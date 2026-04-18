@@ -1,0 +1,14 @@
+[
+  {
+    "name": "unit-tests",
+    "status": "pass"
+  },
+  {
+    "name": "lint",
+    "status": "pass"
+  },
+  {
+    "name": "type-check",
+    "status": "fail"
+  }
+]

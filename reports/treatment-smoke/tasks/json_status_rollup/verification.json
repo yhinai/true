@@ -1,0 +1,23 @@
+{
+  "allowed_paths": [
+    "summary.json"
+  ],
+  "candidate_source": "solution",
+  "duration_ms": 24,
+  "exit_code": 0,
+  "oracle_command": [
+    "python3",
+    "oracle.py"
+  ],
+  "oracle_kind": "local_validator",
+  "passed": true,
+  "prompt": "Update `summary.json` so it is derived from `checks.json`.\n\nRequirements:\n- `total_checks` must equal the number of entries in `checks.json`.\n- `passing_checks` must equal the number of checks whose `\"status\"` is `\"pass\"`.\n- `failing_checks` must equal the number of checks whose `\"status\"` is `\"fail\"`.\n- `verified` must be `true` only when `failing_checks` is `0`.\n- Do not modify `checks.json`.\n",
+  "staged_from": "/Users/alhinai/Desktop/TRUE/fixtures/oracle_tasks/json_status_rollup/solution",
+  "started_at": "2026-04-18T22:34:52+00:00",
+  "stderr": "",
+  "stdout": "summary.json matches derived check counts.\n",
+  "suite": "treatment",
+  "task_dir": "/Users/alhinai/Desktop/TRUE/fixtures/oracle_tasks/json_status_rollup",
+  "task_id": "json_status_rollup",
+  "title": "Repair a derived JSON summary"
+}

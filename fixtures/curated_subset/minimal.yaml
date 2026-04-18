@@ -1,0 +1,22 @@
+{
+  "name": "minimal-curated-subset",
+  "description": "Three deterministic local oracle tasks that prove the benchmark scaffolding and report pipeline work before agent integration.",
+  "golden_task_ids": [
+    "greeting_text_patch",
+    "json_status_rollup"
+  ],
+  "tasks": [
+    {
+      "id": "greeting_text_patch",
+      "manifest": "../oracle_tasks/greeting_text_patch/task.yaml"
+    },
+    {
+      "id": "json_status_rollup",
+      "manifest": "../oracle_tasks/json_status_rollup/task.yaml"
+    },
+    {
+      "id": "shell_banner_contract",
+      "manifest": "../oracle_tasks/shell_banner_contract/task.yaml"
+    }
+  ]
+}

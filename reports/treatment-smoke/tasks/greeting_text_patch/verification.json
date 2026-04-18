@@ -1,0 +1,23 @@
+{
+  "allowed_paths": [
+    "message.txt"
+  ],
+  "candidate_source": "solution",
+  "duration_ms": 23,
+  "exit_code": 0,
+  "oracle_command": [
+    "python3",
+    "oracle.py"
+  ],
+  "oracle_kind": "local_validator",
+  "passed": true,
+  "prompt": "Fix `message.txt` so it contains the exact verified greeting:\n\n`Hello, verification-first world!`\n\nConstraints:\n- Edit only `message.txt`.\n- Preserve the trailing newline.\n",
+  "staged_from": "/Users/alhinai/Desktop/TRUE/fixtures/oracle_tasks/greeting_text_patch/solution",
+  "started_at": "2026-04-18T22:34:52+00:00",
+  "stderr": "",
+  "stdout": "Greeting matches expected text.\n",
+  "suite": "treatment",
+  "task_dir": "/Users/alhinai/Desktop/TRUE/fixtures/oracle_tasks/greeting_text_patch",
+  "task_id": "greeting_text_patch",
+  "title": "Fix the single-line greeting typo"
+}

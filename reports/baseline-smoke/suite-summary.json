@@ -1,0 +1,57 @@
+{
+  "budget": {
+    "per_task_seconds": 30,
+    "suite_seconds": 120
+  },
+  "candidate_source": "solution",
+  "completed_at": "2026-04-18T22:34:52+00:00",
+  "config_path": "/Users/alhinai/Desktop/TRUE/benchmark-configs/baseline.yaml",
+  "description": "Vanilla Codex benchmark shape: single attempt, deterministic scoring, no automatic retry-with-evidence.",
+  "failed": 0,
+  "golden_task_ids": [
+    "greeting_text_patch",
+    "json_status_rollup"
+  ],
+  "note": "This suite verifies fixture oracles against the checked-in candidate source. It does not execute a Codex adapter yet.",
+  "passed": 3,
+  "policy": {
+    "max_attempts": 1,
+    "require_proof_card": false,
+    "retry_with_evidence": false,
+    "unsafe_claim_tracking": "score from run artifacts after verification"
+  },
+  "started_at": "2026-04-18T22:34:52+00:00",
+  "subset_path": "/Users/alhinai/Desktop/TRUE/fixtures/curated_subset/minimal.yaml",
+  "suite": "baseline",
+  "task_count": 3,
+  "tasks": [
+    {
+      "duration_ms": 24,
+      "exit_code": 0,
+      "passed": true,
+      "proof_card_path": null,
+      "task_id": "greeting_text_patch",
+      "title": "Fix the single-line greeting typo",
+      "verification_path": "/Users/alhinai/Desktop/TRUE/reports/baseline-smoke/tasks/greeting_text_patch/verification.json"
+    },
+    {
+      "duration_ms": 24,
+      "exit_code": 0,
+      "passed": true,
+      "proof_card_path": null,
+      "task_id": "json_status_rollup",
+      "title": "Repair a derived JSON summary",
+      "verification_path": "/Users/alhinai/Desktop/TRUE/reports/baseline-smoke/tasks/json_status_rollup/verification.json"
+    },
+    {
+      "duration_ms": 10,
+      "exit_code": 0,
+      "passed": true,
+      "proof_card_path": null,
+      "task_id": "shell_banner_contract",
+      "title": "Repair a shell-based verification banner",
+      "verification_path": "/Users/alhinai/Desktop/TRUE/reports/baseline-smoke/tasks/shell_banner_contract/verification.json"
+    }
+  ],
+  "verified_success_rate": 1.0
+}

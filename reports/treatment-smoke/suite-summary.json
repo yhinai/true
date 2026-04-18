@@ -1,0 +1,57 @@
+{
+  "budget": {
+    "per_task_seconds": 30,
+    "suite_seconds": 180
+  },
+  "candidate_source": "solution",
+  "completed_at": "2026-04-18T22:34:52+00:00",
+  "config_path": "/Users/alhinai/Desktop/TRUE/benchmark-configs/treatment.yaml",
+  "description": "Verification-first harness shape: bounded retries, evidence feedback, deterministic oracle gate, and proof-card artifacts.",
+  "failed": 0,
+  "golden_task_ids": [
+    "greeting_text_patch",
+    "json_status_rollup"
+  ],
+  "note": "This suite verifies fixture oracles against the checked-in candidate source. It does not execute a Codex adapter yet.",
+  "passed": 3,
+  "policy": {
+    "max_attempts": 3,
+    "require_proof_card": true,
+    "retry_with_evidence": true,
+    "unsafe_claim_tracking": "flag any claimed success that fails deterministic verification"
+  },
+  "started_at": "2026-04-18T22:34:52+00:00",
+  "subset_path": "/Users/alhinai/Desktop/TRUE/fixtures/curated_subset/minimal.yaml",
+  "suite": "treatment",
+  "task_count": 3,
+  "tasks": [
+    {
+      "duration_ms": 23,
+      "exit_code": 0,
+      "passed": true,
+      "proof_card_path": "/Users/alhinai/Desktop/TRUE/reports/treatment-smoke/tasks/greeting_text_patch/proof-card.md",
+      "task_id": "greeting_text_patch",
+      "title": "Fix the single-line greeting typo",
+      "verification_path": "/Users/alhinai/Desktop/TRUE/reports/treatment-smoke/tasks/greeting_text_patch/verification.json"
+    },
+    {
+      "duration_ms": 24,
+      "exit_code": 0,
+      "passed": true,
+      "proof_card_path": "/Users/alhinai/Desktop/TRUE/reports/treatment-smoke/tasks/json_status_rollup/proof-card.md",
+      "task_id": "json_status_rollup",
+      "title": "Repair a derived JSON summary",
+      "verification_path": "/Users/alhinai/Desktop/TRUE/reports/treatment-smoke/tasks/json_status_rollup/verification.json"
+    },
+    {
+      "duration_ms": 9,
+      "exit_code": 0,
+      "passed": true,
+      "proof_card_path": "/Users/alhinai/Desktop/TRUE/reports/treatment-smoke/tasks/shell_banner_contract/proof-card.md",
+      "task_id": "shell_banner_contract",
+      "title": "Repair a shell-based verification banner",
+      "verification_path": "/Users/alhinai/Desktop/TRUE/reports/treatment-smoke/tasks/shell_banner_contract/verification.json"
+    }
+  ],
+  "verified_success_rate": 1.0
+}

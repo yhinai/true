@@ -1,0 +1,24 @@
+{
+  "name": "baseline",
+  "description": "Vanilla Codex benchmark shape: single attempt, deterministic scoring, no automatic retry-with-evidence.",
+  "subset_config": "../fixtures/curated_subset/minimal.yaml",
+  "policy": {
+    "max_attempts": 1,
+    "retry_with_evidence": false,
+    "require_proof_card": false,
+    "unsafe_claim_tracking": "score from run artifacts after verification"
+  },
+  "budget": {
+    "per_task_seconds": 30,
+    "suite_seconds": 120
+  },
+  "scoring": {
+    "primary_metrics": [
+      "verified_success_rate",
+      "unsafe_claim_rate"
+    ]
+  },
+  "smoke_verification": {
+    "candidate_source": "solution"
+  }
+}

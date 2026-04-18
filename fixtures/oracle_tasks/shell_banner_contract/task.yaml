@@ -1,0 +1,27 @@
+{
+  "id": "shell_banner_contract",
+  "title": "Repair a shell-based verification banner",
+  "category": "oracle_task",
+  "prompt_file": "PROMPT.md",
+  "allowed_paths": [
+    "bin/report.sh"
+  ],
+  "workspace_dir": "workspace",
+  "solution_dir": "solution",
+  "oracle": {
+    "kind": "test_script",
+    "command": [
+      "sh",
+      "oracle.sh"
+    ]
+  },
+  "tags": [
+    "shell",
+    "stdout",
+    "command-exit"
+  ],
+  "success_criteria": [
+    "bin/report.sh exits with code 0.",
+    "bin/report.sh writes exactly verified:PASS to stdout."
+  ]
+}

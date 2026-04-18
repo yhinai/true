@@ -1,0 +1,23 @@
+{
+  "allowed_paths": [
+    "bin/report.sh"
+  ],
+  "candidate_source": "solution",
+  "duration_ms": 9,
+  "exit_code": 0,
+  "oracle_command": [
+    "sh",
+    "oracle.sh"
+  ],
+  "oracle_kind": "test_script",
+  "passed": true,
+  "prompt": "Fix `bin/report.sh` so a verifier can trust it.\n\nRequirements:\n- The script must exit with status `0`.\n- The script must print exactly `verified:PASS`.\n- Do not add extra output or trailing spaces.\n",
+  "staged_from": "/Users/alhinai/Desktop/TRUE/fixtures/oracle_tasks/shell_banner_contract/solution",
+  "started_at": "2026-04-18T22:34:52+00:00",
+  "stderr": "",
+  "stdout": "Shell banner matches expected output.\n",
+  "suite": "treatment",
+  "task_dir": "/Users/alhinai/Desktop/TRUE/fixtures/oracle_tasks/shell_banner_contract",
+  "task_id": "shell_banner_contract",
+  "title": "Repair a shell-based verification banner"
+}

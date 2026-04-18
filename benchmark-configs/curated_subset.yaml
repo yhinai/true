@@ -1,0 +1,15 @@
+{
+  "name": "curated-subset-benchmark",
+  "description": "A local fallback benchmark subset with reproducible validators and frozen golden tasks.",
+  "subset_config": "../fixtures/curated_subset/minimal.yaml",
+  "report_defaults": {
+    "root": "../reports",
+    "emit_json": true,
+    "emit_markdown": true
+  },
+  "expectations": {
+    "frozen_golden_tasks": 2,
+    "minimum_task_count": 3,
+    "same_snapshot_required": true
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "id": "greeting_text_patch",
+  "title": "Fix the single-line greeting typo",
+  "category": "oracle_task",
+  "prompt_file": "PROMPT.md",
+  "allowed_paths": [
+    "message.txt"
+  ],
+  "workspace_dir": "workspace",
+  "solution_dir": "solution",
+  "oracle": {
+    "kind": "local_validator",
+    "command": [
+      "python3",
+      "oracle.py"
+    ]
+  },
+  "tags": [
+    "text",
+    "single-file",
+    "golden"
+  ],
+  "success_criteria": [
+    "message.txt exactly matches the expected greeting including the trailing newline."
+  ]
+}

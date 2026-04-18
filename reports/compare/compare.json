@@ -1,0 +1,32 @@
+{
+  "baseline": {
+    "candidate_source": "solution",
+    "policy": {
+      "max_attempts": 1,
+      "require_proof_card": false,
+      "retry_with_evidence": false,
+      "unsafe_claim_tracking": "score from run artifacts after verification"
+    },
+    "suite": "baseline",
+    "verified_success_rate": 1.0
+  },
+  "note": "This compare report only checks scaffold readiness on the checked-in reference solutions. It is not an agent-performance benchmark yet.",
+  "same_task_set": true,
+  "task_ids": [
+    "greeting_text_patch",
+    "json_status_rollup",
+    "shell_banner_contract"
+  ],
+  "treatment": {
+    "candidate_source": "solution",
+    "policy": {
+      "max_attempts": 3,
+      "require_proof_card": true,
+      "retry_with_evidence": true,
+      "unsafe_claim_tracking": "flag any claimed success that fails deterministic verification"
+    },
+    "suite": "treatment",
+    "verified_success_rate": 1.0
+  },
+  "verified_success_rate_delta": 0.0
+}
