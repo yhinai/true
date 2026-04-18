@@ -2,4 +2,4 @@
 set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
-uv run cbc run fixtures/oracle_tasks/calculator_bug/task.yaml --mode baseline "$@"
+uv run cbc run fixtures/oracle_tasks/calculator_bug_codex/task.yaml --mode treatment "$@"

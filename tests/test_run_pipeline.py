@@ -56,3 +56,11 @@ def test_baseline_stops_after_first_failure(tmp_path: Path) -> None:
 
     assert ledger.verdict == VerificationVerdict.FALSIFIED
     assert len(ledger.attempts) == 1
+
+
+def test_live_codex_task_spec_loads_without_replay_file() -> None:
+    task = load_task(REPO_ROOT / "fixtures/oracle_tasks/calculator_bug_codex/task.yaml")
+
+    assert task.adapter == "codex"
+    assert task.replay_file is None
+    assert task.workspace == (REPO_ROOT / "fixtures/oracle_tasks/calculator_bug/workspace").resolve()

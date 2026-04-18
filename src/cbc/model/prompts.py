@@ -21,12 +21,12 @@ JSON_RESPONSE_CONTRACT = {
                     "content": {"type": "string"},
                     "executable": {"type": "boolean"},
                 },
-                "required": ["path", "content"],
+                "required": ["path", "content", "executable"],
                 "additionalProperties": False,
             },
         },
     },
-    "required": ["summary", "claimed_success", "writes"],
+    "required": ["summary", "claimed_success", "notes", "writes"],
     "additionalProperties": False,
 }
 

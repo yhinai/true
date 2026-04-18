@@ -41,14 +41,21 @@ Current benchmark honesty:
 Quick start:
 
 ```bash
-PYTHONPATH=src python3 -m pytest
+uv run pytest
 ./scripts/run_compare.sh
 ./scripts/run_treatment.sh
-python3 scripts/run_compare.py
+uv run python scripts/run_compare.py
+./scripts/run_live_codex.sh
 ```
 
 Key docs:
-- [SPEC.md](/Users/alhinai/Desktop/TRUE/SPEC.md)
-- [RUNBOOK.md](/Users/alhinai/Desktop/TRUE/RUNBOOK.md)
-- [STATUS.md](/Users/alhinai/Desktop/TRUE/STATUS.md)
-- [BENCHMARK_PLAN.md](/Users/alhinai/Desktop/TRUE/BENCHMARK_PLAN.md)
+- [SPEC.md](SPEC.md)
+- [RUNBOOK.md](RUNBOOK.md)
+- [STATUS.md](STATUS.md)
+- [BENCHMARK_PLAN.md](BENCHMARK_PLAN.md)
+
+Live Codex task:
+
+```bash
+./scripts/run_live_codex.sh
+```

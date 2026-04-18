@@ -3,7 +3,7 @@
 ## Verify The Repo
 
 ```bash
-PYTHONPATH=src python3 -m pytest
+uv run pytest
 ```
 
 ## Run One Treatment Task
@@ -24,10 +24,16 @@ PYTHONPATH=src python3 -m pytest
 ./scripts/run_compare.sh
 ```
 
+## Run One Live Codex Task
+
+```bash
+./scripts/run_live_codex.sh
+```
+
 ## Start The API
 
 ```bash
-PYTHONPATH=src python3 -m cbc.main api
+uv run cbc api
 ```
 
 ## Where Output Goes
@@ -38,4 +44,4 @@ PYTHONPATH=src python3 -m cbc.main api
 
 ## Switching To Live Codex
 
-Task specs can set `adapter: codex` and omit replay behavior. The adapter in [src/cbc/model/codex_exec.py](/Users/alhinai/Desktop/TRUE/src/cbc/model/codex_exec.py) uses `codex exec --json` plus a JSON output schema.
+Task specs can set `adapter: codex` and omit replay behavior. The adapter in `src/cbc/model/codex_exec.py` uses `codex exec --json` plus a JSON output schema. A checked-in live task spec is available at `fixtures/oracle_tasks/calculator_bug_codex/task.yaml`.

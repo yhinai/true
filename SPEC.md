@@ -18,16 +18,16 @@ Codex is the proposal engine, not the source of trust. Trust comes from determin
 ## Trust Boundaries
 
 - The model adapter never certifies correctness.
-- Verification logic lives under [src/cbc/verify](/Users/alhinai/Desktop/TRUE/src/cbc/verify).
-- Workspace safety lives under [src/cbc/workspace](/Users/alhinai/Desktop/TRUE/src/cbc/workspace).
+- Verification logic lives under `src/cbc/verify`.
+- Workspace safety lives under `src/cbc/workspace`.
 - Benchmarks use the same orchestrator and verifier as single runs.
 
 ## Implemented Surfaces
 
-- CLI: [src/cbc/main.py](/Users/alhinai/Desktop/TRUE/src/cbc/main.py)
-- API: [src/cbc/api/app.py](/Users/alhinai/Desktop/TRUE/src/cbc/api/app.py)
-- Benchmark runner: [src/cbc/benchmark/compare.py](/Users/alhinai/Desktop/TRUE/src/cbc/benchmark/compare.py)
-- Review shell: [src/cbc/review](/Users/alhinai/Desktop/TRUE/src/cbc/review)
+- CLI: `src/cbc/main.py`
+- API: `src/cbc/api/app.py`
+- Benchmark runner: `src/cbc/benchmark/compare.py`
+- Review shell: `src/cbc/review`
 
 ## Artifact Contract
 
@@ -49,3 +49,4 @@ Each benchmark comparison saves:
 - Phase 1.5: curated A/B comparison, metrics, compare report
 - Phase 2: real file-backed patching, scope guard, workspace safety
 - Phase 3-10: thin but working extension seams for deeper verification, review, graph checks, multi-role modules, and API surface
+- live Codex execution is wired through a checked-in `adapter: codex` task spec

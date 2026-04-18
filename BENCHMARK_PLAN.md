@@ -10,9 +10,9 @@
 
 ## Curated Subset
 
-- [calculator bug](/Users/alhinai/Desktop/TRUE/fixtures/oracle_tasks/calculator_bug/task.yaml)
-- [title case bug](/Users/alhinai/Desktop/TRUE/fixtures/oracle_tasks/title_case_bug/task.yaml)
-- [slug shell bug](/Users/alhinai/Desktop/TRUE/fixtures/oracle_tasks/slug_shell_bug/task.yaml)
+- `fixtures/oracle_tasks/calculator_bug/task.yaml`
+- `fixtures/oracle_tasks/title_case_bug/task.yaml`
+- `fixtures/oracle_tasks/slug_shell_bug/task.yaml`
 
 ## Primary Metrics
 
@@ -25,9 +25,13 @@
 
 On the checked-in replay smoke benchmark, treatment outperforms baseline on Verified Success Rate while keeping the same task-level Unsafe Claim Rate.
 
+## Live Codex Demo Candidate
+
+- `fixtures/oracle_tasks/calculator_bug_codex/task.yaml`
+
 ## Command Path
 
 ```bash
 ./scripts/run_compare.sh
-python3 scripts/run_compare.py
+uv run python scripts/run_compare.py
 ```

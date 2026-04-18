@@ -1,0 +1,23 @@
+task_id: calculator_bug_codex
+title: Fix addition in calculator.py with live Codex
+prompt: |
+  The add function in calculator.py returns the wrong result.
+  Update only calculator.py so that the tests pass.
+workspace: ../calculator_bug/workspace
+allowed_files:
+  - calculator.py
+required_checks:
+  - pytest
+doubt_points:
+  - Keep the fix minimal.
+  - Do not modify the test file.
+oracles:
+  - name: pytest
+    kind: pytest
+    command: -q
+adapter: codex
+retry_budget: 2
+tags:
+  - python
+  - codex
+  - live

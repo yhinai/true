@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import subprocess
 from pathlib import Path
+from typing import Any
 
 from pydantic import ValidationError
 
@@ -60,10 +61,9 @@ class CodexExecAdapter(ModelAdapter):
             except json.JSONDecodeError:
                 continue
             events.append(ModelEvent(kind=payload.get("type", "event"), payload=payload))
-            if payload.get("type") == "message":
-                message = payload.get("message", {})
-                if message.get("role") == "assistant":
-                    parsed_message = message.get("content", [{}])[-1].get("text")
+            candidate = _extract_assistant_message(payload)
+            if candidate:
+                parsed_message = candidate
 
         if completed.returncode != 0 and not parsed_message:
             raise RuntimeError(completed.stderr.strip() or "codex exec failed without a final assistant message")
@@ -76,3 +76,27 @@ class CodexExecAdapter(ModelAdapter):
         except ValidationError as exc:
             raise RuntimeError(f"codex exec produced invalid JSON output: {exc}") from exc
         return response, events
+
+
+def _extract_assistant_message(payload: dict[str, Any]) -> str | None:
+    if payload.get("type") == "item.completed":
+        item = payload.get("item", {})
+        if isinstance(item, dict) and item.get("type") == "agent_message":
+            text = item.get("text")
+            if isinstance(text, str):
+                return text
+
+    if payload.get("type") == "message":
+        message = payload.get("message", {})
+        if isinstance(message, dict) and message.get("role") == "assistant":
+            content = message.get("content", [])
+            if isinstance(content, list) and content:
+                last = content[-1]
+                if isinstance(last, dict):
+                    text = last.get("text")
+                    if isinstance(text, str):
+                        return text
+                if isinstance(last, str):
+                    return last
+
+    return None

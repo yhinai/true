@@ -10,13 +10,14 @@
 
 ## Evidence
 
-- tests: `PYTHONPATH=src python3 -m pytest`
+- tests: `uv run pytest`
 - benchmark: `./scripts/run_compare.sh`
-- python wrapper: `python3 scripts/run_compare.py`
+- python wrapper: `uv run python scripts/run_compare.py`
 - proof card path is emitted after each `run`
+- live Codex task path: `./scripts/run_live_codex.sh`
 
 ## Remaining Depth
 
 - deeper verification runners are present but intentionally lightweight and non-blocking
 - review/graph/API shells are implemented and can be deepened without moving trust logic
-- live Codex tasks need a dedicated checked-in benchmark lane that exercises `adapter: codex`
+- one live Codex task spec now exists, but the repo still needs a dedicated checked-in benchmark lane that exercises `adapter: codex` beyond the single calculator task
