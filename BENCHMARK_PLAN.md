@@ -27,7 +27,7 @@ On the checked-in replay smoke benchmark, treatment outperforms baseline on Veri
 
 ## Live Codex Demo Candidate
 
-- `benchmark-configs/live_codex_subset.yaml`
+- `benchmark-configs/live_codex.yaml`
 - `fixtures/oracle_tasks/calculator_bug_codex/task.yaml`
 - `fixtures/oracle_tasks/title_case_bug_codex/task.yaml`
 - `fixtures/oracle_tasks/slug_shell_bug_codex/task.yaml`

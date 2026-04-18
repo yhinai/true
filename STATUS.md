@@ -23,4 +23,5 @@
 - deeper verification runners are present but intentionally lightweight and non-blocking
 - review/graph/API shells are implemented and can be deepened without moving trust logic
 - a checked-in live Codex benchmark lane now exists for calculator, title-case, and slug tasks
-- the next gap is pinning lane-specific Codex runtime knobs in checked-in config, rather than relying on app defaults
+- live benchmark configs can now pin lane-specific Codex runtime knobs in checked-in YAML
+- the next gap is deciding which explicit model and approval-policy values the live lane should standardize on

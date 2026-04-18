@@ -38,11 +38,14 @@ Current benchmark honesty:
 - the default checked-in benchmark is a replay smoke benchmark, not a live Codex benchmark
 - live Codex execution is supported through `adapter: codex`
 - the checked-in curated subset stays replay-backed for deterministic CI and local smoke runs
-- a separate checked-in live suite is available at `benchmark-configs/live_codex_subset.yaml`
+- a separate checked-in live suite is available at `benchmark-configs/live_codex.yaml`
 
 Live Codex lane:
-- [benchmark-configs/live_codex.yaml](/Users/alhinai/Desktop/TRUE/benchmark-configs/live_codex.yaml)
-- [fixtures/oracle_tasks/live_codex_calculator/task.yaml](/Users/alhinai/Desktop/TRUE/fixtures/oracle_tasks/live_codex_calculator/task.yaml)
+- [benchmark-configs/live_codex.yaml](benchmark-configs/live_codex.yaml)
+- [fixtures/oracle_tasks/calculator_bug_codex/task.yaml](fixtures/oracle_tasks/calculator_bug_codex/task.yaml)
+- [fixtures/oracle_tasks/title_case_bug_codex/task.yaml](fixtures/oracle_tasks/title_case_bug_codex/task.yaml)
+- [fixtures/oracle_tasks/slug_shell_bug_codex/task.yaml](fixtures/oracle_tasks/slug_shell_bug_codex/task.yaml)
+- Codex runtime is pinned in the benchmark file under `codex:`
 - `./scripts/run_live_compare.sh`
 
 Quick start:

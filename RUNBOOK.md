@@ -29,20 +29,13 @@ uv run --extra dev pytest
 ```bash
 ./scripts/run_live_compare.sh
 ```
+This uses the same orchestrator and deterministic verifier, but the benchmark file pins live Codex runtime settings in its `codex:` block instead of relying only on app defaults.
 
 ## Run One Live Codex Task
 
 ```bash
 ./scripts/run_live_codex.sh
 ```
-
-## Run The Live Codex Comparison
-
-```bash
-./scripts/run_live_compare.sh
-```
-
-This uses the same orchestrator and deterministic verifier, but the task spec uses `adapter: codex` instead of replay.
 ## Start The API
 
 ```bash
@@ -57,4 +50,4 @@ uv run cbc api
 
 ## Switching To Live Codex
 
-Task specs can set `adapter: codex` and omit replay behavior. The adapter in `src/cbc/model/codex_exec.py` uses `codex exec --json` plus a JSON output schema. Checked-in live task specs are available under `fixtures/oracle_tasks/*_codex/`, and a checked-in live comparison config is available at `benchmark-configs/live_codex_subset.yaml`.
+Task specs can set `adapter: codex` and omit replay behavior. The adapter in `src/cbc/model/codex_exec.py` uses `codex exec --json` plus a JSON output schema. Checked-in live task specs are available under `fixtures/oracle_tasks/*_codex/`, and a checked-in live comparison config is available at `benchmark-configs/live_codex.yaml`. Benchmark YAML can also pin lane-specific Codex runtime settings under `codex:`.

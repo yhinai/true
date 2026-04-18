@@ -1,2 +1,9 @@
 tasks:
-  - ../fixtures/oracle_tasks/live_codex_calculator/task.yaml
+  - ../fixtures/oracle_tasks/calculator_bug_codex/task.yaml
+  - ../fixtures/oracle_tasks/title_case_bug_codex/task.yaml
+  - ../fixtures/oracle_tasks/slug_shell_bug_codex/task.yaml
+codex:
+  executable: codex
+  sandbox: workspace-write
+  skip_git_repo_check: true
+  dangerously_bypass_approvals: false
