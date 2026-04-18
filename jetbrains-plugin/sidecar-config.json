@@ -1,0 +1,9 @@
+{
+  "apiBaseUrl": "http://127.0.0.1:8765",
+  "endpoints": {
+    "health": "/healthz",
+    "runs": "/runs",
+    "runDetail": "/runs/{run_id}",
+    "benchmarks": "/benchmarks"
+  }
+}
