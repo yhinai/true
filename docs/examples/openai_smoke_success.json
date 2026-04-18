@@ -1,0 +1,17 @@
+{
+  "model": "gpt-4.1-mini",
+  "classification": {
+    "axiom": "Totality",
+    "confidence": 0.9,
+    "rationale": "The function apply_discount does not validate the input percentage to ensure it is within a valid range (e.g., 0 to 100). This leads to incorrect or undefined behavior for pct values over 100, violating the axiom of Totality which requires that the function handle all input cases properly.",
+    "target_function": "apply_discount",
+    "bug_summary": "apply_discount does not raise an error for discount percentages above 100, resulting in invalid discount computations."
+  },
+  "patch": {
+    "function_name": "apply_discount",
+    "patched_source": "def apply_discount(price: float, pct: int) -> float:\n    if pct > 100:\n        raise ValueError(\"Discount percentage cannot be greater than 100.\")\n    return price * (100 - pct) / 100",
+    "diff_summary": "Added a check to raise ValueError if pct is greater than 100.",
+    "changed_lines": 3,
+    "rationale": "The original function did not handle the case where pct is greater than 100, which should raise a ValueError according to the failing test. Adding this validation ensures the function behaves correctly for invalid inputs."
+  }
+}

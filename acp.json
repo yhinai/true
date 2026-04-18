@@ -1,0 +1,15 @@
+{
+  "default_mcp_settings": {},
+  "agent_servers": {
+    "Axiom": {
+      "command": "/Users/alhinai/Desktop/TRUE/.venv/bin/python",
+      "args": [
+        "-m",
+        "axiom.agent"
+      ],
+      "env": {
+        "PYTHONPATH": "/Users/alhinai/Desktop/TRUE/src"
+      }
+    }
+  }
+}
