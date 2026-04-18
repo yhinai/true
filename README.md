@@ -40,13 +40,14 @@ Current benchmark honesty:
 - the checked-in curated subset stays replay-backed for deterministic CI and local smoke runs
 - a separate checked-in live suite is available at `benchmark-configs/live_codex.yaml`
 - live task specs can pin Codex runtime knobs through a checked-in `codex:` block instead of relying on local app defaults
+- the checked-in live lane is standardized on `gpt-5.4`, `workspace-write`, and no approval bypass
 
 Live Codex lane:
 - [benchmark-configs/live_codex.yaml](benchmark-configs/live_codex.yaml)
 - [fixtures/oracle_tasks/calculator_bug_codex/task.yaml](fixtures/oracle_tasks/calculator_bug_codex/task.yaml)
 - [fixtures/oracle_tasks/title_case_bug_codex/task.yaml](fixtures/oracle_tasks/title_case_bug_codex/task.yaml)
 - [fixtures/oracle_tasks/slug_shell_bug_codex/task.yaml](fixtures/oracle_tasks/slug_shell_bug_codex/task.yaml)
-- Codex runtime is pinned in the benchmark file under `codex:`, with optional task-level `codex:` overrides for single live tasks
+- Codex runtime is pinned in the benchmark file under `codex:`, with task-level `codex:` blocks keeping single-task live runs on the same `gpt-5.4` / `workspace-write` / no-bypass stance
 - `./scripts/run_live_compare.sh`
 
 Quick start:

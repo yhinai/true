@@ -17,8 +17,10 @@ oracles:
     command: ./oracle.sh
 adapter: codex
 codex:
+  model: gpt-5.4
   sandbox: workspace-write
   skip_git_repo_check: true
+  dangerously_bypass_approvals: false
 retry_budget: 2
 tags:
   - shell

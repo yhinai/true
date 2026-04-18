@@ -28,4 +28,5 @@
 - a checked-in live Codex benchmark lane now exists for calculator, title-case, and slug tasks
 - live benchmark configs can now pin lane-specific Codex runtime knobs in checked-in YAML
 - live task specs can also pin task-specific Codex runtime knobs in checked-in config
-- the next gap is deciding which explicit model and approval-policy values the live lane should standardize on
+- the checked-in live lane is now standardized on `gpt-5.4`, `workspace-write`, and `dangerously_bypass_approvals: false`
+- the next gap is deciding whether live lane reasoning/profile knobs should also be standardized in checked-in config

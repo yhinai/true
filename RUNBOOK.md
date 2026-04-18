@@ -29,7 +29,7 @@ uv run --extra dev pytest
 ```bash
 ./scripts/run_live_compare.sh
 ```
-This uses the same orchestrator and deterministic verifier, but the benchmark file pins live Codex runtime settings in its `codex:` block instead of relying only on app defaults, and the task specs use `adapter: codex` instead of replay.
+This uses the same orchestrator and deterministic verifier, but the benchmark file pins live Codex runtime settings in its `codex:` block instead of relying only on app defaults. The checked-in live lane is standardized on `gpt-5.4`, `workspace-write`, and `dangerously_bypass_approvals: false`.
 
 ## Run One Live Codex Task
 
@@ -62,4 +62,4 @@ uv run cbc api
 
 ## Switching To Live Codex
 
-Task specs can set `adapter: codex` and omit replay behavior. Benchmark YAML can pin lane-level Codex runtime settings under `codex:`, and individual task specs can also include a checked-in `codex:` block to pin task-specific knobs such as `sandbox`, `model`, `profile`, `--config` overrides, and extra writable directories. The adapter in `src/cbc/model/codex_exec.py` uses `codex exec --json` plus a JSON output schema. Checked-in live task specs are available under `fixtures/oracle_tasks/*_codex/`, and a checked-in live comparison config is available at `benchmark-configs/live_codex.yaml`.
+Task specs can set `adapter: codex` and omit replay behavior. Benchmark YAML can pin lane-level Codex runtime settings under `codex:`, and individual task specs can also include a checked-in `codex:` block to pin task-specific knobs such as `sandbox`, `model`, `profile`, `--config` overrides, and extra writable directories. The adapter in `src/cbc/model/codex_exec.py` uses `codex exec --json` plus a JSON output schema. Checked-in live task specs are available under `fixtures/oracle_tasks/*_codex/`, and a checked-in live comparison config is available at `benchmark-configs/live_codex.yaml`. The current checked-in standard is `model: gpt-5.4`, `sandbox: workspace-write`, and `dangerously_bypass_approvals: false`.
