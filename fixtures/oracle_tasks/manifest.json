@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "tasks": [
+    "tasks/shell_exact_match/task.json",
+    "tasks/pytest_divide_fix/task.json",
+    "tasks/property_slugify/task.json",
+    "tasks/shell_status_sanity/task.json"
+  ]
+}

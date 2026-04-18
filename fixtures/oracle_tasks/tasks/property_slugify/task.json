@@ -1,0 +1,35 @@
+{
+  "task_id": "property_slugify",
+  "title": "Property-style slugify task",
+  "kind": "property_check",
+  "prompt": "Implement slugify with idempotence and stable separators.",
+  "oracle_command": "python3 property_check.py",
+  "replay": {
+    "baseline": [
+      {
+        "candidate": "candidates/baseline_attempt_1",
+        "claimed_success": true,
+        "note": "Initial implementation violates slug invariants."
+      }
+    ],
+    "treatment": [
+      {
+        "candidate": "candidates/treatment_attempt_1",
+        "claimed_success": false,
+        "note": "First retry still emits unstable separators."
+      },
+      {
+        "candidate": "candidates/treatment_attempt_2",
+        "claimed_success": true,
+        "note": "Second retry satisfies property checks."
+      }
+    ]
+  },
+  "metadata": {
+    "tags": [
+      "local",
+      "oracle",
+      "property"
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "oracle_local_v1",
+  "description": "Deterministic frozen oracle task subset for local benchmark runs.",
+  "task_ids": [
+    "shell_exact_match",
+    "pytest_divide_fix",
+    "property_slugify",
+    "shell_status_sanity"
+  ]
+}

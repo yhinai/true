@@ -1,0 +1,35 @@
+{
+  "task_id": "shell_exact_match",
+  "title": "Shell exact-match output",
+  "kind": "shell_exact",
+  "prompt": "Write answer.txt with exact content SQUARE=144.",
+  "oracle_command": "python3 oracle.py",
+  "replay": {
+    "baseline": [
+      {
+        "candidate": "candidates/baseline_attempt_1",
+        "claimed_success": true,
+        "note": "Produced incorrect value while claiming success."
+      }
+    ],
+    "treatment": [
+      {
+        "candidate": "candidates/treatment_attempt_1",
+        "claimed_success": false,
+        "note": "First attempt was not accepted; verifier returned evidence."
+      },
+      {
+        "candidate": "candidates/treatment_attempt_2",
+        "claimed_success": true,
+        "note": "Retry produced exact expected output."
+      }
+    ]
+  },
+  "metadata": {
+    "tags": [
+      "local",
+      "oracle",
+      "shell"
+    ]
+  }
+}

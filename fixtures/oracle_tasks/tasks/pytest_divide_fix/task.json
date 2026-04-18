@@ -1,0 +1,35 @@
+{
+  "task_id": "pytest_divide_fix",
+  "title": "Pytest-backed divide fix",
+  "kind": "pytest_fix",
+  "prompt": "Fix divide() so tests pass for float behavior and zero division.",
+  "oracle_command": "python3 -m pytest -q || python3 run_oracle.py",
+  "replay": {
+    "baseline": [
+      {
+        "candidate": "candidates/baseline_attempt_1",
+        "claimed_success": true,
+        "note": "Submitted with failing pytest."
+      }
+    ],
+    "treatment": [
+      {
+        "candidate": "candidates/treatment_attempt_1",
+        "claimed_success": false,
+        "note": "First patch failed one test."
+      },
+      {
+        "candidate": "candidates/treatment_attempt_2",
+        "claimed_success": true,
+        "note": "Retry passes pytest oracle."
+      }
+    ]
+  },
+  "metadata": {
+    "tags": [
+      "local",
+      "oracle",
+      "pytest"
+    ]
+  }
+}

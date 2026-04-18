@@ -1,0 +1,30 @@
+{
+  "task_id": "shell_status_sanity",
+  "title": "Shell sanity task",
+  "kind": "shell_exact",
+  "prompt": "Emit status.txt containing exactly OK.",
+  "oracle_command": "python3 oracle.py",
+  "replay": {
+    "baseline": [
+      {
+        "candidate": "candidates/baseline_attempt_1",
+        "claimed_success": true,
+        "note": "Baseline succeeds directly."
+      }
+    ],
+    "treatment": [
+      {
+        "candidate": "candidates/treatment_attempt_1",
+        "claimed_success": true,
+        "note": "Treatment also succeeds directly."
+      }
+    ]
+  },
+  "metadata": {
+    "tags": [
+      "local",
+      "oracle",
+      "sanity"
+    ]
+  }
+}

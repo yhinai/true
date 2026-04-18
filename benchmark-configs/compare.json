@@ -1,0 +1,9 @@
+{
+  "manifest_path": "fixtures/oracle_tasks/manifest.json",
+  "subset_path": "benchmark-configs/curated_subset.json",
+  "baseline_timeout_s": 30,
+  "treatment_timeout_s": 30,
+  "treatment_max_retries": 2,
+  "artifacts_root": "artifacts",
+  "reports_root": "reports"
+}

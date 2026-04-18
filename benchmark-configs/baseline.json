@@ -1,0 +1,6 @@
+{
+  "manifest_path": "fixtures/oracle_tasks/manifest.json",
+  "task_ids": [],
+  "timeout_s": 30,
+  "artifacts_root": "artifacts"
+}
