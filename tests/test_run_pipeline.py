@@ -82,9 +82,9 @@ def test_task_codex_config_overrides_live_lane_defaults(tmp_path: Path) -> None:
 
     assert resolved.default_model == "gpt-5.4"
     assert resolved.sandbox == "workspace-write"
+    assert resolved.config_overrides == ['foo="bar"', 'model_reasoning_effort="medium"']
     assert resolved.skip_git_repo_check is True
     assert resolved.dangerously_bypass_approvals is False
-    assert resolved.config_overrides == ['foo="bar"']
 
 
 def test_review_workspace_builds_ci_ready_artifacts(tmp_path: Path) -> None:

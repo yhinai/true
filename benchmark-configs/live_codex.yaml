@@ -6,5 +6,7 @@ codex:
   executable: codex
   default_model: gpt-5.4
   sandbox: workspace-write
+  config_overrides:
+    - model_reasoning_effort="medium"
   skip_git_repo_check: true
   dangerously_bypass_approvals: false

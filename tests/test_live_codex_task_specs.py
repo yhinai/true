@@ -54,5 +54,6 @@ def test_live_codex_task_specs_load_correctly(
     assert task.oracles[0].kind == expected_oracle_kind
     assert task.codex.model == "gpt-5.4"
     assert task.codex.sandbox == "workspace-write"
+    assert task.codex.config_overrides == ['model_reasoning_effort="medium"']
     assert task.codex.skip_git_repo_check is True
     assert task.codex.dangerously_bypass_approvals is False

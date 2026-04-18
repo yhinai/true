@@ -23,6 +23,7 @@ def test_live_codex_config_resolves_all_live_task_specs_and_pins_runtime() -> No
     assert benchmark_config.codex.executable == "codex"
     assert benchmark_config.codex.default_model == "gpt-5.4"
     assert benchmark_config.codex.sandbox == "workspace-write"
+    assert benchmark_config.codex.config_overrides == ['model_reasoning_effort="medium"']
     assert benchmark_config.codex.skip_git_repo_check is True
     assert benchmark_config.codex.dangerously_bypass_approvals is False
 
@@ -46,6 +47,7 @@ def test_apply_benchmark_config_merges_partial_codex_overrides() -> None:
     assert merged.codex.executable == "codex"
     assert merged.codex.default_model == "gpt-5.4"
     assert merged.codex.sandbox == "workspace-write"
+    assert merged.codex.config_overrides == ['model_reasoning_effort="medium"']
     assert merged.codex.skip_git_repo_check is True
     assert merged.codex.dangerously_bypass_approvals is False
 
