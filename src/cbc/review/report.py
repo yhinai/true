@@ -36,7 +36,12 @@ def compose_review_report(run_artifact: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def compose_review_report_from_path(path: Path) -> dict[str, Any]:
-    artifact = read_json(path)
+    selected_path = path
+    if path.name == "run_ledger.json":
+        sibling = path.with_name("run_artifact.json")
+        if sibling.exists():
+            selected_path = sibling
+    artifact = read_json(selected_path)
     report = compose_review_report(artifact)
     report["artifact_path"] = str(path)
     return report

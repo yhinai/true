@@ -29,12 +29,24 @@ uv run --extra dev pytest
 ```bash
 ./scripts/run_live_compare.sh
 ```
-This uses the same orchestrator and deterministic verifier, but the benchmark file pins live Codex runtime settings in its `codex:` block instead of relying only on app defaults.
+This uses the same orchestrator and deterministic verifier, but the benchmark file pins live Codex runtime settings in its `codex:` block instead of relying only on app defaults, and the task specs use `adapter: codex` instead of replay.
 
 ## Run One Live Codex Task
 
 ```bash
 ./scripts/run_live_codex.sh
+```
+
+## Review An Existing Workspace Diff
+
+```bash
+PYTHONPATH=src python3 -m cbc.main review-workspace fixtures/oracle_tasks/calculator_bug/task.yaml /path/to/workspace
+```
+
+## Run A CI Gate Against An Existing Workspace Diff
+
+```bash
+PYTHONPATH=src python3 -m cbc.main ci fixtures/oracle_tasks/calculator_bug/task.yaml /path/to/workspace
 ```
 ## Start The API
 

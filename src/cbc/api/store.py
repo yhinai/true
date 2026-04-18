@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any
 
 from cbc.review.artifacts import read_json
-from cbc.review.report import compose_review_report
+from cbc.review.report import compose_review_report_from_path
 
 
 def _choose_artifact_root(root: Path | str) -> Path:
@@ -35,7 +35,7 @@ def _iter_benchmark_files(root: Path) -> list[Path]:
 
 
 def _summarize_run(path: Path, payload: dict[str, Any]) -> dict[str, Any]:
-    report = compose_review_report(payload)
+    report = compose_review_report_from_path(path)
     gate = report["summary"]["merge_gate"]["verdict"]
     verification_state = report["summary"]["verification"]["state"]
     return {
@@ -74,9 +74,7 @@ def get_run(artifacts_root: Path | str, run_id: str) -> dict[str, Any] | None:
         candidate_id = str(payload.get("run_id") or payload.get("id") or "")
         if candidate_id != run_id:
             continue
-        report = compose_review_report(payload)
-        report["artifact_path"] = str(path)
-        return report
+        return compose_review_report_from_path(path)
     return None
 
 

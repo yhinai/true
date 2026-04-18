@@ -137,7 +137,7 @@ class RetryTranscript(BaseModel):
 class ProofCard(BaseModel):
     run_id: str
     task_id: str
-    mode: Literal["baseline", "treatment"]
+    mode: Literal["baseline", "treatment", "review"]
     verdict: VerificationVerdict
     unsafe_claims: int
     attempts: int

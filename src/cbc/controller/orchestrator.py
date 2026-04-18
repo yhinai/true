@@ -12,12 +12,13 @@ from cbc.controller.retries import should_retry
 from cbc.model.codex_exec import CodexExecAdapter
 from cbc.model.prompts import summarize_verification_for_retry, write_schema_file
 from cbc.model.replay import ReplayModelAdapter
-from cbc.models import AttemptRecord, ProofCard, RetryTranscript, RunLedger, TaskSpec, VerificationVerdict
+from cbc.models import AttemptRecord, ModelResponse, ProofCard, RetryTranscript, RunLedger, TaskSpec, VerificationVerdict
 from cbc.roles.coder import run_coder
 from cbc.roles.planner import build_plan
 from cbc.storage.artifacts import create_artifact_dir
 from cbc.storage.runs import save_run
 from cbc.verify.core import verify_workspace
+from cbc.workspace.diffing import summarize_workspace_diff
 from cbc.workspace.git_safety import describe_workspace_safety
 from cbc.workspace.patching import apply_writes
 from cbc.workspace.staging import stage_workspace
@@ -102,6 +103,8 @@ def run_task(task: TaskSpec, *, mode: str, config: AppConfig = DEFAULT_CONFIG) -
         evidence = summarize_verification_for_retry(verification)
 
     final_verification = attempts[-1].verification
+    all_changed_files = _collect_changed_files(attempts)
+    diff_summary = summarize_workspace_diff(task.workspace, workspace, changed_files=all_changed_files)
     safety_note = describe_workspace_safety(task.workspace, workspace)
     checkpoints = [checkpoint_name(attempt.attempt, workspace) for attempt in attempts]
     final_summary = f"{final_verification.summary} {safety_note} Checkpoints: {', '.join(checkpoints)}."
@@ -145,6 +148,107 @@ def run_task(task: TaskSpec, *, mode: str, config: AppConfig = DEFAULT_CONFIG) -
         transcript=RetryTranscript(run_id=run_id, attempts=attempts),
         verification=final_verification,
         proof_card=proof_card,
+        diff_summary=diff_summary,
     )
     save_run(config.paths.storage_db, ledger)
     return ledger
+
+
+def review_workspace(task: TaskSpec, workspace_path: Path, *, config: AppConfig = DEFAULT_CONFIG) -> RunLedger:
+    run_id = uuid4().hex[:12]
+    artifact_dir = create_artifact_dir(config.paths.artifacts_dir, "runs")
+    started_at = datetime.now(UTC)
+    workspace = stage_workspace(workspace_path)
+    plan = build_plan(task)
+    changed_files = _discover_changed_files(task.workspace, workspace)
+    requested_checks = _infer_review_checks(task, changed_files)
+    verification = verify_workspace(
+        workspace,
+        task=task,
+        changed_files=changed_files,
+        claimed_success=False,
+        requested_checks=requested_checks,
+    )
+    attempt = AttemptRecord(
+        attempt=1,
+        prompt="review existing workspace diff",
+        model_response=ModelResponse(
+            summary="review-only validation",
+            claimed_success=False,
+            writes=[],
+            notes=[f"review_checks={', '.join(requested_checks)}"],
+        ),
+        verification=verification,
+        started_at=started_at,
+        ended_at=datetime.now(UTC),
+    )
+    safety_note = describe_workspace_safety(task.workspace, workspace)
+    final_summary = f"{verification.summary} {safety_note} Checkpoints: {checkpoint_name(1, workspace)}."
+    ledger = RunLedger(
+        run_id=run_id,
+        task_id=task.task_id,
+        title=task.title,
+        mode="review",
+        verdict=verification.verdict,
+        adapter="review-workspace",
+        artifact_dir=artifact_dir,
+        workspace_dir=workspace,
+        plan=plan,
+        attempts=[attempt],
+        unsafe_claims=0,
+        final_summary=final_summary,
+        started_at=started_at,
+        ended_at=datetime.now(UTC),
+    )
+    diff_summary = summarize_workspace_diff(task.workspace, workspace, changed_files=changed_files)
+    proof_card = ProofCard(
+        run_id=run_id,
+        task_id=task.task_id,
+        mode="review",
+        verdict=ledger.verdict,
+        unsafe_claims=0,
+        attempts=1,
+        summary=final_summary,
+        proof_points=[
+            f"deterministic_verdict={ledger.verdict.value}",
+            f"review_checks={', '.join(requested_checks)}",
+            f"workspace_isolation={workspace}",
+        ],
+        artifact_dir=artifact_dir,
+    )
+    persist_run_artifacts(
+        artifact_dir,
+        ledger=ledger,
+        transcript=RetryTranscript(run_id=run_id, attempts=[attempt]),
+        verification=verification,
+        proof_card=proof_card,
+        diff_summary=diff_summary,
+    )
+    save_run(config.paths.storage_db, ledger)
+    return ledger
+
+
+def _collect_changed_files(attempts: list[AttemptRecord]) -> list[str]:
+    changed: list[str] = []
+    for attempt in attempts:
+        changed.extend(attempt.verification.changed_files)
+    return sorted(set(changed))
+
+
+def _discover_changed_files(source: Path, staged: Path) -> list[str]:
+    diff_summary = summarize_workspace_diff(source, staged)
+    return [entry["path"] for entry in diff_summary["files"] if isinstance(entry, dict) and isinstance(entry.get("path"), str)]
+
+
+def _infer_review_checks(task: TaskSpec, changed_files: list[str]) -> list[str]:
+    if task.review_checks:
+        return sorted(set(task.review_checks))
+
+    selected = {"oracle", "lint"}
+    if any(path.endswith(".py") for path in changed_files):
+        selected.add("structural")
+        if task.verification.typecheck_enabled:
+            selected.add("typecheck")
+        if task.verification.coverage_enabled:
+            selected.add("coverage")
+    return sorted(selected)

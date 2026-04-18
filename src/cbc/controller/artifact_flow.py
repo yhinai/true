@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from cbc.models import ProofCard, RetryTranscript, RunLedger, VerificationReport
+from cbc.review.ci import build_ci_report, render_ci_report
 from cbc.review.report import compose_review_report
 from cbc.storage.artifacts import write_json, write_markdown
 
@@ -14,13 +15,22 @@ def persist_run_artifacts(
     transcript: RetryTranscript,
     verification: VerificationReport,
     proof_card: ProofCard,
+    diff_summary: dict[str, object],
 ) -> None:
+    run_artifact = build_run_artifact(ledger, verification, diff_summary=diff_summary)
+    review_report = compose_review_report(run_artifact)
+    ci_report = build_ci_report(review_report)
+
     write_json(artifact_dir / "run_ledger.json", ledger.model_dump(mode="json"))
     write_json(artifact_dir / "retry_transcript.json", transcript.model_dump(mode="json"))
     write_json(artifact_dir / "verification_report.json", verification.model_dump(mode="json"))
-    write_json(artifact_dir / "run_artifact.json", build_run_artifact(ledger, verification))
-    write_json(artifact_dir / "review_report.json", compose_review_report(ledger.model_dump(mode="json")))
+    write_json(artifact_dir / "diff_summary.json", diff_summary)
+    write_json(artifact_dir / "run_artifact.json", run_artifact)
+    write_json(artifact_dir / "review_report.json", review_report)
+    write_json(artifact_dir / "merge_gate.json", review_report["summary"]["merge_gate"])
+    write_json(artifact_dir / "ci_report.json", ci_report)
     write_markdown(artifact_dir / "proof_card.md", render_proof_card(proof_card))
+    write_markdown(artifact_dir / "ci_report.md", render_ci_report(ci_report))
 
 
 def render_proof_card(card: ProofCard) -> str:
@@ -38,7 +48,12 @@ def render_proof_card(card: ProofCard) -> str:
     )
 
 
-def build_run_artifact(ledger: RunLedger, verification: VerificationReport) -> dict[str, object]:
+def build_run_artifact(
+    ledger: RunLedger,
+    verification: VerificationReport,
+    *,
+    diff_summary: dict[str, object],
+) -> dict[str, object]:
     return {
         "run_id": ledger.run_id,
         "task_id": ledger.task_id,
@@ -46,6 +61,7 @@ def build_run_artifact(ledger: RunLedger, verification: VerificationReport) -> d
         "mode": ledger.mode,
         "changed_files": verification.changed_files,
         "unsafe_claim": ledger.unsafe_claims > 0,
+        "diff": diff_summary,
         "verification": {
             "status": verification.verdict.value,
             "checks": [check.model_dump(mode="json") for check in verification.checks],

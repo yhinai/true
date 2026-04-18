@@ -8,6 +8,8 @@
 - Curated replay smoke comparison is reproducible from one command.
 - Treatment currently improves verified success rate on the checked-in replay subset.
 - A live `adapter: codex` lane now exists for end-to-end agent runs against the same verifier loop.
+- Review and CI can now validate an existing workspace diff through the same verifier core.
+- Python tasks now run a bounded structural check that can fail locally-valid but signature-broken changes.
 
 ## Evidence
 
@@ -15,13 +17,14 @@
 - benchmark: `./scripts/run_compare.sh`
 - python wrapper: `python3 scripts/run_compare.py`
 - proof card path is emitted after each `run`
+- review/CI artifact path is emitted after `review-workspace` and `ci`
 - live Codex task path: `./scripts/run_live_codex.sh`
 - live Codex compare path: `./scripts/run_live_compare.sh`
 
 ## Remaining Depth
 
-- deeper verification runners are present but intentionally lightweight and non-blocking
-- review/graph/API shells are implemented and can be deepened without moving trust logic
+- deeper verification runners are still intentionally lightweight and non-blocking outside the bounded structural path
+- review/graph/API shells are implemented and now emit diff-aware review and CI artifacts without moving trust logic
 - a checked-in live Codex benchmark lane now exists for calculator, title-case, and slug tasks
 - live benchmark configs can now pin lane-specific Codex runtime knobs in checked-in YAML
 - live task specs can also pin task-specific Codex runtime knobs in checked-in config

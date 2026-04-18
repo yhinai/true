@@ -27,12 +27,12 @@ Golden task:
 - `fixtures/oracle_tasks/calculator_bug/task.yaml`
 
 Current implementation:
-- real CLI for `run`, `compare`, `review`, and `api`
+- real CLI for `run`, `compare`, `review`, `review-workspace`, `ci`, and `api`
 - replay-backed fixtures for a reproducible smoke benchmark
 - Codex adapter wired through `codex exec --json --output-schema`
-- deterministic verification via pytest, shell oracles, and lightweight gates
+- deterministic verification via pytest, shell oracles, bounded structural checks, and lightweight gates
 - SQLite-backed run and benchmark index
-- proof cards, ledgers, compare reports, and scoreboard output
+- proof cards, ledgers, diff summaries, CI reports, compare reports, and scoreboard output
 
 Current benchmark honesty:
 - the default checked-in benchmark is a replay smoke benchmark, not a live Codex benchmark
@@ -76,4 +76,11 @@ Live Codex benchmark:
 
 ```bash
 ./scripts/run_live_compare.sh
+```
+
+Review/CI validation against an existing workspace diff:
+
+```bash
+PYTHONPATH=src python3 -m cbc.main review-workspace fixtures/oracle_tasks/calculator_bug/task.yaml /path/to/workspace
+PYTHONPATH=src python3 -m cbc.main ci fixtures/oracle_tasks/calculator_bug/task.yaml /path/to/workspace
 ```

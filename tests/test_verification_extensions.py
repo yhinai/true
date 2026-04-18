@@ -101,3 +101,41 @@ def test_verification_options_run_real_commands(tmp_path: Path) -> None:
     by_name = {check.name: check for check in report.checks}
     assert by_name["typecheck"].status.value == "passed"
     assert by_name["coverage"].status.value == "passed"
+
+
+def test_structural_check_catches_cross_file_signature_mismatch(tmp_path: Path) -> None:
+    (tmp_path / "helpers.py").write_text(
+        "def normalize(value: int) -> int:\n    return value + 1\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "main.py").write_text(
+        "from helpers import normalize\n\n"
+        "def entry(seed: int) -> int:\n"
+        "    return normalize(seed, 7)\n",
+        encoding="utf-8",
+    )
+
+    task = TaskSpec(
+        task_id="structural_mismatch",
+        title="Catch bounded structural mismatch",
+        prompt="noop",
+        workspace=tmp_path,
+        adapter="codex",
+        allowed_files=["main.py", "helpers.py"],
+        oracles=[OracleSpec(name="oracle", kind="python", command="-c \"print('ok')\"")],
+        tags=["python"],
+    )
+
+    report = verify_workspace(
+        tmp_path,
+        task=task,
+        changed_files=["main.py"],
+        claimed_success=True,
+    )
+
+    assert report.verdict.value == "FALSIFIED"
+    by_name = {check.name: check for check in report.checks}
+    assert by_name["structural"].status.value == "failed"
+    mismatches = by_name["structural"].details["mismatches"]
+    assert mismatches[0]["callee_function"] == "normalize"
+    assert mismatches[0]["kind"] == "too_many_positional"

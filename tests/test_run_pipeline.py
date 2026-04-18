@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from pathlib import Path
+import shutil
 
 from cbc.config import AppConfig, PathsConfig, RetryConfig
-from cbc.controller.orchestrator import resolve_codex_config, run_task
+from cbc.controller.orchestrator import resolve_codex_config, review_workspace, run_task
 from cbc.intake.normalize import load_task
+from cbc.review.ci import build_ci_report
 from cbc.review.report import compose_review_report_from_path
 from cbc.models import VerificationVerdict
 from cbc.api.store import get_run, list_runs
@@ -37,10 +39,13 @@ def test_treatment_retries_to_verified(tmp_path: Path) -> None:
     assert (ledger.artifact_dir / "proof_card.md").exists()
     assert (ledger.artifact_dir / "run_artifact.json").exists()
     assert (ledger.artifact_dir / "review_report.json").exists()
+    assert (ledger.artifact_dir / "merge_gate.json").exists()
+    assert (ledger.artifact_dir / "ci_report.json").exists()
 
     review_report = compose_review_report_from_path(ledger.artifact_dir / "run_ledger.json")
     assert review_report["run_id"] == ledger.run_id
     assert review_report["summary"]["verification"]["state"] == "VERIFIED"
+    assert review_report["summary"]["diff"]["total_files"] == 1
 
     runs = list_runs(tmp_path / "artifacts", limit=10)
     assert [run["run_id"] for run in runs] == [ledger.run_id]
@@ -65,7 +70,6 @@ def test_live_codex_task_spec_loads_without_replay_file() -> None:
     assert task.replay_file is None
     assert task.workspace == (REPO_ROOT / "fixtures/oracle_tasks/calculator_bug/workspace").resolve()
 
-
 def test_task_codex_config_overrides_app_defaults(tmp_path: Path) -> None:
     task = load_task(REPO_ROOT / "fixtures/oracle_tasks/calculator_bug_codex/task.yaml")
     config = build_test_config(tmp_path)
@@ -79,3 +83,27 @@ def test_task_codex_config_overrides_app_defaults(tmp_path: Path) -> None:
     assert resolved.sandbox == "workspace-write"
     assert resolved.skip_git_repo_check is True
     assert resolved.config_overrides == ['foo="bar"']
+
+
+def test_review_workspace_builds_ci_ready_artifacts(tmp_path: Path) -> None:
+    task = load_task(REPO_ROOT / "fixtures/oracle_tasks/calculator_bug/task.yaml")
+    reviewed_workspace = tmp_path / "reviewed"
+    shutil.copytree(task.workspace, reviewed_workspace)
+    (reviewed_workspace / "calculator.py").write_text(
+        "def add(a: int, b: int) -> int:\n    return a + b\n",
+        encoding="utf-8",
+    )
+
+    ledger = review_workspace(task, reviewed_workspace, config=build_test_config(tmp_path))
+
+    assert ledger.mode == "review"
+    assert ledger.verdict == VerificationVerdict.VERIFIED
+    assert len(ledger.attempts) == 1
+    assert (ledger.artifact_dir / "ci_report.json").exists()
+
+    review_report = compose_review_report_from_path(ledger.artifact_dir / "run_ledger.json")
+    assert review_report["summary"]["diff"]["total_files"] == 1
+    assert review_report["summary"]["merge_gate"]["verdict"] == "APPROVE"
+
+    ci_report = build_ci_report(review_report)
+    assert ci_report["exit_code"] == 0

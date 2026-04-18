@@ -9,9 +9,10 @@ from rich.table import Table
 from cbc.api.app import create_app
 from cbc.benchmark.local_runner import run_local_benchmark
 from cbc.controller.artifact_flow import render_proof_card
-from cbc.controller.orchestrator import run_task
+from cbc.controller.orchestrator import review_workspace, run_task
 from cbc.intake.normalize import load_task
 from cbc.models import ProofCard
+from cbc.review.ci import build_ci_report
 from cbc.review.merge_gate import compute_merge_gate
 from cbc.review.report import compose_review_report_from_path
 from cbc.review.summarize import summarize_run
@@ -78,6 +79,38 @@ def review_artifact(artifact_path: Path) -> None:
     console.print(f"Verification: {report['summary']['verification']['state']}")
     console.print(f"Merge gate: {report['summary']['merge_gate']['verdict']}")
     console.print(f"Risk: {report['summary']['risk']['risk_level']}")
+
+
+@app.command("review-workspace")
+def review_workspace_command(task_path: Path, workspace_path: Path) -> None:
+    task = load_task(task_path)
+    ledger = review_workspace(task, workspace_path)
+    report = compose_review_report_from_path(ledger.artifact_dir / "run_ledger.json")
+    console.print(f"Review workspace: {ledger.run_id}")
+    console.print(f"Verification: {report['summary']['verification']['state']}")
+    console.print(f"Merge gate: {report['summary']['merge_gate']['verdict']}")
+    console.print(f"Artifacts: {ledger.artifact_dir}")
+
+
+@app.command()
+def ci(task_path: Path, workspace_path: Path) -> None:
+    task = load_task(task_path)
+    ledger = review_workspace(task, workspace_path)
+    report = compose_review_report_from_path(ledger.artifact_dir / "run_ledger.json")
+    ci_report = build_ci_report(report)
+    console.print(f"CI verdict: {ci_report['merge_gate_verdict']}")
+    console.print(f"Verification: {ci_report['verification_state']}")
+    console.print(f"Artifacts: {ledger.artifact_dir}")
+    raise typer.Exit(code=int(ci_report["exit_code"]))
+
+
+@app.command("ci-artifact")
+def ci_artifact(artifact_path: Path) -> None:
+    report = compose_review_report_from_path(artifact_path)
+    ci_report = build_ci_report(report)
+    console.print(f"CI verdict: {ci_report['merge_gate_verdict']}")
+    console.print(f"Verification: {ci_report['verification_state']}")
+    raise typer.Exit(code=int(ci_report["exit_code"]))
 
 
 @app.command()
