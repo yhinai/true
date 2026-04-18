@@ -70,6 +70,8 @@ def _bootstrap_with_uv(argv: list[str], exc: ModuleNotFoundError) -> None:
             "--project",
             str(REPO_ROOT),
             "--frozen",
+            "--extra",
+            "dev",
             "python3",
             str(SCRIPT_PATH),
             *argv,

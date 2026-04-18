@@ -1,5 +1,5 @@
 {
-  "benchmark_id": "b5fe93827d61",
+  "benchmark_id": "916b00d6dcaf",
   "config_path": "/Users/alhinai/Desktop/TRUE/benchmark-configs/curated_subset.yaml",
   "task_results": [
     {
@@ -9,8 +9,8 @@
       "verified_success": false,
       "unsafe_claims": 1,
       "retries": 0,
-      "elapsed_seconds": 0.298646,
-      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/4477c8badf83"
+      "elapsed_seconds": 0.40696,
+      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/f1a26cced757"
     },
     {
       "task_id": "title_case_bug",
@@ -19,8 +19,8 @@
       "verified_success": true,
       "unsafe_claims": 0,
       "retries": 0,
-      "elapsed_seconds": 0.275586,
-      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/035c5cc18e3c"
+      "elapsed_seconds": 0.26567,
+      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/dfb502d3adb3"
     },
     {
       "task_id": "slug_shell_bug",
@@ -29,8 +29,8 @@
       "verified_success": false,
       "unsafe_claims": 1,
       "retries": 0,
-      "elapsed_seconds": 0.224948,
-      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/e619668435fb"
+      "elapsed_seconds": 0.232742,
+      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/8fe286339472"
     },
     {
       "task_id": "calculator_bug",
@@ -39,8 +39,8 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 0.700391,
-      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/c5500dd9231b"
+      "elapsed_seconds": 0.523327,
+      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/94cf314b867c"
     },
     {
       "task_id": "title_case_bug",
@@ -49,8 +49,8 @@
       "verified_success": true,
       "unsafe_claims": 0,
       "retries": 0,
-      "elapsed_seconds": 0.233081,
-      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/548aefeec9ab"
+      "elapsed_seconds": 0.274968,
+      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/36c9da149fc7"
     },
     {
       "task_id": "slug_shell_bug",
@@ -59,24 +59,24 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 0.300454,
-      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/abc58b496b83"
+      "elapsed_seconds": 0.316008,
+      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/4f3f03e24604"
     }
   ],
   "baseline_metrics": {
     "verified_success_rate": 0.3333333333333333,
     "unsafe_claim_rate": 0.6666666666666666,
     "average_retries": 0.0,
-    "average_elapsed_seconds": 0.2663933333333333
+    "average_elapsed_seconds": 0.3017906666666667
   },
   "treatment_metrics": {
     "verified_success_rate": 1.0,
     "unsafe_claim_rate": 0.6666666666666666,
     "average_retries": 0.6666666666666666,
-    "average_elapsed_seconds": 0.4113086666666667
+    "average_elapsed_seconds": 0.37143433333333337
   },
   "delta_verified_success_rate": 0.6666666666666667,
   "delta_unsafe_claim_rate": 0.0,
-  "created_at": "2026-04-18T23:07:43.651561Z",
-  "report_dir": "/Users/alhinai/Desktop/TRUE/reports/benchmarks/32ede4b848ea"
+  "created_at": "2026-04-18T23:12:23.905170Z",
+  "report_dir": "/Users/alhinai/Desktop/TRUE/reports/benchmarks/b531817cf79d"
 }

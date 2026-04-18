@@ -36,6 +36,6 @@ On the checked-in replay smoke benchmark, treatment outperforms baseline on Veri
 
 ```bash
 ./scripts/run_compare.sh
-uv run python scripts/run_compare.py
+python3 scripts/run_compare.py
 ./scripts/run_live_compare.sh
 ```

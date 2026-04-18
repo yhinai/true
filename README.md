@@ -48,10 +48,10 @@ Live Codex lane:
 Quick start:
 
 ```bash
-uv run pytest
+uv run --extra dev pytest
 ./scripts/run_compare.sh
 ./scripts/run_treatment.sh
-uv run python scripts/run_compare.py
+python3 scripts/run_compare.py
 ./scripts/run_live_codex.sh
 ./scripts/run_live_compare.sh
 ```

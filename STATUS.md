@@ -11,9 +11,9 @@
 
 ## Evidence
 
-- tests: `uv run pytest`
+- tests: `uv run --extra dev pytest`
 - benchmark: `./scripts/run_compare.sh`
-- python wrapper: `uv run python scripts/run_compare.py`
+- python wrapper: `python3 scripts/run_compare.py`
 - proof card path is emitted after each `run`
 - live Codex task path: `./scripts/run_live_codex.sh`
 - live Codex compare path: `./scripts/run_live_compare.sh`

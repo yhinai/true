@@ -3,7 +3,7 @@
 ## Verify The Repo
 
 ```bash
-uv run pytest
+uv run --extra dev pytest
 ```
 
 ## Run One Treatment Task
