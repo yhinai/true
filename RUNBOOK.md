@@ -24,6 +24,12 @@ uv run pytest
 ./scripts/run_compare.sh
 ```
 
+## Run The Live Codex Comparison
+
+```bash
+./scripts/run_live_compare.sh
+```
+
 ## Run One Live Codex Task
 
 ```bash
@@ -44,4 +50,4 @@ uv run cbc api
 
 ## Switching To Live Codex
 
-Task specs can set `adapter: codex` and omit replay behavior. The adapter in `src/cbc/model/codex_exec.py` uses `codex exec --json` plus a JSON output schema. A checked-in live task spec is available at `fixtures/oracle_tasks/calculator_bug_codex/task.yaml`.
+Task specs can set `adapter: codex` and omit replay behavior. The adapter in `src/cbc/model/codex_exec.py` uses `codex exec --json` plus a JSON output schema. Checked-in live task specs are available under `fixtures/oracle_tasks/*_codex/`, and a checked-in live comparison config is available at `benchmark-configs/live_codex_subset.yaml`.

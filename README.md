@@ -36,7 +36,9 @@ Current implementation:
 
 Current benchmark honesty:
 - the default checked-in benchmark is a replay smoke benchmark, not a live Codex benchmark
-- live Codex execution is supported through `adapter: codex`, but the checked-in curated subset uses replay tasks so it stays deterministic in CI and local smoke runs
+- live Codex execution is supported through `adapter: codex`
+- the checked-in curated subset stays replay-backed for deterministic CI and local smoke runs
+- a separate checked-in live suite is available at `benchmark-configs/live_codex_subset.yaml`
 
 Quick start:
 
@@ -46,6 +48,7 @@ uv run pytest
 ./scripts/run_treatment.sh
 uv run python scripts/run_compare.py
 ./scripts/run_live_codex.sh
+./scripts/run_live_compare.sh
 ```
 
 Key docs:
@@ -58,4 +61,10 @@ Live Codex task:
 
 ```bash
 ./scripts/run_live_codex.sh
+```
+
+Live Codex benchmark:
+
+```bash
+./scripts/run_live_compare.sh
 ```
