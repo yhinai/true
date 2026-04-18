@@ -1,68 +1,59 @@
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
-from .types import BenchmarkComparison, to_builtin
+from cbc.models import BenchmarkComparison
+from cbc.storage.artifacts import write_json, write_markdown
+
+try:
+    import matplotlib.pyplot as plt
+except ModuleNotFoundError:  # pragma: no cover - exercised in CLI smoke runs
+    plt = None
 
 
-def render_markdown_report(comparison: BenchmarkComparison) -> str:
-    baseline = comparison.baseline_metrics
-    treatment = comparison.treatment_metrics
-    delta = comparison.delta_metrics
-    lines = [
-        "# Correct by Construction Benchmark Comparison",
-        "",
-        f"- Run ID: `{comparison.run_id}`",
-        f"- Generated: `{comparison.generated_at}`",
-        "",
-        "## Metrics",
-        "",
-        "| Metric | Baseline | Treatment | Delta (Treatment - Baseline) |",
-        "|---|---:|---:|---:|",
-        "| Verified Success Rate | "
-        f"{baseline['verified_success_rate']:.4f} | "
-        f"{treatment['verified_success_rate']:.4f} | "
-        f"{delta['verified_success_rate_delta']:+.4f} |",
-        "| Unsafe Claim Rate | "
-        f"{baseline['unsafe_claim_rate']:.4f} | "
-        f"{treatment['unsafe_claim_rate']:.4f} | "
-        f"{delta['unsafe_claim_rate_delta']:+.4f} |",
-        "| Mean Duration (s) | "
-        f"{baseline['mean_duration_s']:.4f} | "
-        f"{treatment['mean_duration_s']:.4f} | "
-        f"{delta['mean_duration_s_delta']:+.4f} |",
-        "| Mean Retries | "
-        f"{baseline['mean_retries']:.4f} | "
-        f"{treatment['mean_retries']:.4f} | "
-        f"{delta['mean_retries_delta']:+.4f} |",
-        "",
-        "## Task Outcomes",
-        "",
-        "| Task ID | Baseline Verified | Treatment Verified | Baseline Unsafe | Treatment Unsafe |",
-        "|---|---:|---:|---:|---:|",
-    ]
+def save_benchmark_report(comparison: BenchmarkComparison) -> None:
+    comparison.report_dir.mkdir(parents=True, exist_ok=True)
+    write_json(comparison.report_dir / "comparison.json", comparison.model_dump(mode="json"))
+    write_markdown(comparison.report_dir / "comparison.md", render_benchmark_markdown(comparison))
+    render_scoreboard_chart(comparison, comparison.report_dir / "scoreboard.png")
 
-    baseline_by_task = {result.task_id: result for result in comparison.baseline_results}
-    treatment_by_task = {result.task_id: result for result in comparison.treatment_results}
-    for task_id in sorted(baseline_by_task):
-        b = baseline_by_task[task_id]
-        t = treatment_by_task[task_id]
-        lines.append(
-            f"| {task_id} | {int(b.verified)} | {int(t.verified)} | {int(b.unsafe_claim)} | {int(t.unsafe_claim)} |"
+
+def render_benchmark_markdown(comparison: BenchmarkComparison) -> str:
+    return (
+        "# Benchmark Comparison\n\n"
+        f"- Baseline verified success rate: `{comparison.baseline_metrics.verified_success_rate:.2f}`\n"
+        f"- Treatment verified success rate: `{comparison.treatment_metrics.verified_success_rate:.2f}`\n"
+        f"- Baseline unsafe claim rate: `{comparison.baseline_metrics.unsafe_claim_rate:.2f}`\n"
+        f"- Treatment unsafe claim rate: `{comparison.treatment_metrics.unsafe_claim_rate:.2f}`\n"
+        f"- Delta verified success rate: `{comparison.delta_verified_success_rate:.2f}`\n"
+        f"- Delta unsafe claim rate: `{comparison.delta_unsafe_claim_rate:.2f}`\n"
+    )
+
+
+def render_scoreboard_chart(comparison: BenchmarkComparison, output: Path) -> None:
+    if plt is None:
+        write_markdown(
+            output.with_suffix(".txt"),
+            "matplotlib is not installed; scoreboard chart was skipped.\n",
         )
-
-    return "\n".join(lines) + "\n"
-
-
-def write_comparison_json(comparison: BenchmarkComparison, target_path: Path) -> str:
-    target_path.parent.mkdir(parents=True, exist_ok=True)
-    target_path.write_text(json.dumps(to_builtin(comparison), indent=2), encoding="utf-8")
-    return str(target_path.resolve())
-
-
-def write_markdown_report(comparison: BenchmarkComparison, target_path: Path) -> str:
-    target_path.parent.mkdir(parents=True, exist_ok=True)
-    target_path.write_text(render_markdown_report(comparison), encoding="utf-8")
-    return str(target_path.resolve())
-
+        return
+    fig, ax = plt.subplots(figsize=(6, 4))
+    labels = ["Verified Success", "Unsafe Claims"]
+    baseline = [
+        comparison.baseline_metrics.verified_success_rate,
+        comparison.baseline_metrics.unsafe_claim_rate,
+    ]
+    treatment = [
+        comparison.treatment_metrics.verified_success_rate,
+        comparison.treatment_metrics.unsafe_claim_rate,
+    ]
+    x = range(len(labels))
+    ax.bar([i - 0.15 for i in x], baseline, width=0.3, label="baseline")
+    ax.bar([i + 0.15 for i in x], treatment, width=0.3, label="treatment")
+    ax.set_xticks(list(x), labels)
+    ax.set_ylim(0, 1)
+    ax.legend()
+    ax.set_title("Correct by Construction scoreboard")
+    fig.tight_layout()
+    fig.savefig(output)
+    plt.close(fig)

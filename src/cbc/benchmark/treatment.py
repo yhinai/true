@@ -1,32 +1,19 @@
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Callable
-
-from .replay import run_task
-from .types import BenchmarkTaskResult, TaskDefinition
-
-TaskOrchestrator = Callable[..., object]
+from cbc.config import AppConfig
+from cbc.controller.orchestrator import run_task
+from cbc.models import BenchmarkTaskResult, TaskSpec
 
 
-def run_treatment_suite(
-    tasks: list[TaskDefinition],
-    max_retries: int = 2,
-    timeout_s: int = 30,
-    orchestrator: TaskOrchestrator | None = None,
-    artifact_dir: Path | None = None,
-) -> list[BenchmarkTaskResult]:
-    results: list[BenchmarkTaskResult] = []
-    for task in tasks:
-        results.append(
-            run_task(
-                task=task,
-                mode="treatment",
-                max_retries=max_retries,
-                timeout_s=timeout_s,
-                orchestrator=orchestrator,
-                artifact_dir=artifact_dir,
-            )
-        )
-    return results
-
+def run_treatment(task: TaskSpec, config: AppConfig) -> BenchmarkTaskResult:
+    ledger = run_task(task, mode="treatment", config=config)
+    return BenchmarkTaskResult(
+        task_id=task.task_id,
+        mode="treatment",
+        verdict=ledger.verdict,
+        verified_success=ledger.verdict.value == "VERIFIED",
+        unsafe_claims=ledger.unsafe_claims,
+        retries=max(len(ledger.attempts) - 1, 0),
+        elapsed_seconds=ledger.elapsed_seconds,
+        artifact_dir=ledger.artifact_dir,
+    )

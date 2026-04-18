@@ -1,0 +1,51 @@
+# Specification
+
+## Product Thesis
+
+Codex is the proposal engine, not the source of trust. Trust comes from deterministic verification, staged execution, bounded retries, and saved proof artifacts.
+
+## Core Loop
+
+1. Load a task spec from `fixtures/oracle_tasks/*/task.yaml` or another compatible task file.
+2. Build a plan artifact with allowed files, required checks, and doubt points.
+3. Stage the task workspace into a temp copy.
+4. Run either the replay adapter or the Codex CLI adapter.
+5. Apply file writes inside the allowed scope.
+6. Run deterministic verification.
+7. If verification fails and budget remains, feed the failure evidence back into the next attempt.
+8. Emit `VERIFIED`, `FALSIFIED`, or `UNPROVEN` plus artifacts.
+
+## Trust Boundaries
+
+- The model adapter never certifies correctness.
+- Verification logic lives under [src/cbc/verify](/Users/alhinai/Desktop/TRUE/src/cbc/verify).
+- Workspace safety lives under [src/cbc/workspace](/Users/alhinai/Desktop/TRUE/src/cbc/workspace).
+- Benchmarks use the same orchestrator and verifier as single runs.
+
+## Implemented Surfaces
+
+- CLI: [src/cbc/main.py](/Users/alhinai/Desktop/TRUE/src/cbc/main.py)
+- API: [src/cbc/api/app.py](/Users/alhinai/Desktop/TRUE/src/cbc/api/app.py)
+- Benchmark runner: [src/cbc/benchmark/compare.py](/Users/alhinai/Desktop/TRUE/src/cbc/benchmark/compare.py)
+- Review shell: [src/cbc/review](/Users/alhinai/Desktop/TRUE/src/cbc/review)
+
+## Artifact Contract
+
+Each run saves:
+- `run_ledger.json`
+- `retry_transcript.json`
+- `verification_report.json`
+- `proof_card.md`
+
+Each benchmark comparison saves:
+- `comparison.json`
+- `comparison.md`
+- `scoreboard.png` when matplotlib is installed, otherwise a text note
+
+## Phase Coverage
+
+- Phase 0: repo skeleton, README, adapter entry points
+- Phase 1: truthful loop, staged workspace, proof artifacts, unsafe-claim detection
+- Phase 1.5: curated A/B comparison, metrics, compare report
+- Phase 2: real file-backed patching, scope guard, workspace safety
+- Phase 3-10: thin but working extension seams for deeper verification, review, graph checks, multi-role modules, and API surface

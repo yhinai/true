@@ -1,0 +1,21 @@
+task_id: title_case_bug
+title: Fix title casing helper
+prompt: |
+  normalize_title should capitalize each word in the incoming title.
+  Update only formatter.py so that the test passes.
+workspace: workspace
+allowed_files:
+  - formatter.py
+required_checks:
+  - pytest
+doubt_points:
+  - Avoid touching the test.
+oracles:
+  - name: pytest
+    kind: pytest
+    command: -q
+adapter: replay
+replay_file: replay.json
+retry_budget: 2
+tags:
+  - python

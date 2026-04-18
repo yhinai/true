@@ -1,58 +1,63 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
 
-from .store import get_run, list_benchmarks, list_runs
+from fastapi import APIRouter
 
-try:
-    from fastapi import APIRouter, HTTPException, Query
-except Exception:  # pragma: no cover - exercised when fastapi is installed
-    APIRouter = None  # type: ignore[assignment]
-    HTTPException = RuntimeError  # type: ignore[assignment]
-    Query = None  # type: ignore[assignment]
+from cbc.api.store import get_run, list_benchmarks, list_runs
+from cbc.config import DEFAULT_CONFIG
+from cbc.storage.db import connect
+
+router = APIRouter()
 
 
-def health_payload() -> dict[str, str]:
+@router.get("/health")
+def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-def runs_payload(artifacts_root: Path | str, limit: int = 50) -> dict[str, Any]:
-    return {"runs": list_runs(artifacts_root, limit=limit)}
+@router.get("/runs")
+def runs() -> list[dict[str, str]]:
+    with connect(DEFAULT_CONFIG.paths.storage_db) as connection:
+        rows = connection.execute("SELECT run_id, task_id, mode, verdict, artifact_dir, created_at FROM runs ORDER BY created_at DESC").fetchall()
+    return [
+        {
+            "run_id": row[0],
+            "task_id": row[1],
+            "mode": row[2],
+            "verdict": row[3],
+            "artifact_dir": row[4],
+            "created_at": row[5],
+        }
+        for row in rows
+    ]
 
 
-def run_payload(artifacts_root: Path | str, run_id: str) -> dict[str, Any] | None:
-    return get_run(artifacts_root, run_id=run_id)
+@router.get("/benchmarks")
+def benchmarks() -> list[dict[str, str]]:
+    with connect(DEFAULT_CONFIG.paths.storage_db) as connection:
+        rows = connection.execute(
+            "SELECT benchmark_id, report_dir, delta_verified_success_rate, delta_unsafe_claim_rate, created_at FROM benchmarks ORDER BY created_at DESC"
+        ).fetchall()
+    return [
+        {
+            "benchmark_id": row[0],
+            "report_dir": row[1],
+            "delta_verified_success_rate": row[2],
+            "delta_unsafe_claim_rate": row[3],
+            "created_at": row[4],
+        }
+        for row in rows
+    ]
 
 
-def benchmarks_payload(artifacts_root: Path | str, limit: int = 50) -> dict[str, Any]:
-    return {"benchmarks": list_benchmarks(artifacts_root, limit=limit)}
+def runs_payload(root: Path, limit: int = 50) -> dict[str, list[dict[str, object]]]:
+    return {"runs": list_runs(root, limit=limit)}
 
 
-def build_router(artifacts_root: Path | str):
-    if APIRouter is None:
-        raise RuntimeError("fastapi is not installed; install fastapi to enable HTTP routes.")
+def run_payload(root: Path, run_id: str) -> dict[str, object] | None:
+    return get_run(root, run_id)
 
-    root = Path(artifacts_root)
-    router = APIRouter()
 
-    @router.get("/healthz")
-    def healthz() -> dict[str, str]:
-        return health_payload()
-
-    @router.get("/runs")
-    def runs(limit: int = Query(default=50, ge=1, le=200)) -> dict[str, Any]:
-        return runs_payload(root, limit=limit)
-
-    @router.get("/runs/{run_id}")
-    def run_detail(run_id: str) -> dict[str, Any]:
-        payload = run_payload(root, run_id=run_id)
-        if payload is None:
-            raise HTTPException(status_code=404, detail=f"Run '{run_id}' not found.")
-        return payload
-
-    @router.get("/benchmarks")
-    def benchmarks(limit: int = Query(default=50, ge=1, le=200)) -> dict[str, Any]:
-        return benchmarks_payload(root, limit=limit)
-
-    return router
+def benchmarks_payload(root: Path, limit: int = 50) -> dict[str, list[dict[str, object]]]:
+    return {"benchmarks": list_benchmarks(root, limit=limit)}

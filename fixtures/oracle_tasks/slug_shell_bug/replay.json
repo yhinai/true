@@ -1,0 +1,22 @@
+[
+  {
+    "summary": "I lowercased the string but forgot to insert hyphens.",
+    "claimed_success": true,
+    "writes": [
+      {
+        "path": "app.py",
+        "content": "def render_slug(value: str) -> str:\n    return value.lower()\n"
+      }
+    ]
+  },
+  {
+    "summary": "I normalized the slug by lowercasing and replacing spaces with hyphens.",
+    "claimed_success": true,
+    "writes": [
+      {
+        "path": "app.py",
+        "content": "def render_slug(value: str) -> str:\n    return value.lower().replace(' ', '-')\n"
+      }
+    ]
+  }
+]

@@ -1,0 +1,6 @@
+__pycache__/
+.pytest_cache/
+*.pyc
+artifacts/runs/
+artifacts/cbc.sqlite3
+reports/benchmarks/

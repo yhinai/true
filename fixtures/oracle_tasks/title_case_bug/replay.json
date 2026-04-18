@@ -1,0 +1,12 @@
+[
+  {
+    "summary": "I fixed normalize_title by title-casing each word.",
+    "claimed_success": true,
+    "writes": [
+      {
+        "path": "formatter.py",
+        "content": "def normalize_title(value: str) -> str:\n    return value.title()\n"
+      }
+    ]
+  }
+]

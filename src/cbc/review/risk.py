@@ -2,39 +2,38 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
+from cbc.models import ReviewReport, RunLedger
 
-def summarize_risk(
-    diff_summary: Mapping[str, Any], verification_summary: Mapping[str, Any]
-) -> dict[str, Any]:
-    file_count = int(diff_summary.get("file_count", 0) or 0)
-    high_risk_files = diff_summary.get("high_risk_files", [])
-    failed_checks = verification_summary.get("failed_checks", [])
-    unsafe_claim = bool(verification_summary.get("unsafe_claim", False))
+
+def build_risk_summary(ledger: RunLedger) -> list[str]:
+    risks = []
+    if ledger.unsafe_claims:
+        risks.append("unsafe claim detected before deterministic verification passed")
+    if ledger.verdict.value != "VERIFIED":
+        risks.append("deterministic verification did not end in VERIFIED")
+    return risks
+
+
+def summarize_risk(diff_summary: Mapping[str, Any], verification_summary: Mapping[str, Any]) -> dict[str, Any]:
+    state = str(verification_summary.get("state", "UNPROVEN")).upper()
+    failed = verification_summary.get("failing_checks", [])
+    total_files = int(diff_summary.get("total_files", 0))
+    if state == "FALSIFIED":
+        level = "CRITICAL" if failed else "HIGH"
+    elif state == "UNPROVEN":
+        level = "MEDIUM"
+    elif total_files > 5:
+        level = "MEDIUM"
+    else:
+        level = "LOW"
 
     reasons: list[str] = []
-    risk_level = "LOW"
+    if failed:
+        reasons.append(f"{len(failed)} failing deterministic checks")
+    if total_files:
+        reasons.append(f"{total_files} changed files")
 
-    if file_count > 25:
-        risk_level = "HIGH"
-        reasons.append(f"Large patch touches {file_count} files.")
-    elif file_count > 10:
-        risk_level = "MEDIUM"
-        reasons.append(f"Medium-size patch touches {file_count} files.")
-
-    if high_risk_files:
-        if risk_level in {"LOW", "MEDIUM"}:
-            risk_level = "HIGH"
-        reasons.append(f"Touches trust-sensitive paths: {', '.join(sorted(set(high_risk_files)))}.")
-
-    if failed_checks:
-        risk_level = "HIGH"
-        reasons.append(f"Deterministic checks failed: {', '.join(failed_checks)}.")
-
-    if unsafe_claim:
-        risk_level = "CRITICAL"
-        reasons.append("Unsafe completion claim recorded in verification artifacts.")
-
-    if not reasons:
-        reasons.append("No elevated risk signals in diff or verification artifacts.")
-
-    return {"risk_level": risk_level, "reasons": reasons}
+    return {
+        "risk_level": level,
+        "reasons": reasons,
+    }

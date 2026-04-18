@@ -1,0 +1,253 @@
+{
+  "run_id": "1018cf22170d",
+  "attempts": [
+    {
+      "attempt": 1,
+      "prompt": "You are the Coder role inside a verification-first harness.\nReturn JSON that matches the provided schema exactly.\nOnly write files inside the allowed scope.\n\nTask:\nThe add function in calculator.py returns the wrong result.\nUpdate only calculator.py so that the tests pass.\n\n\nAllowed files: calculator.py\nRequired checks: pytest\nDoubt points: Keep the fix minimal.",
+      "evidence": null,
+      "model_response": {
+        "summary": "I updated the function, but I kept the same subtraction logic by mistake.",
+        "claimed_success": true,
+        "writes": [
+          {
+            "path": "calculator.py",
+            "content": "def add(a: int, b: int) -> int:\n    return a - b\n",
+            "executable": false
+          }
+        ],
+        "notes": [
+          "This first attempt should still fail the oracle."
+        ]
+      },
+      "verification": {
+        "verdict": "FALSIFIED",
+        "checks": [
+          {
+            "name": "pytest",
+            "command": "python3 -m pytest -q",
+            "status": "failed",
+            "exit_code": 1,
+            "stdout": "F                                                                        [100%]\n=================================== FAILURES ===================================\n___________________________________ test_add ___________________________________\n\n    def test_add() -> None:\n>       assert add(2, 3) == 5\nE       assert -1 == 5\nE        +  where -1 = add(2, 3)\n\ntest_calculator.py:5: AssertionError\n=========================== short test summary info ============================\nFAILED test_calculator.py::test_add - assert -1 == 5\n1 failed in 0.02s\n",
+            "stderr": "",
+            "duration_seconds": 0.2559592499746941,
+            "details": {}
+          },
+          {
+            "name": "lint",
+            "command": "python3 -m compileall .",
+            "status": "passed",
+            "exit_code": 0,
+            "stdout": "Listing '.'...\nListing './.pytest_cache'...\nListing './.pytest_cache/v'...\nListing './.pytest_cache/v/cache'...\nCompiling './calculator.py'...\nCompiling './test_calculator.py'...\n",
+            "stderr": "",
+            "duration_seconds": 0.04567204200429842,
+            "details": {}
+          },
+          {
+            "name": "typecheck",
+            "command": "disabled",
+            "status": "skipped",
+            "exit_code": null,
+            "stdout": "Type checking is opt-in for this minimal build.",
+            "stderr": "",
+            "duration_seconds": 0.0,
+            "details": {}
+          },
+          {
+            "name": "coverage",
+            "command": "disabled",
+            "status": "skipped",
+            "exit_code": null,
+            "stdout": "Coverage is opt-in for this minimal build.",
+            "stderr": "",
+            "duration_seconds": 0.0,
+            "details": {}
+          },
+          {
+            "name": "contracts",
+            "command": "static inspection",
+            "status": "skipped",
+            "exit_code": null,
+            "stdout": "Contracts are supported as an optional deeper verification layer.",
+            "stderr": "",
+            "duration_seconds": 0.0,
+            "details": {}
+          },
+          {
+            "name": "crosshair",
+            "command": "disabled",
+            "status": "skipped",
+            "exit_code": null,
+            "stdout": "Not implemented",
+            "stderr": "",
+            "duration_seconds": 0.0,
+            "details": {}
+          },
+          {
+            "name": "hypothesis",
+            "command": "disabled",
+            "status": "skipped",
+            "exit_code": null,
+            "stdout": "Not implemented",
+            "stderr": "",
+            "duration_seconds": 0.0,
+            "details": {}
+          },
+          {
+            "name": "mutation",
+            "command": "disabled",
+            "status": "skipped",
+            "exit_code": null,
+            "stdout": "Mutation testing is intentionally cut by default.",
+            "stderr": "",
+            "duration_seconds": 0.0,
+            "details": {}
+          }
+        ],
+        "summary": "Deterministic verification failed or stayed unproven.",
+        "unsafe_claim_detected": true,
+        "counterexample": "F                                                                        [100%]\n=================================== FAILURES ===================================\n___________________________________ test_add ___________________________________\n\n    def test_add() -> None:\n>       assert add(2, 3) == 5\nE       assert -1 == 5\nE        +  where -1 = add(2, 3)\n\ntest_calculator.py:5: AssertionError\n=========================== short test summary info ============================\nFAILED test_calculator.py::test_add - assert -1 == 5\n1 failed in 0.02s",
+        "changed_files": [
+          "calculator.py"
+        ],
+        "failure_mode_ledger": [
+          "pytest: deterministic verifier found a failing oracle or gate"
+        ],
+        "verification_ledger": [
+          "pytest: failed",
+          "lint: passed",
+          "typecheck: skipped",
+          "coverage: skipped",
+          "contracts: skipped",
+          "crosshair: skipped",
+          "hypothesis: skipped",
+          "mutation: skipped",
+          "contract_graph_nodes=1"
+        ]
+      },
+      "started_at": "2026-04-18T22:42:41.156400Z",
+      "ended_at": "2026-04-18T22:42:41.460217Z"
+    },
+    {
+      "attempt": 2,
+      "prompt": "You are the Coder role inside a verification-first harness.\nReturn JSON that matches the provided schema exactly.\nOnly write files inside the allowed scope.\n\nTask:\nThe add function in calculator.py returns the wrong result.\nUpdate only calculator.py so that the tests pass.\n\n\nAllowed files: calculator.py\nRequired checks: pytest\nDoubt points: Keep the fix minimal.\n\nRetry evidence from the deterministic verifier:\npytest failed:\nF                                                                        [100%]\n=================================== FAILURES ===================================\n___________________________________ test_add ___________________________________\n\n    def test_add() -> None:\n>       assert add(2, 3) == 5\nE       assert -1 == 5\nE        +  where -1 = add(2, 3)\n\ntest_calculator.py:5: AssertionError\n=========================== short test summary info ============================\nFAILED test_calculator.py::test_add - assert -1 == 5\n1 failed in 0.02s\n\nCounterexample: F                                                                        [100%]\n=================================== FAILURES ===================================\n___________________________________ test_add ___________________________________\n\n    def test_add() -> None:\n>       assert add(2, 3) == 5\nE       assert -1 == 5\nE        +  where -1 = add(2, 3)\n\ntest_calculator.py:5: AssertionError\n=========================== short test summary info ============================\nFAILED test_calculator.py::test_add - assert -1 == 5\n1 failed in 0.02s",
+      "evidence": "pytest failed:\nF                                                                        [100%]\n=================================== FAILURES ===================================\n___________________________________ test_add ___________________________________\n\n    def test_add() -> None:\n>       assert add(2, 3) == 5\nE       assert -1 == 5\nE        +  where -1 = add(2, 3)\n\ntest_calculator.py:5: AssertionError\n=========================== short test summary info ============================\nFAILED test_calculator.py::test_add - assert -1 == 5\n1 failed in 0.02s\n\nCounterexample: F                                                                        [100%]\n=================================== FAILURES ===================================\n___________________________________ test_add ___________________________________\n\n    def test_add() -> None:\n>       assert add(2, 3) == 5\nE       assert -1 == 5\nE        +  where -1 = add(2, 3)\n\ntest_calculator.py:5: AssertionError\n=========================== short test summary info ============================\nFAILED test_calculator.py::test_add - assert -1 == 5\n1 failed in 0.02s",
+      "model_response": {
+        "summary": "I corrected add() to perform addition.",
+        "claimed_success": true,
+        "writes": [
+          {
+            "path": "calculator.py",
+            "content": "def add(a: int, b: int) -> int:\n    return a + b\n",
+            "executable": false
+          }
+        ],
+        "notes": []
+      },
+      "verification": {
+        "verdict": "VERIFIED",
+        "checks": [
+          {
+            "name": "pytest",
+            "command": "python3 -m pytest -q",
+            "status": "passed",
+            "exit_code": 0,
+            "stdout": ".                                                                        [100%]\n1 passed in 0.01s\n",
+            "stderr": "",
+            "duration_seconds": 0.2681332500069402,
+            "details": {}
+          },
+          {
+            "name": "lint",
+            "command": "python3 -m compileall .",
+            "status": "passed",
+            "exit_code": 0,
+            "stdout": "Listing '.'...\nListing './.pytest_cache'...\nListing './.pytest_cache/v'...\nListing './.pytest_cache/v/cache'...\nCompiling './calculator.py'...\nCompiling './test_calculator.py'...\n",
+            "stderr": "",
+            "duration_seconds": 0.05647845898056403,
+            "details": {}
+          },
+          {
+            "name": "typecheck",
+            "command": "disabled",
+            "status": "skipped",
+            "exit_code": null,
+            "stdout": "Type checking is opt-in for this minimal build.",
+            "stderr": "",
+            "duration_seconds": 0.0,
+            "details": {}
+          },
+          {
+            "name": "coverage",
+            "command": "disabled",
+            "status": "skipped",
+            "exit_code": null,
+            "stdout": "Coverage is opt-in for this minimal build.",
+            "stderr": "",
+            "duration_seconds": 0.0,
+            "details": {}
+          },
+          {
+            "name": "contracts",
+            "command": "static inspection",
+            "status": "skipped",
+            "exit_code": null,
+            "stdout": "Contracts are supported as an optional deeper verification layer.",
+            "stderr": "",
+            "duration_seconds": 0.0,
+            "details": {}
+          },
+          {
+            "name": "crosshair",
+            "command": "disabled",
+            "status": "skipped",
+            "exit_code": null,
+            "stdout": "Not implemented",
+            "stderr": "",
+            "duration_seconds": 0.0,
+            "details": {}
+          },
+          {
+            "name": "hypothesis",
+            "command": "disabled",
+            "status": "skipped",
+            "exit_code": null,
+            "stdout": "Not implemented",
+            "stderr": "",
+            "duration_seconds": 0.0,
+            "details": {}
+          },
+          {
+            "name": "mutation",
+            "command": "disabled",
+            "status": "skipped",
+            "exit_code": null,
+            "stdout": "Mutation testing is intentionally cut by default.",
+            "stderr": "",
+            "duration_seconds": 0.0,
+            "details": {}
+          }
+        ],
+        "summary": "All deterministic checks passed.",
+        "unsafe_claim_detected": false,
+        "counterexample": null,
+        "changed_files": [
+          "calculator.py"
+        ],
+        "failure_mode_ledger": [],
+        "verification_ledger": [
+          "pytest: passed",
+          "lint: passed",
+          "typecheck: skipped",
+          "coverage: skipped",
+          "contracts: skipped",
+          "crosshair: skipped",
+          "hypothesis: skipped",
+          "mutation: skipped",
+          "contract_graph_nodes=1"
+        ]
+      },
+      "started_at": "2026-04-18T22:42:41.156400Z",
+      "ended_at": "2026-04-18T22:42:41.785931Z"
+    }
+  ]
+}

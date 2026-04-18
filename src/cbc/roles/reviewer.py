@@ -1,20 +1,19 @@
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Any, Mapping
-
-from cbc.review.artifacts import read_json
-from cbc.review.report import compose_review_report
+from cbc.models import ReviewReport, RunLedger, VerificationVerdict
 
 
-def review_artifact(run_artifact: Mapping[str, Any]) -> dict[str, Any]:
-    """Role facade for Phase 6 review mode."""
-    return compose_review_report(run_artifact)
-
-
-def review_artifact_path(path: Path | str) -> dict[str, Any]:
-    artifact_path = Path(path)
-    run_artifact = read_json(artifact_path)
-    report = review_artifact(run_artifact)
-    report["artifact_path"] = str(artifact_path.resolve())
-    return report
+def build_review_report(ledger: RunLedger) -> ReviewReport:
+    if ledger.verdict == VerificationVerdict.VERIFIED:
+        verdict = "APPROVE"
+    elif ledger.unsafe_claims:
+        verdict = "UNSAFE"
+    else:
+        verdict = "NEEDS_CHANGES"
+    risks = [attempt.verification.summary for attempt in ledger.attempts if attempt.verification.verdict != VerificationVerdict.VERIFIED]
+    return ReviewReport(
+        verdict=verdict,
+        summary=ledger.final_summary,
+        risks=risks,
+        supporting_checks=ledger.plan.required_checks,
+    )

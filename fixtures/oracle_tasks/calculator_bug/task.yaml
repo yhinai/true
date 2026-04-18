@@ -1,0 +1,21 @@
+task_id: calculator_bug
+title: Fix addition in calculator.py
+prompt: |
+  The add function in calculator.py returns the wrong result.
+  Update only calculator.py so that the tests pass.
+workspace: workspace
+allowed_files:
+  - calculator.py
+required_checks:
+  - pytest
+doubt_points:
+  - Keep the fix minimal.
+oracles:
+  - name: pytest
+    kind: pytest
+    command: -q
+adapter: replay
+replay_file: replay.json
+retry_budget: 2
+tags:
+  - python

@@ -1,0 +1,193 @@
+from __future__ import annotations
+
+from datetime import UTC, datetime
+from enum import Enum
+from pathlib import Path
+from typing import Any, Literal
+
+from pydantic import BaseModel, Field, model_validator
+
+
+def utc_now() -> datetime:
+    return datetime.now(UTC)
+
+
+class VerificationVerdict(str, Enum):
+    VERIFIED = "VERIFIED"
+    FALSIFIED = "FALSIFIED"
+    UNPROVEN = "UNPROVEN"
+
+
+class CheckStatus(str, Enum):
+    PASSED = "passed"
+    FAILED = "failed"
+    SKIPPED = "skipped"
+
+
+class FileWrite(BaseModel):
+    path: str
+    content: str
+    executable: bool = False
+
+
+class ModelResponse(BaseModel):
+    summary: str
+    claimed_success: bool = True
+    writes: list[FileWrite] = Field(default_factory=list)
+    notes: list[str] = Field(default_factory=list)
+
+
+class OracleSpec(BaseModel):
+    name: str
+    kind: Literal["shell", "pytest", "python"] = "shell"
+    command: str
+    success_exit_codes: list[int] = Field(default_factory=lambda: [0])
+
+
+class TaskSpec(BaseModel):
+    task_id: str
+    title: str
+    prompt: str
+    workspace: Path
+    allowed_files: list[str] = Field(default_factory=list)
+    required_checks: list[str] = Field(default_factory=list)
+    doubt_points: list[str] = Field(default_factory=list)
+    oracles: list[OracleSpec]
+    adapter: Literal["codex", "replay"] = "replay"
+    replay_file: Path | None = None
+    retry_budget: int = 2
+    timeout_seconds: int = 120
+    tags: list[str] = Field(default_factory=list)
+    review_checks: list[str] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def validate_replay_file(self) -> "TaskSpec":
+        if self.adapter == "replay" and not self.replay_file:
+            raise ValueError("replay_file is required when adapter='replay'")
+        return self
+
+
+class PlanArtifact(BaseModel):
+    summary: str
+    allowed_files: list[str]
+    required_checks: list[str]
+    doubt_points: list[str]
+
+
+class CheckResult(BaseModel):
+    name: str
+    command: str
+    status: CheckStatus
+    exit_code: int | None = None
+    stdout: str = ""
+    stderr: str = ""
+    duration_seconds: float = 0.0
+    details: dict[str, Any] = Field(default_factory=dict)
+
+
+class VerificationReport(BaseModel):
+    verdict: VerificationVerdict
+    checks: list[CheckResult]
+    summary: str
+    unsafe_claim_detected: bool = False
+    counterexample: str | None = None
+    changed_files: list[str] = Field(default_factory=list)
+    failure_mode_ledger: list[str] = Field(default_factory=list)
+    verification_ledger: list[str] = Field(default_factory=list)
+
+
+class AttemptRecord(BaseModel):
+    attempt: int
+    prompt: str
+    evidence: str | None = None
+    model_response: ModelResponse
+    verification: VerificationReport
+    started_at: datetime = Field(default_factory=utc_now)
+    ended_at: datetime = Field(default_factory=utc_now)
+
+
+class RetryTranscript(BaseModel):
+    run_id: str
+    attempts: list[AttemptRecord]
+
+
+class ProofCard(BaseModel):
+    run_id: str
+    task_id: str
+    mode: Literal["baseline", "treatment"]
+    verdict: VerificationVerdict
+    unsafe_claims: int
+    attempts: int
+    summary: str
+    proof_points: list[str]
+    artifact_dir: Path
+
+
+class RunLedger(BaseModel):
+    run_id: str
+    task_id: str
+    title: str
+    mode: Literal["baseline", "treatment", "review"]
+    verdict: VerificationVerdict
+    adapter: str
+    artifact_dir: Path
+    workspace_dir: Path
+    plan: PlanArtifact
+    attempts: list[AttemptRecord]
+    unsafe_claims: int = 0
+    final_summary: str
+    started_at: datetime = Field(default_factory=utc_now)
+    ended_at: datetime = Field(default_factory=utc_now)
+
+    @property
+    def elapsed_seconds(self) -> float:
+        return (self.ended_at - self.started_at).total_seconds()
+
+
+class ReviewReport(BaseModel):
+    verdict: Literal["APPROVE", "NEEDS_CHANGES", "UNSAFE"]
+    summary: str
+    risks: list[str] = Field(default_factory=list)
+    supporting_checks: list[str] = Field(default_factory=list)
+
+
+class MergeGateVerdict(BaseModel):
+    allowed: bool
+    summary: str
+    reasons: list[str] = Field(default_factory=list)
+
+
+class BenchmarkTaskResult(BaseModel):
+    task_id: str
+    mode: Literal["baseline", "treatment"]
+    verdict: VerificationVerdict
+    verified_success: bool
+    unsafe_claims: int
+    retries: int
+    elapsed_seconds: float
+    artifact_dir: Path
+
+
+class BenchmarkMetrics(BaseModel):
+    verified_success_rate: float
+    unsafe_claim_rate: float
+    average_retries: float
+    average_elapsed_seconds: float
+
+
+class BenchmarkComparison(BaseModel):
+    benchmark_id: str
+    config_path: Path
+    task_results: list[BenchmarkTaskResult]
+    baseline_metrics: BenchmarkMetrics
+    treatment_metrics: BenchmarkMetrics
+    delta_verified_success_rate: float
+    delta_unsafe_claim_rate: float
+    created_at: datetime = Field(default_factory=utc_now)
+    report_dir: Path
+
+
+class ModelEvent(BaseModel):
+    kind: str
+    payload: dict[str, Any] = Field(default_factory=dict)

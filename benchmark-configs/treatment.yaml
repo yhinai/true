@@ -1,24 +1,5 @@
-{
-  "name": "treatment",
-  "description": "Verification-first harness shape: bounded retries, evidence feedback, deterministic oracle gate, and proof-card artifacts.",
-  "subset_config": "../fixtures/curated_subset/minimal.yaml",
-  "policy": {
-    "max_attempts": 3,
-    "retry_with_evidence": true,
-    "require_proof_card": true,
-    "unsafe_claim_tracking": "flag any claimed success that fails deterministic verification"
-  },
-  "budget": {
-    "per_task_seconds": 30,
-    "suite_seconds": 180
-  },
-  "scoring": {
-    "primary_metrics": [
-      "verified_success_rate",
-      "unsafe_claim_rate"
-    ]
-  },
-  "smoke_verification": {
-    "candidate_source": "solution"
-  }
-}
+tasks:
+  - /Users/alhinai/Desktop/TRUE/fixtures/oracle_tasks/calculator_bug/task.yaml
+  - /Users/alhinai/Desktop/TRUE/fixtures/oracle_tasks/title_case_bug/task.yaml
+  - /Users/alhinai/Desktop/TRUE/fixtures/oracle_tasks/slug_shell_bug/task.yaml
+mode: treatment

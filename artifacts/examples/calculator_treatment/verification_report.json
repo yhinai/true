@@ -1,0 +1,103 @@
+{
+  "verdict": "VERIFIED",
+  "checks": [
+    {
+      "name": "pytest",
+      "command": "python3 -m pytest -q",
+      "status": "passed",
+      "exit_code": 0,
+      "stdout": ".                                                                        [100%]\n1 passed in 0.01s\n",
+      "stderr": "",
+      "duration_seconds": 0.2681332500069402,
+      "details": {}
+    },
+    {
+      "name": "lint",
+      "command": "python3 -m compileall .",
+      "status": "passed",
+      "exit_code": 0,
+      "stdout": "Listing '.'...\nListing './.pytest_cache'...\nListing './.pytest_cache/v'...\nListing './.pytest_cache/v/cache'...\nCompiling './calculator.py'...\nCompiling './test_calculator.py'...\n",
+      "stderr": "",
+      "duration_seconds": 0.05647845898056403,
+      "details": {}
+    },
+    {
+      "name": "typecheck",
+      "command": "disabled",
+      "status": "skipped",
+      "exit_code": null,
+      "stdout": "Type checking is opt-in for this minimal build.",
+      "stderr": "",
+      "duration_seconds": 0.0,
+      "details": {}
+    },
+    {
+      "name": "coverage",
+      "command": "disabled",
+      "status": "skipped",
+      "exit_code": null,
+      "stdout": "Coverage is opt-in for this minimal build.",
+      "stderr": "",
+      "duration_seconds": 0.0,
+      "details": {}
+    },
+    {
+      "name": "contracts",
+      "command": "static inspection",
+      "status": "skipped",
+      "exit_code": null,
+      "stdout": "Contracts are supported as an optional deeper verification layer.",
+      "stderr": "",
+      "duration_seconds": 0.0,
+      "details": {}
+    },
+    {
+      "name": "crosshair",
+      "command": "disabled",
+      "status": "skipped",
+      "exit_code": null,
+      "stdout": "Not implemented",
+      "stderr": "",
+      "duration_seconds": 0.0,
+      "details": {}
+    },
+    {
+      "name": "hypothesis",
+      "command": "disabled",
+      "status": "skipped",
+      "exit_code": null,
+      "stdout": "Not implemented",
+      "stderr": "",
+      "duration_seconds": 0.0,
+      "details": {}
+    },
+    {
+      "name": "mutation",
+      "command": "disabled",
+      "status": "skipped",
+      "exit_code": null,
+      "stdout": "Mutation testing is intentionally cut by default.",
+      "stderr": "",
+      "duration_seconds": 0.0,
+      "details": {}
+    }
+  ],
+  "summary": "All deterministic checks passed.",
+  "unsafe_claim_detected": false,
+  "counterexample": null,
+  "changed_files": [
+    "calculator.py"
+  ],
+  "failure_mode_ledger": [],
+  "verification_ledger": [
+    "pytest: passed",
+    "lint: passed",
+    "typecheck: skipped",
+    "coverage: skipped",
+    "contracts: skipped",
+    "crosshair: skipped",
+    "hypothesis: skipped",
+    "mutation: skipped",
+    "contract_graph_nodes=1"
+  ]
+}

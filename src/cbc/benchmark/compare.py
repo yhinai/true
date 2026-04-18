@@ -1,69 +1,40 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from pathlib import Path
-from typing import Callable
+from uuid import uuid4
 
-from .baseline import run_baseline_suite
-from .metrics import compare_metrics, summarize_results
-from .reports import write_comparison_json, write_markdown_report
-from .treatment import run_treatment_suite
-from .types import BenchmarkComparison, TaskDefinition, utc_now_iso
-
-TaskOrchestrator = Callable[..., object]
-
-
-def _default_run_id() -> str:
-    return datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+from cbc.benchmark.baseline import run_baseline
+from cbc.benchmark.metrics import compute_metrics
+from cbc.benchmark.reports import save_benchmark_report
+from cbc.benchmark.treatment import run_treatment
+from cbc.config import AppConfig, DEFAULT_CONFIG
+from cbc.intake.normalize import load_task
+from cbc.models import BenchmarkComparison
+from cbc.storage.artifacts import create_artifact_dir
+from cbc.storage.benchmark_results import save_benchmark
 
 
-def run_comparison(
-    tasks: list[TaskDefinition],
-    *,
-    baseline_timeout_s: int = 30,
-    treatment_timeout_s: int = 30,
-    treatment_max_retries: int = 2,
-    orchestrator: TaskOrchestrator | None = None,
-    artifacts_root: Path = Path("artifacts"),
-    reports_root: Path = Path("reports"),
-    run_id: str | None = None,
-) -> BenchmarkComparison:
-    effective_run_id = run_id or _default_run_id()
-    run_artifact_dir = artifacts_root / "benchmark" / effective_run_id
-    baseline_artifact_dir = run_artifact_dir / "baseline"
-    treatment_artifact_dir = run_artifact_dir / "treatment"
+def run_comparison(*, task_paths: list[Path], config_path: Path, config: AppConfig = DEFAULT_CONFIG) -> BenchmarkComparison:
+    baseline_results = []
+    treatment_results = []
+    for task_path in task_paths:
+        task = load_task(task_path)
+        baseline_results.append(run_baseline(task, config))
+        treatment_results.append(run_treatment(task, config))
 
-    baseline_results = run_baseline_suite(
-        tasks=tasks,
-        timeout_s=baseline_timeout_s,
-        orchestrator=orchestrator,
-        artifact_dir=baseline_artifact_dir,
-    )
-    treatment_results = run_treatment_suite(
-        tasks=tasks,
-        timeout_s=treatment_timeout_s,
-        max_retries=treatment_max_retries,
-        orchestrator=orchestrator,
-        artifact_dir=treatment_artifact_dir,
-    )
-
-    baseline_metrics = summarize_results(baseline_results)
-    treatment_metrics = summarize_results(treatment_results)
-    deltas = compare_metrics(baseline_metrics, treatment_metrics)
-
+    baseline_metrics = compute_metrics(baseline_results)
+    treatment_metrics = compute_metrics(treatment_results)
+    report_dir = create_artifact_dir(config.paths.reports_dir, "benchmarks")
     comparison = BenchmarkComparison(
-        run_id=effective_run_id,
-        generated_at=utc_now_iso(),
-        baseline_results=baseline_results,
-        treatment_results=treatment_results,
+        benchmark_id=uuid4().hex[:12],
+        config_path=config_path,
+        task_results=baseline_results + treatment_results,
         baseline_metrics=baseline_metrics,
         treatment_metrics=treatment_metrics,
-        delta_metrics=deltas,
+        delta_verified_success_rate=treatment_metrics.verified_success_rate - baseline_metrics.verified_success_rate,
+        delta_unsafe_claim_rate=baseline_metrics.unsafe_claim_rate - treatment_metrics.unsafe_claim_rate,
+        report_dir=report_dir,
     )
-
-    comparison_json_path = run_artifact_dir / "comparison.json"
-    report_path = reports_root / f"benchmark_compare_{effective_run_id}.md"
-    comparison.comparison_path = write_comparison_json(comparison, comparison_json_path)
-    comparison.report_path = write_markdown_report(comparison, report_path)
+    save_benchmark_report(comparison)
+    save_benchmark(config.paths.storage_db, comparison)
     return comparison
-
