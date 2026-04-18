@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from cbc.config import AppConfig, PathsConfig, RetryConfig
-from cbc.controller.orchestrator import run_task
+from cbc.controller.orchestrator import resolve_codex_config, run_task
 from cbc.intake.normalize import load_task
 from cbc.review.report import compose_review_report_from_path
 from cbc.models import VerificationVerdict
@@ -64,3 +64,18 @@ def test_live_codex_task_spec_loads_without_replay_file() -> None:
     assert task.adapter == "codex"
     assert task.replay_file is None
     assert task.workspace == (REPO_ROOT / "fixtures/oracle_tasks/calculator_bug/workspace").resolve()
+
+
+def test_task_codex_config_overrides_app_defaults(tmp_path: Path) -> None:
+    task = load_task(REPO_ROOT / "fixtures/oracle_tasks/calculator_bug_codex/task.yaml")
+    config = build_test_config(tmp_path)
+    config.codex.default_model = "fallback-model"
+    config.codex.sandbox = "read-only"
+    config.codex.config_overrides = ['foo="bar"']
+
+    resolved = resolve_codex_config(task, config)
+
+    assert resolved.default_model == "fallback-model"
+    assert resolved.sandbox == "workspace-write"
+    assert resolved.skip_git_repo_check is True
+    assert resolved.config_overrides == ['foo="bar"']

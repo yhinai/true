@@ -23,9 +23,32 @@ from cbc.workspace.patching import apply_writes
 from cbc.workspace.staging import stage_workspace
 
 
+def resolve_codex_config(task: TaskSpec, config: AppConfig):
+    task_codex = task.codex
+    return config.codex.model_copy(
+        update={
+            "default_model": task_codex.model if task_codex.model is not None else config.codex.default_model,
+            "sandbox": task_codex.sandbox if task_codex.sandbox is not None else config.codex.sandbox,
+            "profile": task_codex.profile if task_codex.profile is not None else config.codex.profile,
+            "config_overrides": [*config.codex.config_overrides, *task_codex.config_overrides],
+            "add_dirs": [*config.codex.add_dirs, *task_codex.add_dirs],
+            "skip_git_repo_check": (
+                task_codex.skip_git_repo_check
+                if task_codex.skip_git_repo_check is not None
+                else config.codex.skip_git_repo_check
+            ),
+            "dangerously_bypass_approvals": (
+                task_codex.dangerously_bypass_approvals
+                if task_codex.dangerously_bypass_approvals is not None
+                else config.codex.dangerously_bypass_approvals
+            ),
+        }
+    )
+
+
 def load_adapter(task: TaskSpec, config: AppConfig):
     if task.adapter == "codex":
-        return CodexExecAdapter(config.codex)
+        return CodexExecAdapter(resolve_codex_config(task, config))
     assert task.replay_file is not None
     return ReplayModelAdapter(task.replay_file)
 

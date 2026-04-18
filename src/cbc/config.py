@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Literal
 
 from pydantic import BaseModel, Field
+
+SandboxMode = Literal["read-only", "workspace-write", "danger-full-access"]
 
 
 class PathsConfig(BaseModel):
@@ -22,7 +25,10 @@ class RetryConfig(BaseModel):
 class CodexConfig(BaseModel):
     executable: str = "codex"
     default_model: str | None = None
-    sandbox: str = "workspace-write"
+    sandbox: SandboxMode = "workspace-write"
+    profile: str | None = None
+    config_overrides: list[str] = Field(default_factory=list)
+    add_dirs: list[Path] = Field(default_factory=list)
     skip_git_repo_check: bool = True
     dangerously_bypass_approvals: bool = False
 

@@ -27,6 +27,13 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
             "shell-oracle",
             "shell",
         ),
+        (
+            REPO_ROOT / "fixtures/oracle_tasks/live_codex_calculator/task.yaml",
+            REPO_ROOT / "fixtures/oracle_tasks/calculator_bug/workspace",
+            ["pytest"],
+            "pytest",
+            "pytest",
+        ),
     ],
 )
 def test_live_codex_task_specs_load_correctly(
@@ -45,3 +52,5 @@ def test_live_codex_task_specs_load_correctly(
     assert len(task.oracles) == 1
     assert task.oracles[0].name == expected_oracle_name
     assert task.oracles[0].kind == expected_oracle_kind
+    assert task.codex.sandbox == "workspace-write"
+    assert task.codex.skip_git_repo_check is True

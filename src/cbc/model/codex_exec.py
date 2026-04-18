@@ -39,6 +39,12 @@ class CodexExecAdapter(ModelAdapter):
             command.append("--skip-git-repo-check")
         if self.config.default_model:
             command.extend(["--model", self.config.default_model])
+        if self.config.profile:
+            command.extend(["--profile", self.config.profile])
+        for override in self.config.config_overrides:
+            command.extend(["--config", override])
+        for add_dir in self.config.add_dirs:
+            command.extend(["--add-dir", str(add_dir)])
         if self.config.dangerously_bypass_approvals:
             command.append("--dangerously-bypass-approvals-and-sandbox")
         if schema_path:

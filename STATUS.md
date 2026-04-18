@@ -24,4 +24,5 @@
 - review/graph/API shells are implemented and can be deepened without moving trust logic
 - a checked-in live Codex benchmark lane now exists for calculator, title-case, and slug tasks
 - live benchmark configs can now pin lane-specific Codex runtime knobs in checked-in YAML
+- live task specs can also pin task-specific Codex runtime knobs in checked-in config
 - the next gap is deciding which explicit model and approval-policy values the live lane should standardize on

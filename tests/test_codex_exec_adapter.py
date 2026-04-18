@@ -117,3 +117,57 @@ def test_write_schema_file_marks_all_properties_required(tmp_path: Path) -> None
 
     assert payload["required"] == JSON_RESPONSE_CONTRACT["required"] == ["summary", "claimed_success", "notes", "writes"]
     assert payload["properties"]["writes"]["items"]["required"] == ["path", "content", "executable"]
+
+
+def test_codex_exec_includes_runtime_overrides(monkeypatch, tmp_path: Path) -> None:
+    seen: dict[str, object] = {}
+
+    def fake_run(command: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+        seen["command"] = command
+        return subprocess.CompletedProcess(
+            command,
+            0,
+            stdout=json.dumps(
+                {
+                    "type": "item.completed",
+                    "item": {
+                        "type": "agent_message",
+                        "text": json.dumps(
+                            {
+                                "summary": "done",
+                                "claimed_success": True,
+                                "writes": [],
+                                "notes": [],
+                            }
+                        ),
+                    },
+                }
+            ),
+            stderr="",
+        )
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    writable = tmp_path / "shared"
+    writable.mkdir()
+    adapter = CodexExecAdapter(
+        CodexConfig(
+            default_model="gpt-5.4",
+            sandbox="danger-full-access",
+            profile="benchmark",
+            config_overrides=['model_reasoning_effort="medium"'],
+            add_dirs=[writable],
+            skip_git_repo_check=False,
+        )
+    )
+    adapter.run(prompt="fix it", workspace=tmp_path, attempt=1, schema_path=None)
+
+    command = seen["command"]
+    assert isinstance(command, list)
+    assert "--model" in command and "gpt-5.4" in command
+    assert "--sandbox" in command and "danger-full-access" in command
+    assert "--profile" in command and "benchmark" in command
+    assert command.count("--config") == 1
+    assert 'model_reasoning_effort="medium"' in command
+    assert "--add-dir" in command and str(writable) in command
+    assert "--skip-git-repo-check" not in command

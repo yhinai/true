@@ -7,6 +7,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
+from cbc.config import SandboxMode
+
 
 def utc_now() -> datetime:
     return datetime.now(UTC)
@@ -52,6 +54,16 @@ class VerificationOptions(BaseModel):
     coverage_command: str | None = None
 
 
+class CodexTaskConfig(BaseModel):
+    model: str | None = None
+    sandbox: SandboxMode | None = None
+    profile: str | None = None
+    config_overrides: list[str] = Field(default_factory=list)
+    add_dirs: list[Path] = Field(default_factory=list)
+    skip_git_repo_check: bool | None = None
+    dangerously_bypass_approvals: bool | None = None
+
+
 class TaskSpec(BaseModel):
     task_id: str
     title: str
@@ -69,6 +81,7 @@ class TaskSpec(BaseModel):
     review_checks: list[str] = Field(default_factory=list)
     metadata: dict[str, Any] = Field(default_factory=dict)
     verification: VerificationOptions = Field(default_factory=VerificationOptions)
+    codex: CodexTaskConfig = Field(default_factory=CodexTaskConfig)
 
     @model_validator(mode="after")
     def validate_replay_file(self) -> "TaskSpec":
