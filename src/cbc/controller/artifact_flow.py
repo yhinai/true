@@ -17,6 +17,7 @@ def persist_run_artifacts(
     write_json(artifact_dir / "run_ledger.json", ledger.model_dump(mode="json"))
     write_json(artifact_dir / "retry_transcript.json", transcript.model_dump(mode="json"))
     write_json(artifact_dir / "verification_report.json", verification.model_dump(mode="json"))
+    write_json(artifact_dir / "run_artifact.json", build_run_artifact(ledger, verification))
     write_markdown(artifact_dir / "proof_card.md", render_proof_card(proof_card))
 
 
@@ -33,3 +34,23 @@ def render_proof_card(card: ProofCard) -> str:
         f"## Summary\n{card.summary}\n\n"
         f"## Proof Points\n{bullets}\n"
     )
+
+
+def build_run_artifact(ledger: RunLedger, verification: VerificationReport) -> dict[str, object]:
+    return {
+        "run_id": ledger.run_id,
+        "task_id": ledger.task_id,
+        "title": ledger.title,
+        "mode": ledger.mode,
+        "changed_files": verification.changed_files,
+        "unsafe_claim": ledger.unsafe_claims > 0,
+        "verification": {
+            "status": verification.verdict.value,
+            "checks": [check.model_dump(mode="json") for check in verification.checks],
+            "summary": verification.summary,
+        },
+        "artifacts": {
+            "artifact_dir": str(ledger.artifact_dir),
+            "workspace_dir": str(ledger.workspace_dir),
+        },
+    }

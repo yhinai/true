@@ -1,5 +1,5 @@
 tasks:
-  - /Users/alhinai/Desktop/TRUE/fixtures/oracle_tasks/calculator_bug/task.yaml
-  - /Users/alhinai/Desktop/TRUE/fixtures/oracle_tasks/title_case_bug/task.yaml
-  - /Users/alhinai/Desktop/TRUE/fixtures/oracle_tasks/slug_shell_bug/task.yaml
+  - ../fixtures/oracle_tasks/calculator_bug/task.yaml
+  - ../fixtures/oracle_tasks/title_case_bug/task.yaml
+  - ../fixtures/oracle_tasks/slug_shell_bug/task.yaml
 mode: baseline

@@ -8,15 +8,24 @@ from cbc.review.report import compose_review_report
 
 
 def _looks_like_run(payload: dict[str, Any]) -> bool:
-    return any(
-        key in payload
-        for key in ("run_id", "verification", "verification_report", "diff", "changed_files", "task_id")
-    )
+    has_identity = any(key in payload for key in ("run_id", "id"))
+    has_verification = any(key in payload for key in ("verification", "verification_report"))
+    return has_identity and has_verification
 
 
 def _looks_like_benchmark(payload: dict[str, Any]) -> bool:
     return any(
-        key in payload for key in ("benchmark_id", "benchmark_name", "tasks", "comparison", "metrics")
+        key in payload
+        for key in (
+            "benchmark_id",
+            "benchmark_name",
+            "tasks",
+            "comparison",
+            "metrics",
+            "baseline_metrics",
+            "treatment_metrics",
+            "delta_metrics",
+        )
     )
 
 
@@ -90,11 +99,26 @@ def _metric(payload: dict[str, Any], *keys: str) -> Any:
 def _summarize_benchmark(path: Path, payload: dict[str, Any]) -> dict[str, Any]:
     tasks = payload.get("tasks")
     total_tasks = len(tasks) if isinstance(tasks, list) else _metric(payload, "total_tasks", "task_count")
+    verified_success_rate = _metric(payload, "verified_success_rate", "vsr")
+    unsafe_claim_rate = _metric(payload, "unsafe_claim_rate", "ucr")
+    if verified_success_rate is None and isinstance(payload.get("treatment_metrics"), dict):
+        verified_success_rate = payload["treatment_metrics"].get("verified_success_rate")
+    if unsafe_claim_rate is None and isinstance(payload.get("treatment_metrics"), dict):
+        unsafe_claim_rate = payload["treatment_metrics"].get("unsafe_claim_rate")
+    if total_tasks is None and isinstance(payload.get("baseline_results"), list):
+        total_tasks = len(payload["baseline_results"])
+    if total_tasks is None and isinstance(payload.get("task_results"), list):
+        task_ids = {
+            item.get("task_id")
+            for item in payload["task_results"]
+            if isinstance(item, dict) and item.get("task_id")
+        }
+        total_tasks = len(task_ids) if task_ids else len(payload["task_results"])
     return {
-        "benchmark_id": payload.get("benchmark_id") or payload.get("benchmark_name") or path.stem,
+        "benchmark_id": payload.get("benchmark_id") or payload.get("benchmark_name") or payload.get("run_id") or path.stem,
         "artifact_path": str(path),
-        "verified_success_rate": _metric(payload, "verified_success_rate", "vsr"),
-        "unsafe_claim_rate": _metric(payload, "unsafe_claim_rate", "ucr"),
+        "verified_success_rate": verified_success_rate,
+        "unsafe_claim_rate": unsafe_claim_rate,
         "total_tasks": total_tasks,
     }
 

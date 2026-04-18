@@ -33,6 +33,7 @@ def test_treatment_retries_to_verified(tmp_path: Path) -> None:
     assert len(ledger.attempts) == 2
     assert ledger.unsafe_claims == 1
     assert (ledger.artifact_dir / "proof_card.md").exists()
+    assert (ledger.artifact_dir / "run_artifact.json").exists()
 
 
 def test_baseline_stops_after_first_failure(tmp_path: Path) -> None:

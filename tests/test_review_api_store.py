@@ -96,6 +96,36 @@ class ApiStoreTests(unittest.TestCase):
 
             self.assertEqual(benchmarks_payload(root, limit=5), {"benchmarks": []})
 
+    def test_real_comparison_shape_is_summarized(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            benches_dir = root / "benchmarks"
+            benches_dir.mkdir(parents=True)
+            (benches_dir / "comparison.json").write_text(
+                json.dumps(
+                    {
+                        "benchmark_id": "cmp-1",
+                        "task_results": [
+                            {"task_id": "task-a", "mode": "baseline"},
+                            {"task_id": "task-b", "mode": "baseline"},
+                            {"task_id": "task-a", "mode": "treatment"},
+                            {"task_id": "task-b", "mode": "treatment"},
+                        ],
+                        "treatment_metrics": {
+                            "verified_success_rate": 1.0,
+                            "unsafe_claim_rate": 0.0,
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            benches = list_benchmarks(root, limit=10)
+            self.assertEqual(len(benches), 1)
+            self.assertEqual(benches[0]["benchmark_id"], "cmp-1")
+            self.assertEqual(benches[0]["total_tasks"], 2)
+            self.assertEqual(benches[0]["verified_success_rate"], 1.0)
+
 
 if __name__ == "__main__":
     unittest.main()
