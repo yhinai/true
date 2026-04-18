@@ -126,7 +126,7 @@ Demo-time must-haves:
 Must-not-happen:
   1. Treatment is slower and less correct than baseline on the chosen subset.
   2. The verifier depends on an LLM saying "looks good."
-  3. The demo depends on fragile late-stage plugin or subagent work.
+  3. The demo depends on fragile late-stage integration or subagent work.
   4. We over-promise full-benchmark dominance.
 
 ################################################################################
