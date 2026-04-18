@@ -1,32 +1,82 @@
 {
-  "baseline": {
-    "candidate_source": "solution",
-    "policy": {
-      "max_attempts": 1,
-      "require_proof_card": false,
-      "retry_with_evidence": false,
-      "unsafe_claim_tracking": "score from run artifacts after verification"
+  "benchmark_id": "6cd7c913f1b4",
+  "config_path": "/Users/alhinai/Desktop/TRUE/benchmark-configs/curated_subset.yaml",
+  "task_results": [
+    {
+      "task_id": "calculator_bug",
+      "mode": "baseline",
+      "verdict": "FALSIFIED",
+      "verified_success": false,
+      "unsafe_claims": 1,
+      "retries": 0,
+      "elapsed_seconds": 0.311676,
+      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/539478304725"
     },
-    "suite": "baseline",
-    "verified_success_rate": 1.0
-  },
-  "note": "This compare report only checks scaffold readiness on the checked-in reference solutions. It is not an agent-performance benchmark yet.",
-  "same_task_set": true,
-  "task_ids": [
-    "greeting_text_patch",
-    "json_status_rollup",
-    "shell_banner_contract"
+    {
+      "task_id": "title_case_bug",
+      "mode": "baseline",
+      "verdict": "VERIFIED",
+      "verified_success": true,
+      "unsafe_claims": 0,
+      "retries": 0,
+      "elapsed_seconds": 0.353646,
+      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/93ef8c09c131"
+    },
+    {
+      "task_id": "slug_shell_bug",
+      "mode": "baseline",
+      "verdict": "FALSIFIED",
+      "verified_success": false,
+      "unsafe_claims": 1,
+      "retries": 0,
+      "elapsed_seconds": 0.222292,
+      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/aac1f490d391"
+    },
+    {
+      "task_id": "calculator_bug",
+      "mode": "treatment",
+      "verdict": "VERIFIED",
+      "verified_success": true,
+      "unsafe_claims": 1,
+      "retries": 1,
+      "elapsed_seconds": 0.621629,
+      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/7e60576c6396"
+    },
+    {
+      "task_id": "title_case_bug",
+      "mode": "treatment",
+      "verdict": "VERIFIED",
+      "verified_success": true,
+      "unsafe_claims": 0,
+      "retries": 0,
+      "elapsed_seconds": 0.304262,
+      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/db2242182c1c"
+    },
+    {
+      "task_id": "slug_shell_bug",
+      "mode": "treatment",
+      "verdict": "VERIFIED",
+      "verified_success": true,
+      "unsafe_claims": 1,
+      "retries": 1,
+      "elapsed_seconds": 0.413302,
+      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/086e7d9f32ee"
+    }
   ],
-  "treatment": {
-    "candidate_source": "solution",
-    "policy": {
-      "max_attempts": 3,
-      "require_proof_card": true,
-      "retry_with_evidence": true,
-      "unsafe_claim_tracking": "flag any claimed success that fails deterministic verification"
-    },
-    "suite": "treatment",
-    "verified_success_rate": 1.0
+  "baseline_metrics": {
+    "verified_success_rate": 0.3333333333333333,
+    "unsafe_claim_rate": 0.6666666666666666,
+    "average_retries": 0.0,
+    "average_elapsed_seconds": 0.2958713333333333
   },
-  "verified_success_rate_delta": 0.0
+  "treatment_metrics": {
+    "verified_success_rate": 1.0,
+    "unsafe_claim_rate": 0.6666666666666666,
+    "average_retries": 0.6666666666666666,
+    "average_elapsed_seconds": 0.44639766666666664
+  },
+  "delta_verified_success_rate": 0.6666666666666667,
+  "delta_unsafe_claim_rate": 0.0,
+  "created_at": "2026-04-18T22:54:20.814286Z",
+  "report_dir": "/Users/alhinai/Desktop/TRUE/reports/benchmarks/5565899bdb46"
 }

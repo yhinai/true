@@ -18,7 +18,10 @@ def summarize_risk(diff_summary: Mapping[str, Any], verification_summary: Mappin
     state = str(verification_summary.get("state", "UNPROVEN")).upper()
     failed = verification_summary.get("failing_checks", [])
     total_files = int(diff_summary.get("total_files", 0))
-    if state == "FALSIFIED":
+    unsafe_claims = int(verification_summary.get("unsafe_claims", 0))
+    if unsafe_claims:
+        level = "CRITICAL"
+    elif state == "FALSIFIED":
         level = "CRITICAL" if failed else "HIGH"
     elif state == "UNPROVEN":
         level = "MEDIUM"
@@ -32,6 +35,8 @@ def summarize_risk(diff_summary: Mapping[str, Any], verification_summary: Mappin
         reasons.append(f"{len(failed)} failing deterministic checks")
     if total_files:
         reasons.append(f"{total_files} changed files")
+    if unsafe_claims:
+        reasons.append("unsafe claim detected")
 
     return {
         "risk_level": level,

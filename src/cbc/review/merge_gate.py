@@ -13,6 +13,11 @@ def compute_merge_gate(review: ReviewReport) -> MergeGateVerdict:
 
 def verification_state(run_artifact: Mapping[str, Any]) -> dict[str, Any]:
     verification = run_artifact.get("verification") or run_artifact.get("verification_report") or {}
+    attempts = run_artifact.get("attempts")
+    if isinstance(attempts, list) and attempts:
+        last_attempt = attempts[-1]
+        if isinstance(last_attempt, Mapping) and isinstance(last_attempt.get("verification"), Mapping):
+            verification = last_attempt["verification"]
     if not isinstance(verification, Mapping):
         verification = {}
     checks = verification.get("checks", [])
@@ -23,13 +28,14 @@ def verification_state(run_artifact: Mapping[str, Any]) -> dict[str, Any]:
         "state": state,
         "passing_checks": passed,
         "failing_checks": failed,
+        "unsafe_claims": int(run_artifact.get("unsafe_claims", 0) or bool(run_artifact.get("unsafe_claim"))),
     }
 
 
 def merge_gate_verdict(run_artifact: Mapping[str, Any], *, risk_summary: Mapping[str, Any]) -> dict[str, Any]:
     verification = verification_state(run_artifact)
     state = verification["state"]
-    unsafe_claim = bool(run_artifact.get("unsafe_claim"))
+    unsafe_claim = bool(run_artifact.get("unsafe_claim")) or int(run_artifact.get("unsafe_claims", 0)) > 0
 
     if unsafe_claim or risk_summary.get("risk_level") == "CRITICAL":
         verdict = "UNSAFE"

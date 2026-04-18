@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
 set -euo pipefail
-export PYTHONPATH="/Users/alhinai/Desktop/TRUE/src${PYTHONPATH:+:$PYTHONPATH}"
-python3 -m cbc.main run /Users/alhinai/Desktop/TRUE/fixtures/oracle_tasks/calculator_bug/task.yaml --mode treatment
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+export PYTHONPATH="$ROOT/src${PYTHONPATH:+:$PYTHONPATH}"
+python3 -m cbc.main run "$ROOT/fixtures/oracle_tasks/calculator_bug/task.yaml" --mode treatment

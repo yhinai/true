@@ -5,10 +5,23 @@ import argparse
 import json
 from pathlib import Path
 
-from _benchmark_common import REPO_ROOT, load_json
-from cbc.benchmark.compare import run_comparison
-from cbc.benchmark.fixtures import load_tasks_from_manifest
-from cbc.benchmark.types import to_builtin
+from _benchmark_common import REPO_ROOT
+from cbc.benchmark.local_runner import run_local_benchmark
+from cbc.benchmark.reports import render_benchmark_markdown
+from cbc.config import AppConfig, PathsConfig
+
+
+def build_config(artifacts_root: Path, reports_root: Path) -> AppConfig:
+    return AppConfig(
+        paths=PathsConfig(
+            root=REPO_ROOT,
+            artifacts_dir=artifacts_root,
+            reports_dir=reports_root,
+            prompts_dir=REPO_ROOT / "prompts",
+            benchmark_config_dir=REPO_ROOT / "benchmark-configs",
+            storage_db=artifacts_root / "cbc.sqlite3",
+        )
+    )
 
 
 def parse_args() -> argparse.Namespace:
@@ -16,43 +29,42 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--config",
         type=Path,
-        default=Path("benchmark-configs/compare.json"),
-        help="Path to benchmark comparison JSON config.",
+        default=Path("benchmark-configs/curated_subset.yaml"),
+        help="Path to replay-smoke comparison config.",
     )
+    parser.add_argument("--artifacts-root", type=Path, default=Path("artifacts"))
+    parser.add_argument("--reports-root", type=Path, default=Path("reports"))
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
     config_path = (REPO_ROOT / args.config).resolve() if not args.config.is_absolute() else args.config
-    config = load_json(config_path)
+    artifacts_root = (REPO_ROOT / args.artifacts_root).resolve() if not args.artifacts_root.is_absolute() else args.artifacts_root
+    reports_root = (REPO_ROOT / args.reports_root).resolve() if not args.reports_root.is_absolute() else args.reports_root
+    app_config = build_config(artifacts_root, reports_root)
+    comparison = run_local_benchmark(config_path, config=app_config)
 
-    manifest_path = (REPO_ROOT / config["manifest_path"]).resolve()
-    task_ids: list[str] | None = None
-    subset_path_raw = config.get("subset_path")
-    if subset_path_raw:
-        subset_path = (REPO_ROOT / subset_path_raw).resolve()
-        subset_config = load_json(subset_path)
-        task_ids = list(subset_config.get("task_ids", []))
-    elif config.get("task_ids"):
-        task_ids = list(config["task_ids"])
+    output_dir = reports_root / "compare"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    json_output = output_dir / "compare.json"
+    markdown_output = output_dir / "compare.md"
+    json_output.write_text(json.dumps(comparison.model_dump(mode="json"), indent=2), encoding="utf-8")
+    markdown_output.write_text(render_benchmark_markdown(comparison), encoding="utf-8")
 
-    tasks = load_tasks_from_manifest(manifest_path, include_task_ids=task_ids)
-    comparison = run_comparison(
-        tasks=tasks,
-        baseline_timeout_s=int(config.get("baseline_timeout_s", 30)),
-        treatment_timeout_s=int(config.get("treatment_timeout_s", 30)),
-        treatment_max_retries=int(config.get("treatment_max_retries", 2)),
-        artifacts_root=(REPO_ROOT / config.get("artifacts_root", "artifacts")).resolve(),
-        reports_root=(REPO_ROOT / config.get("reports_root", "reports")).resolve(),
+    print(f"comparison json: {json_output}")
+    print(f"comparison report: {markdown_output}")
+    print(
+        json.dumps(
+            {
+                "delta_verified_success_rate": comparison.delta_verified_success_rate,
+                "delta_unsafe_claim_rate": comparison.delta_unsafe_claim_rate,
+            },
+            indent=2,
+        )
     )
-
-    print(f"comparison json: {comparison.comparison_path}")
-    print(f"comparison report: {comparison.report_path}")
-    print(json.dumps(to_builtin(comparison.delta_metrics), indent=2))
     return 0
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

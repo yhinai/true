@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from cbc.models import ProofCard, RetryTranscript, RunLedger, VerificationReport
+from cbc.review.report import compose_review_report
 from cbc.storage.artifacts import write_json, write_markdown
 
 
@@ -18,6 +19,7 @@ def persist_run_artifacts(
     write_json(artifact_dir / "retry_transcript.json", transcript.model_dump(mode="json"))
     write_json(artifact_dir / "verification_report.json", verification.model_dump(mode="json"))
     write_json(artifact_dir / "run_artifact.json", build_run_artifact(ledger, verification))
+    write_json(artifact_dir / "review_report.json", compose_review_report(ledger.model_dump(mode="json")))
     write_markdown(artifact_dir / "proof_card.md", render_proof_card(proof_card))
 
 

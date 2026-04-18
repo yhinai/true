@@ -5,11 +5,25 @@ import argparse
 import json
 from pathlib import Path
 
-from _benchmark_common import REPO_ROOT, load_json
-from cbc.benchmark.fixtures import load_tasks_from_manifest
+from _benchmark_common import REPO_ROOT
 from cbc.benchmark.metrics import summarize_results
-from cbc.benchmark.treatment import run_treatment_suite
-from cbc.benchmark.types import to_builtin
+from cbc.benchmark.local_runner import load_task_paths_from_config
+from cbc.benchmark.treatment import run_treatment
+from cbc.config import AppConfig, PathsConfig
+from cbc.intake.normalize import load_task
+
+
+def build_config(artifacts_root: Path, reports_root: Path) -> AppConfig:
+    return AppConfig(
+        paths=PathsConfig(
+            root=REPO_ROOT,
+            artifacts_dir=artifacts_root,
+            reports_dir=reports_root,
+            prompts_dir=REPO_ROOT / "prompts",
+            benchmark_config_dir=REPO_ROOT / "benchmark-configs",
+            storage_db=artifacts_root / "cbc.sqlite3",
+        )
+    )
 
 
 def parse_args() -> argparse.Namespace:
@@ -17,35 +31,44 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--config",
         type=Path,
-        default=Path("benchmark-configs/treatment.json"),
-        help="Path to treatment JSON config.",
+        default=Path("benchmark-configs/treatment.yaml"),
+        help="Path to treatment replay-smoke config.",
     )
+    parser.add_argument("--artifacts-root", type=Path, default=Path("artifacts"))
+    parser.add_argument("--reports-root", type=Path, default=Path("reports"))
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
     config_path = (REPO_ROOT / args.config).resolve() if not args.config.is_absolute() else args.config
-    config = load_json(config_path)
+    artifacts_root = (REPO_ROOT / args.artifacts_root).resolve() if not args.artifacts_root.is_absolute() else args.artifacts_root
+    reports_root = (REPO_ROOT / args.reports_root).resolve() if not args.reports_root.is_absolute() else args.reports_root
+    app_config = build_config(artifacts_root, reports_root)
 
-    manifest_path = (REPO_ROOT / config["manifest_path"]).resolve()
-    task_ids = config.get("task_ids") or None
-    timeout_s = int(config.get("timeout_s", 30))
-    max_retries = int(config.get("max_retries", 2))
-    artifacts_root = (REPO_ROOT / config.get("artifacts_root", "artifacts")).resolve()
-
-    tasks = load_tasks_from_manifest(manifest_path, include_task_ids=task_ids)
-    run_dir = artifacts_root / "benchmark" / "treatment_latest"
-    results = run_treatment_suite(
-        tasks,
-        timeout_s=timeout_s,
-        max_retries=max_retries,
-        artifact_dir=run_dir,
-    )
+    task_paths = load_task_paths_from_config(config_path)
+    results = [run_treatment(load_task(task_path), app_config) for task_path in task_paths]
     summary = summarize_results(results)
-    output = {"summary": summary, "results": to_builtin(results)}
+    output = {
+        "suite": "treatment-smoke",
+        "config_path": str(config_path),
+        "summary": summary,
+        "results": [
+            {
+                "task_id": result.task_id,
+                "mode": result.mode,
+                "verdict": result.verdict.value,
+                "verified_success": result.verified_success,
+                "unsafe_claims": result.unsafe_claims,
+                "retries": result.retries,
+                "elapsed_seconds": result.elapsed_seconds,
+                "artifact_dir": str(result.artifact_dir),
+            }
+            for result in results
+        ],
+    }
 
-    output_path = run_dir / "treatment_results.json"
+    output_path = reports_root / "treatment-smoke" / "suite-summary.json"
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(output, indent=2), encoding="utf-8")
     print(f"treatment run complete: {output_path}")
@@ -55,4 +78,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

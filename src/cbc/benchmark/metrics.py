@@ -22,3 +22,37 @@ def compute_metrics(results: list[BenchmarkTaskResult]) -> BenchmarkMetrics:
         average_retries=retries / total,
         average_elapsed_seconds=elapsed / total,
     )
+
+
+def summarize_results(results: list[object]) -> dict[str, float]:
+    if not results:
+        return {
+            "task_count": 0,
+            "verified_success_rate": 0.0,
+            "unsafe_claim_rate": 0.0,
+            "average_attempt_count": 0.0,
+            "average_retries": 0.0,
+            "average_duration_s": 0.0,
+        }
+
+    task_count = len(results)
+    verified = 0
+    unsafe = 0
+    attempts = 0
+    retries = 0
+    duration = 0.0
+    for result in results:
+        verified += int(bool(getattr(result, "verified", getattr(result, "verified_success", False))))
+        unsafe += int(bool(getattr(result, "unsafe_claim", False) or getattr(result, "unsafe_claims", 0)))
+        attempts += int(getattr(result, "attempt_count", getattr(result, "retries", 0) + 1))
+        retries += int(getattr(result, "retries_used", getattr(result, "retries", 0)))
+        duration += float(getattr(result, "duration_s", getattr(result, "elapsed_seconds", 0.0)))
+
+    return {
+        "task_count": task_count,
+        "verified_success_rate": verified / task_count,
+        "unsafe_claim_rate": unsafe / task_count,
+        "average_attempt_count": attempts / task_count,
+        "average_retries": retries / task_count,
+        "average_duration_s": duration / task_count,
+    }

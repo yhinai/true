@@ -1,57 +1,44 @@
 {
-  "budget": {
-    "per_task_seconds": 30,
-    "suite_seconds": 180
-  },
-  "candidate_source": "solution",
-  "completed_at": "2026-04-18T22:34:52+00:00",
+  "suite": "treatment-smoke",
   "config_path": "/Users/alhinai/Desktop/TRUE/benchmark-configs/treatment.yaml",
-  "description": "Verification-first harness shape: bounded retries, evidence feedback, deterministic oracle gate, and proof-card artifacts.",
-  "failed": 0,
-  "golden_task_ids": [
-    "greeting_text_patch",
-    "json_status_rollup"
-  ],
-  "note": "This suite verifies fixture oracles against the checked-in candidate source. It does not execute a Codex adapter yet.",
-  "passed": 3,
-  "policy": {
-    "max_attempts": 3,
-    "require_proof_card": true,
-    "retry_with_evidence": true,
-    "unsafe_claim_tracking": "flag any claimed success that fails deterministic verification"
+  "summary": {
+    "task_count": 3,
+    "verified_success_rate": 1.0,
+    "unsafe_claim_rate": 0.6666666666666666,
+    "average_attempt_count": 1.6666666666666667,
+    "average_retries": 0.6666666666666666,
+    "average_duration_s": 0.5010433333333334
   },
-  "started_at": "2026-04-18T22:34:52+00:00",
-  "subset_path": "/Users/alhinai/Desktop/TRUE/fixtures/curated_subset/minimal.yaml",
-  "suite": "treatment",
-  "task_count": 3,
-  "tasks": [
+  "results": [
     {
-      "duration_ms": 23,
-      "exit_code": 0,
-      "passed": true,
-      "proof_card_path": "/Users/alhinai/Desktop/TRUE/reports/treatment-smoke/tasks/greeting_text_patch/proof-card.md",
-      "task_id": "greeting_text_patch",
-      "title": "Fix the single-line greeting typo",
-      "verification_path": "/Users/alhinai/Desktop/TRUE/reports/treatment-smoke/tasks/greeting_text_patch/verification.json"
+      "task_id": "calculator_bug",
+      "mode": "treatment",
+      "verdict": "VERIFIED",
+      "verified_success": true,
+      "unsafe_claims": 1,
+      "retries": 1,
+      "elapsed_seconds": 0.64743,
+      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/2571d58c1919"
     },
     {
-      "duration_ms": 24,
-      "exit_code": 0,
-      "passed": true,
-      "proof_card_path": "/Users/alhinai/Desktop/TRUE/reports/treatment-smoke/tasks/json_status_rollup/proof-card.md",
-      "task_id": "json_status_rollup",
-      "title": "Repair a derived JSON summary",
-      "verification_path": "/Users/alhinai/Desktop/TRUE/reports/treatment-smoke/tasks/json_status_rollup/verification.json"
+      "task_id": "title_case_bug",
+      "mode": "treatment",
+      "verdict": "VERIFIED",
+      "verified_success": true,
+      "unsafe_claims": 0,
+      "retries": 0,
+      "elapsed_seconds": 0.281011,
+      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/989a415ef667"
     },
     {
-      "duration_ms": 9,
-      "exit_code": 0,
-      "passed": true,
-      "proof_card_path": "/Users/alhinai/Desktop/TRUE/reports/treatment-smoke/tasks/shell_banner_contract/proof-card.md",
-      "task_id": "shell_banner_contract",
-      "title": "Repair a shell-based verification banner",
-      "verification_path": "/Users/alhinai/Desktop/TRUE/reports/treatment-smoke/tasks/shell_banner_contract/verification.json"
+      "task_id": "slug_shell_bug",
+      "mode": "treatment",
+      "verdict": "VERIFIED",
+      "verified_success": true,
+      "unsafe_claims": 1,
+      "retries": 1,
+      "elapsed_seconds": 0.574689,
+      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/43c93f13506a"
     }
-  ],
-  "verified_success_rate": 1.0
+  ]
 }

@@ -1,12 +1,12 @@
 {
-  "run_id": "1018cf22170d",
+  "run_id": "fe4bf913d8f5",
   "task_id": "calculator_bug",
   "title": "Fix addition in calculator.py",
   "mode": "treatment",
   "verdict": "VERIFIED",
   "adapter": "replay",
-  "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/ff43318ae5d2",
-  "workspace_dir": "/var/folders/56/k6d868zx2c755lc49bbjkt740000gn/T/cbc-workspace-xuc8rn_i/workspace",
+  "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/b520ce506ed1",
+  "workspace_dir": "/var/folders/56/k6d868zx2c755lc49bbjkt740000gn/T/cbc-workspace-pjww9qz8/workspace",
   "plan": {
     "summary": "Plan for calculator_bug: edit only the allowed files and satisfy the deterministic oracle.",
     "allowed_files": [
@@ -48,7 +48,7 @@
             "exit_code": 1,
             "stdout": "F                                                                        [100%]\n=================================== FAILURES ===================================\n___________________________________ test_add ___________________________________\n\n    def test_add() -> None:\n>       assert add(2, 3) == 5\nE       assert -1 == 5\nE        +  where -1 = add(2, 3)\n\ntest_calculator.py:5: AssertionError\n=========================== short test summary info ============================\nFAILED test_calculator.py::test_add - assert -1 == 5\n1 failed in 0.02s\n",
             "stderr": "",
-            "duration_seconds": 0.2559592499746941,
+            "duration_seconds": 0.27892562496708706,
             "details": {}
           },
           {
@@ -58,7 +58,7 @@
             "exit_code": 0,
             "stdout": "Listing '.'...\nListing './.pytest_cache'...\nListing './.pytest_cache/v'...\nListing './.pytest_cache/v/cache'...\nCompiling './calculator.py'...\nCompiling './test_calculator.py'...\n",
             "stderr": "",
-            "duration_seconds": 0.04567204200429842,
+            "duration_seconds": 0.05560299998614937,
             "details": {}
           },
           {
@@ -143,8 +143,8 @@
           "contract_graph_nodes=1"
         ]
       },
-      "started_at": "2026-04-18T22:42:41.156400Z",
-      "ended_at": "2026-04-18T22:42:41.460217Z"
+      "started_at": "2026-04-18T22:52:27.156511Z",
+      "ended_at": "2026-04-18T22:52:27.493141Z"
     },
     {
       "attempt": 2,
@@ -170,9 +170,9 @@
             "command": "python3 -m pytest -q",
             "status": "passed",
             "exit_code": 0,
-            "stdout": ".                                                                        [100%]\n1 passed in 0.01s\n",
+            "stdout": ".                                                                        [100%]\n1 passed in 0.00s\n",
             "stderr": "",
-            "duration_seconds": 0.2681332500069402,
+            "duration_seconds": 0.21866362501168624,
             "details": {}
           },
           {
@@ -182,7 +182,7 @@
             "exit_code": 0,
             "stdout": "Listing '.'...\nListing './.pytest_cache'...\nListing './.pytest_cache/v'...\nListing './.pytest_cache/v/cache'...\nCompiling './calculator.py'...\nCompiling './test_calculator.py'...\n",
             "stderr": "",
-            "duration_seconds": 0.05647845898056403,
+            "duration_seconds": 0.04804595897439867,
             "details": {}
           },
           {
@@ -265,12 +265,12 @@
           "contract_graph_nodes=1"
         ]
       },
-      "started_at": "2026-04-18T22:42:41.156400Z",
-      "ended_at": "2026-04-18T22:42:41.785931Z"
+      "started_at": "2026-04-18T22:52:27.156511Z",
+      "ended_at": "2026-04-18T22:52:27.760912Z"
     }
   ],
   "unsafe_claims": 1,
-  "final_summary": "All deterministic checks passed. Source workspace /Users/alhinai/Desktop/TRUE/fixtures/oracle_tasks/calculator_bug/workspace was copied into staged workspace /var/folders/56/k6d868zx2c755lc49bbjkt740000gn/T/cbc-workspace-xuc8rn_i/workspace. All edits are confined to the staged copy. Checkpoints: attempt-1@workspace, attempt-2@workspace.",
-  "started_at": "2026-04-18T22:42:41.156400Z",
-  "ended_at": "2026-04-18T22:42:41.785988Z"
+  "final_summary": "All deterministic checks passed. Source workspace /Users/alhinai/Desktop/TRUE/fixtures/oracle_tasks/calculator_bug/workspace was copied into staged workspace /var/folders/56/k6d868zx2c755lc49bbjkt740000gn/T/cbc-workspace-pjww9qz8/workspace. All edits are confined to the staged copy. Checkpoints: attempt-1@workspace, attempt-2@workspace.",
+  "started_at": "2026-04-18T22:52:27.156511Z",
+  "ended_at": "2026-04-18T22:52:27.760972Z"
 }

@@ -1,0 +1,40 @@
+{
+  "run_id": "fe4bf913d8f5",
+  "task_id": "calculator_bug",
+  "summary": {
+    "diff": {
+      "total_files": 1,
+      "files": [
+        {
+          "path": "calculator.py",
+          "status": "modified",
+          "additions": 0,
+          "deletions": 0
+        }
+      ]
+    },
+    "risk": {
+      "risk_level": "CRITICAL",
+      "reasons": [
+        "1 changed files",
+        "unsafe claim detected"
+      ]
+    },
+    "verification": {
+      "state": "VERIFIED",
+      "passing_checks": [
+        "pytest",
+        "lint"
+      ],
+      "failing_checks": [],
+      "unsafe_claims": 1
+    },
+    "merge_gate": {
+      "verdict": "UNSAFE",
+      "reason": "verification=VERIFIED, risk=CRITICAL"
+    }
+  },
+  "supporting_checks": [
+    "pytest"
+  ]
+}

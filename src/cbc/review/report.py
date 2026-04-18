@@ -10,10 +10,17 @@ from .summarize import summarize_diff
 
 
 def compose_review_report(run_artifact: Mapping[str, Any]) -> dict[str, Any]:
+    if "summary" in run_artifact and isinstance(run_artifact["summary"], Mapping):
+        return dict(run_artifact)
+
     verification = verification_state(run_artifact)
     diff = summarize_diff(run_artifact)
     risk = summarize_risk(diff, verification)
     gate = merge_gate_verdict(run_artifact, risk_summary=risk)
+    plan = run_artifact.get("plan", {})
+    supporting_checks = []
+    if isinstance(plan, Mapping):
+        supporting_checks = list(plan.get("required_checks", []))
 
     return {
         "run_id": run_artifact.get("run_id") or run_artifact.get("id") or "unknown-run",
@@ -24,6 +31,7 @@ def compose_review_report(run_artifact: Mapping[str, Any]) -> dict[str, Any]:
             "verification": verification,
             "merge_gate": gate,
         },
+        "supporting_checks": supporting_checks,
     }
 
 

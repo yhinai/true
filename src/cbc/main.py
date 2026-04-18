@@ -13,6 +13,7 @@ from cbc.controller.orchestrator import run_task
 from cbc.intake.normalize import load_task
 from cbc.models import ProofCard
 from cbc.review.merge_gate import compute_merge_gate
+from cbc.review.report import compose_review_report_from_path
 from cbc.review.summarize import summarize_run
 
 app = typer.Typer(help="Correct by Construction CLI")
@@ -68,6 +69,15 @@ def review(task_path: Path, mode: str = typer.Option("treatment", "--mode", "-m"
     console.print(f"Review verdict: {review_report.verdict}")
     console.print(review_report.summary)
     console.print(f"Merge gate: {merge_gate.summary}")
+
+
+@app.command("review-artifact")
+def review_artifact(artifact_path: Path) -> None:
+    report = compose_review_report_from_path(artifact_path)
+    console.print(f"Review artifact: {report['run_id']}")
+    console.print(f"Verification: {report['summary']['verification']['state']}")
+    console.print(f"Merge gate: {report['summary']['merge_gate']['verdict']}")
+    console.print(f"Risk: {report['summary']['risk']['risk_level']}")
 
 
 @app.command()

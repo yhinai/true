@@ -23,10 +23,11 @@
 
 ## Current Expected Outcome
 
-On the checked-in replay benchmark, treatment outperforms baseline on Verified Success Rate while keeping the same task-level Unsafe Claim Rate.
+On the checked-in replay smoke benchmark, treatment outperforms baseline on Verified Success Rate while keeping the same task-level Unsafe Claim Rate.
 
 ## Command Path
 
 ```bash
 ./scripts/run_compare.sh
+python3 scripts/run_compare.py
 ```

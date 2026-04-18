@@ -1,57 +1,44 @@
 {
-  "budget": {
-    "per_task_seconds": 30,
-    "suite_seconds": 120
-  },
-  "candidate_source": "solution",
-  "completed_at": "2026-04-18T22:34:52+00:00",
+  "suite": "baseline-smoke",
   "config_path": "/Users/alhinai/Desktop/TRUE/benchmark-configs/baseline.yaml",
-  "description": "Vanilla Codex benchmark shape: single attempt, deterministic scoring, no automatic retry-with-evidence.",
-  "failed": 0,
-  "golden_task_ids": [
-    "greeting_text_patch",
-    "json_status_rollup"
-  ],
-  "note": "This suite verifies fixture oracles against the checked-in candidate source. It does not execute a Codex adapter yet.",
-  "passed": 3,
-  "policy": {
-    "max_attempts": 1,
-    "require_proof_card": false,
-    "retry_with_evidence": false,
-    "unsafe_claim_tracking": "score from run artifacts after verification"
+  "summary": {
+    "task_count": 3,
+    "verified_success_rate": 0.3333333333333333,
+    "unsafe_claim_rate": 0.6666666666666666,
+    "average_attempt_count": 1.0,
+    "average_retries": 0.0,
+    "average_duration_s": 0.29118866666666665
   },
-  "started_at": "2026-04-18T22:34:52+00:00",
-  "subset_path": "/Users/alhinai/Desktop/TRUE/fixtures/curated_subset/minimal.yaml",
-  "suite": "baseline",
-  "task_count": 3,
-  "tasks": [
+  "results": [
     {
-      "duration_ms": 24,
-      "exit_code": 0,
-      "passed": true,
-      "proof_card_path": null,
-      "task_id": "greeting_text_patch",
-      "title": "Fix the single-line greeting typo",
-      "verification_path": "/Users/alhinai/Desktop/TRUE/reports/baseline-smoke/tasks/greeting_text_patch/verification.json"
+      "task_id": "calculator_bug",
+      "mode": "baseline",
+      "verdict": "FALSIFIED",
+      "verified_success": false,
+      "unsafe_claims": 1,
+      "retries": 0,
+      "elapsed_seconds": 0.31231,
+      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/80685e899a64"
     },
     {
-      "duration_ms": 24,
-      "exit_code": 0,
-      "passed": true,
-      "proof_card_path": null,
-      "task_id": "json_status_rollup",
-      "title": "Repair a derived JSON summary",
-      "verification_path": "/Users/alhinai/Desktop/TRUE/reports/baseline-smoke/tasks/json_status_rollup/verification.json"
+      "task_id": "title_case_bug",
+      "mode": "baseline",
+      "verdict": "VERIFIED",
+      "verified_success": true,
+      "unsafe_claims": 0,
+      "retries": 0,
+      "elapsed_seconds": 0.315835,
+      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/0b16c594dafa"
     },
     {
-      "duration_ms": 10,
-      "exit_code": 0,
-      "passed": true,
-      "proof_card_path": null,
-      "task_id": "shell_banner_contract",
-      "title": "Repair a shell-based verification banner",
-      "verification_path": "/Users/alhinai/Desktop/TRUE/reports/baseline-smoke/tasks/shell_banner_contract/verification.json"
+      "task_id": "slug_shell_bug",
+      "mode": "baseline",
+      "verdict": "FALSIFIED",
+      "verified_success": false,
+      "unsafe_claims": 1,
+      "retries": 0,
+      "elapsed_seconds": 0.245421,
+      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/2c208d2daf63"
     }
-  ],
-  "verified_success_rate": 1.0
+  ]
 }

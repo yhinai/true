@@ -28,11 +28,15 @@ Golden task:
 
 Current implementation:
 - real CLI for `run`, `compare`, `review`, and `api`
-- replay-backed fixtures for reproducible benchmarks
+- replay-backed fixtures for a reproducible smoke benchmark
 - Codex adapter wired through `codex exec --json --output-schema`
 - deterministic verification via pytest, shell oracles, and lightweight gates
 - SQLite-backed run and benchmark index
 - proof cards, ledgers, compare reports, and scoreboard output
+
+Current benchmark honesty:
+- the default checked-in benchmark is a replay smoke benchmark, not a live Codex benchmark
+- live Codex execution is supported through `adapter: codex`, but the checked-in curated subset uses replay tasks so it stays deterministic in CI and local smoke runs
 
 Quick start:
 
@@ -40,6 +44,7 @@ Quick start:
 PYTHONPATH=src python3 -m pytest
 ./scripts/run_compare.sh
 ./scripts/run_treatment.sh
+python3 scripts/run_compare.py
 ```
 
 Key docs:
