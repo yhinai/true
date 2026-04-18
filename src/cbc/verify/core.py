@@ -3,7 +3,7 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 
-from cbc.models import CheckResult, CheckStatus, VerificationReport, VerificationVerdict
+from cbc.models import CheckResult, CheckStatus, TaskSpec, VerificationReport, VerificationVerdict
 from cbc.verify.contract_ir import build_contract_graph
 from cbc.verify.contracts import inspect_contracts
 from cbc.verify.coverage_runner import run_coverage
@@ -21,21 +21,32 @@ from cbc.verify.type_runner import run_typecheck
 def verify_workspace(
     workspace: Path,
     *,
-    oracles,
+    task: TaskSpec,
     changed_files: list[str],
     claimed_success: bool,
-    enable_deeper_checks: bool = False,
 ) -> VerificationReport:
     for cache_dir in workspace.rglob("__pycache__"):
         shutil.rmtree(cache_dir, ignore_errors=True)
 
-    checks: list[CheckResult] = [run_oracle(workspace, oracle) for oracle in oracles]
-    checks.append(run_lint(workspace))
-    checks.append(run_typecheck(workspace, enabled=False))
-    checks.append(run_coverage(workspace, enabled=False))
+    checks: list[CheckResult] = [run_oracle(workspace, oracle) for oracle in task.oracles]
+    checks.append(run_lint(workspace, command=task.verification.lint_command))
+    checks.append(
+        run_typecheck(
+            workspace,
+            enabled=task.verification.typecheck_enabled,
+            command=task.verification.typecheck_command,
+        )
+    )
+    checks.append(
+        run_coverage(
+            workspace,
+            enabled=task.verification.coverage_enabled,
+            command=task.verification.coverage_command,
+        )
+    )
     checks.append(inspect_contracts(workspace))
-    checks.append(run_crosshair(workspace, enabled=enable_deeper_checks))
-    checks.append(run_hypothesis(workspace, enabled=enable_deeper_checks))
+    checks.append(run_crosshair(workspace, enabled="python" in task.tags))
+    checks.append(run_hypothesis(workspace, enabled="python" in task.tags))
     checks.append(run_mutation(workspace, enabled=False))
 
     verdict = verdict_from_checks(checks)

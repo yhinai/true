@@ -7,6 +7,7 @@
 - Treatment retries with concrete evidence.
 - Curated replay smoke comparison is reproducible from one command.
 - Treatment currently improves verified success rate on the checked-in replay subset.
+- A live `adapter: codex` lane now exists for end-to-end agent runs against the same verifier loop.
 
 ## Evidence
 

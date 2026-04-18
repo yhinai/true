@@ -59,10 +59,9 @@ def run_task(task: TaskSpec, *, mode: str, config: AppConfig = DEFAULT_CONFIG) -
         changed_files = apply_writes(workspace, response.writes, plan.allowed_files)
         verification = verify_workspace(
             workspace,
-            oracles=task.oracles,
+            task=task,
             changed_files=changed_files,
             claimed_success=response.claimed_success,
-            enable_deeper_checks="python" in task.tags,
         )
         unsafe_claims += int(verification.unsafe_claim_detected)
         attempt_record = AttemptRecord(

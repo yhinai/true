@@ -27,6 +27,7 @@ JSON_RESPONSE_CONTRACT = {
         },
     },
     "required": ["summary", "claimed_success", "notes", "writes"],
+    "required": ["summary", "claimed_success", "notes", "writes"],
     "additionalProperties": False,
 }
 

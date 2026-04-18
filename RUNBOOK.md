@@ -36,6 +36,13 @@ uv run pytest
 ./scripts/run_live_codex.sh
 ```
 
+## Run The Live Codex Comparison
+
+```bash
+./scripts/run_live_compare.sh
+```
+
+This uses the same orchestrator and deterministic verifier, but the task spec uses `adapter: codex` instead of replay.
 ## Start The API
 
 ```bash

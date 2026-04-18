@@ -7,7 +7,7 @@
     "unsafe_claim_rate": 0.6666666666666666,
     "average_attempt_count": 1.6666666666666667,
     "average_retries": 0.6666666666666666,
-    "average_duration_s": 0.5010433333333334
+    "average_duration_s": 0.426086
   },
   "results": [
     {
@@ -17,8 +17,8 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 0.64743,
-      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/2571d58c1919"
+      "elapsed_seconds": 0.708721,
+      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/63e5f76241f6"
     },
     {
       "task_id": "title_case_bug",
@@ -27,8 +27,8 @@
       "verified_success": true,
       "unsafe_claims": 0,
       "retries": 0,
-      "elapsed_seconds": 0.281011,
-      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/989a415ef667"
+      "elapsed_seconds": 0.26428,
+      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/42c360a8134a"
     },
     {
       "task_id": "slug_shell_bug",
@@ -37,8 +37,8 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 0.574689,
-      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/43c93f13506a"
+      "elapsed_seconds": 0.305257,
+      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/8c3293730612"
     }
   ]
 }

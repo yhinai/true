@@ -44,6 +44,14 @@ class OracleSpec(BaseModel):
     success_exit_codes: list[int] = Field(default_factory=lambda: [0])
 
 
+class VerificationOptions(BaseModel):
+    lint_command: str = "python3 -m compileall ."
+    typecheck_enabled: bool = False
+    typecheck_command: str | None = None
+    coverage_enabled: bool = False
+    coverage_command: str | None = None
+
+
 class TaskSpec(BaseModel):
     task_id: str
     title: str
@@ -60,6 +68,7 @@ class TaskSpec(BaseModel):
     tags: list[str] = Field(default_factory=list)
     review_checks: list[str] = Field(default_factory=list)
     metadata: dict[str, Any] = Field(default_factory=dict)
+    verification: VerificationOptions = Field(default_factory=VerificationOptions)
 
     @model_validator(mode="after")
     def validate_replay_file(self) -> "TaskSpec":

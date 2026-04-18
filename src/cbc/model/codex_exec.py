@@ -43,11 +43,12 @@ class CodexExecAdapter(ModelAdapter):
             command.append("--dangerously-bypass-approvals-and-sandbox")
         if schema_path:
             command.extend(["--output-schema", str(schema_path)])
-        command.append(prompt)
+        command.append("-")
 
         completed = subprocess.run(
             command,
             cwd=workspace,
+            input=prompt,
             capture_output=True,
             text=True,
             check=False,
@@ -55,6 +56,7 @@ class CodexExecAdapter(ModelAdapter):
 
         events: list[ModelEvent] = []
         parsed_message: str | None = None
+        reported_error: str | None = None
         for line in completed.stdout.splitlines():
             try:
                 payload = json.loads(line)
@@ -64,9 +66,17 @@ class CodexExecAdapter(ModelAdapter):
             candidate = _extract_assistant_message(payload)
             if candidate:
                 parsed_message = candidate
+            if payload.get("type") == "error":
+                reported_error = payload.get("message")
+            elif payload.get("type") == "turn.failed":
+                reported_error = payload.get("error", {}).get("message", reported_error)
 
         if completed.returncode != 0 and not parsed_message:
-            raise RuntimeError(completed.stderr.strip() or "codex exec failed without a final assistant message")
+            raise RuntimeError(
+                reported_error
+                or completed.stderr.strip()
+                or "codex exec failed without a final assistant message"
+            )
 
         if not parsed_message:
             raise RuntimeError("codex exec did not produce a parseable assistant message")

@@ -1,0 +1,2 @@
+tasks:
+  - ../fixtures/oracle_tasks/live_codex_calculator/task.yaml

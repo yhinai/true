@@ -40,6 +40,11 @@ Current benchmark honesty:
 - the checked-in curated subset stays replay-backed for deterministic CI and local smoke runs
 - a separate checked-in live suite is available at `benchmark-configs/live_codex_subset.yaml`
 
+Live Codex lane:
+- [benchmark-configs/live_codex.yaml](/Users/alhinai/Desktop/TRUE/benchmark-configs/live_codex.yaml)
+- [fixtures/oracle_tasks/live_codex_calculator/task.yaml](/Users/alhinai/Desktop/TRUE/fixtures/oracle_tasks/live_codex_calculator/task.yaml)
+- `./scripts/run_live_compare.sh`
+
 Quick start:
 
 ```bash
