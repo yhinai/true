@@ -28,6 +28,7 @@ Golden task:
 
 Current implementation:
 - real CLI for `run`, `compare`, `review`, `review-workspace`, `ci`, and `api`
+- a seeded POC harness compares direct raw Codex against CBC baseline and treatment on a checked-in live task bank
 - replay-backed fixtures for a reproducible smoke benchmark
 - Codex adapter wired through `codex exec --json --output-schema`
 - deterministic verification via pytest, shell oracles, bounded structural checks, and property-case checks that can emit counterexample artifacts plus generated regression tests
@@ -60,6 +61,7 @@ uv run --extra dev pytest
 python3 scripts/run_compare.py
 ./scripts/run_live_codex.sh
 ./scripts/run_live_compare.sh
+./scripts/run_poc_compare.sh --sample-size 1 --seed 42
 ```
 
 Key docs:
@@ -78,6 +80,12 @@ Live Codex benchmark:
 
 ```bash
 ./scripts/run_live_compare.sh
+```
+
+Automated raw-vs-CBC POC:
+
+```bash
+./scripts/run_poc_compare.sh --sample-size 2 --seed 42 --repetitions 2
 ```
 
 Review/CI validation against an existing workspace diff:

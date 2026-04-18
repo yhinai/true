@@ -34,6 +34,13 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
             "pytest",
             "pytest",
         ),
+        (
+            REPO_ROOT / "fixtures/oracle_tasks/slugify_property_regression_codex/task.yaml",
+            REPO_ROOT / "fixtures/oracle_tasks/slugify_property_regression/workspace",
+            ["pytest", "hypothesis"],
+            "pytest",
+            "pytest",
+        ),
     ],
 )
 def test_live_codex_task_specs_load_correctly(

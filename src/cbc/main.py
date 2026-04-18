@@ -8,10 +8,11 @@ from rich.table import Table
 
 from cbc.api.app import create_app
 from cbc.benchmark.local_runner import run_local_benchmark
+from cbc.benchmark.poc_compare import RawPromptStyle, run_poc_comparison
 from cbc.controller.artifact_flow import render_proof_card
 from cbc.controller.orchestrator import review_workspace, run_task
 from cbc.intake.normalize import load_task
-from cbc.models import ProofCard
+from cbc.models import PocMetrics, ProofCard
 from cbc.review.ci import build_ci_report
 from cbc.review.merge_gate import compute_merge_gate
 from cbc.review.report import compose_review_report_from_path
@@ -58,6 +59,39 @@ def compare(config_path: Path = typer.Option(Path("benchmark-configs/curated_sub
         f"{comparison.treatment_metrics.unsafe_claim_rate:.2f}",
     )
     console.print(table)
+    console.print(f"Reports: {comparison.report_dir}")
+
+
+@app.command()
+def poc(
+    config_path: Path = typer.Option(Path("benchmark-configs/poc_live_codex.yaml")),
+    seed: int = typer.Option(42),
+    sample_size: int = typer.Option(3, min=1),
+    repetitions: int = typer.Option(1, min=1),
+    raw_prompt_style: RawPromptStyle = typer.Option(RawPromptStyle.SCAFFOLDED),
+) -> None:
+    comparison = run_poc_comparison(
+        config_path,
+        seed=seed,
+        sample_size=sample_size,
+        repetitions=repetitions,
+        raw_prompt_style=raw_prompt_style,
+    )
+    table = Table(title="POC Comparison")
+    table.add_column("Arm")
+    table.add_column("Verified Success")
+    table.add_column("Unsafe Claim")
+    table.add_column("Avg Retries")
+    table.add_column("Avg Seconds")
+    table.add_column("Avg Changed Files")
+    for arm, metrics in (
+        ("raw_codex", comparison.raw_codex_metrics),
+        ("cbc_baseline", comparison.cbc_baseline_metrics),
+        ("cbc_treatment", comparison.cbc_treatment_metrics),
+    ):
+        _add_poc_row(table, arm, metrics)
+    console.print(table)
+    console.print(f"Sampled tasks: {', '.join(path.parent.name for path in comparison.sampled_tasks)}")
     console.print(f"Reports: {comparison.report_dir}")
 
 
@@ -118,6 +152,17 @@ def api(host: str = "127.0.0.1", port: int = 8000) -> None:
     import uvicorn
 
     uvicorn.run(create_app(), host=host, port=port)
+
+
+def _add_poc_row(table: Table, arm: str, metrics: PocMetrics) -> None:
+    table.add_row(
+        arm,
+        f"{metrics.verified_success_rate:.2f}",
+        f"{metrics.unsafe_claim_rate:.2f}",
+        f"{metrics.average_retries:.2f}",
+        f"{metrics.average_elapsed_seconds:.2f}",
+        f"{metrics.average_changed_files:.2f}",
+    )
 
 
 if __name__ == "__main__":

@@ -227,6 +227,52 @@ class BenchmarkComparison(BaseModel):
     report_dir: Path
 
 
+class PocArm(str, Enum):
+    RAW_CODEX = "raw_codex"
+    CBC_BASELINE = "cbc_baseline"
+    CBC_TREATMENT = "cbc_treatment"
+
+
+class PocRunResult(BaseModel):
+    task_id: str
+    task_path: Path
+    title: str
+    arm: PocArm
+    repetition: int
+    verdict: VerificationVerdict
+    verified_success: bool
+    unsafe_claims: int
+    retries: int
+    elapsed_seconds: float
+    changed_files: int
+    artifact_dir: Path
+    summary: str
+
+
+class PocMetrics(BaseModel):
+    verified_success_rate: float
+    unsafe_claim_rate: float
+    average_retries: float
+    average_elapsed_seconds: float
+    average_changed_files: float
+
+
+class PocComparison(BaseModel):
+    poc_id: str
+    config_path: Path
+    seed: int
+    sample_size: int
+    repetitions: int
+    raw_prompt_style: Literal["minimal", "scaffolded"]
+    sampled_tasks: list[Path]
+    results: list[PocRunResult]
+    raw_codex_metrics: PocMetrics
+    cbc_baseline_metrics: PocMetrics
+    cbc_treatment_metrics: PocMetrics
+    created_at: datetime = Field(default_factory=utc_now)
+    report_dir: Path
+
+
 class ModelEvent(BaseModel):
     kind: str
     payload: dict[str, Any] = Field(default_factory=dict)

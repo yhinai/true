@@ -12,6 +12,7 @@
 - Python tasks now run a bounded structural check that can fail locally-valid but signature-broken changes.
 - Python property checks can now emit counterexample artifacts and generated regression tests during the main retry loop.
 - A bounded read-only explorer role now identifies likely targets and nearby tests before the coder runs, and that brief is persisted as a run artifact.
+- A seeded POC harness now compares direct raw Codex against CBC baseline and treatment on a checked-in live task bank.
 
 ## Evidence
 
@@ -22,6 +23,7 @@
 - review/CI artifact path is emitted after `review-workspace` and `ci`
 - live Codex task path: `./scripts/run_live_codex.sh`
 - live Codex compare path: `./scripts/run_live_compare.sh`
+- automated raw-vs-CBC POC path: `./scripts/run_poc_compare.sh --sample-size 2 --seed 42`
 - property-regression demo path: `PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/slugify_property_regression/task.yaml --mode treatment`
 
 ## Remaining Depth

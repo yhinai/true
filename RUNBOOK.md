@@ -32,6 +32,13 @@ uv run --extra dev pytest
 This uses the same orchestrator and deterministic verifier, but the benchmark file pins live Codex runtime settings in its `codex:` block instead of relying only on app defaults. The checked-in live lane is standardized on `gpt-5.4`, `workspace-write`, and `dangerously_bypass_approvals: false`.
 The checked-in live lane also standardizes on `model_reasoning_effort="medium"` and intentionally leaves `profile` unset so it does not depend on a local user profile name.
 
+## Run The Automated Raw-vs-CBC POC
+
+```bash
+./scripts/run_poc_compare.sh --sample-size 2 --seed 42 --repetitions 2
+```
+This samples from a checked-in live task bank, runs a direct raw Codex arm plus CBC baseline and treatment, and writes a JSON/markdown comparison under `reports/poc/`.
+
 ## Run One Live Codex Task
 
 ```bash

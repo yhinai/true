@@ -38,4 +38,5 @@ On the checked-in replay smoke benchmark, treatment outperforms baseline on Veri
 ./scripts/run_compare.sh
 python3 scripts/run_compare.py
 ./scripts/run_live_compare.sh
+./scripts/run_poc_compare.sh --sample-size 2 --seed 42
 ```
