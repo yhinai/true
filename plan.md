@@ -549,7 +549,6 @@ correct-by-construction/
 │   ├── baseline.yaml
 │   ├── treatment.yaml
 │   └── curated_subset.yaml
-└── jetbrains-plugin/   # later only
 
 Repo rule:
   Each new phase adds modules and artifacts.
@@ -949,30 +948,31 @@ Phase gate:
   - simple sequential loop still available as fallback
 
 ===============================================================================
-PHASE 10 — IDE / PRODUCT SHELL
+PHASE 10 — HEADLESS PRODUCT COMPLETION
 ===============================================================================
 
 Goal:
   Make the system easier to use without touching the trust core.
 
 Meaning:
-  Add IDE shell and polish.
+  Add headless product polish and stable interfaces.
 
 Scope:
-  - JetBrains tool window
-  - artifact viewer
-  - benchmark tab
-  - thin backend bridge
+  - stable CLI contract
+  - stable API contract
+  - stable artifact schemas
+  - stable benchmark/report flow
+  - headless demo and runbook polish
 
 What exists at the end:
-  Better adoption surface.
+  Better adoption surface for headless workflows.
 
 What is proven:
-  Surfaces can change without changing trust logic.
+  Product surfaces can change without changing trust logic.
 
 Phase gate:
-  - CLI and IDE produce same underlying results
-  - IDE only visualizes and controls, does not redefine truth
+  - CLI and API produce the same underlying results
+  - headless surfaces only visualize and control, and do not redefine truth
   - core benchmark loop still works headless
 
 ################################################################################
@@ -999,7 +999,7 @@ If these are not true, the phase is not complete.
 Cut first:
   1. mutation testing
   2. CrossHair if unstable
-  3. JetBrains plugin
+  3. UI surfaces beyond the headless CLI/API contract
   4. separate Planner role
   5. Reviewer role
   6. subagents
