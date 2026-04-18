@@ -1,0 +1,17 @@
+{
+  "summary": "Explorer found 1 likely target file(s), 1 nearby test file(s), and 2 related file(s).",
+  "likely_targets": [
+    "slugify.py"
+  ],
+  "nearby_tests": [
+    "test_slugify.py"
+  ],
+  "related_files": [
+    "property_checks.py",
+    "test_slugify.py"
+  ],
+  "notes": [
+    "python_files_scanned=3",
+    "allowed_scope=slugify.py"
+  ]
+}

@@ -1,0 +1,176 @@
+{
+  "run_id": "43957e16060e",
+  "task_id": "slugify_property_regression",
+  "title": "Fix slugify and capture a regression test from a failing property case",
+  "mode": "treatment",
+  "changed_files": [
+    "slugify.py"
+  ],
+  "unsafe_claim": true,
+  "diff": {
+    "total_files": 1,
+    "files": [
+      {
+        "path": "slugify.py",
+        "status": "modified",
+        "additions": 2,
+        "deletions": 1,
+        "before_exists": true,
+        "after_exists": true
+      }
+    ]
+  },
+  "generated_test_artifacts": [
+    "/Users/alhinai/Desktop/TRUE/artifacts/runs/44e5a06788c5/generated_tests/test_slugify_property_regression.py"
+  ],
+  "verification": {
+    "status": "VERIFIED",
+    "checks": [
+      {
+        "name": "pytest",
+        "command": "python3 -m pytest -q",
+        "status": "passed",
+        "exit_code": 0,
+        "stdout": ".                                                                        [100%]\n1 passed in 0.00s\n",
+        "stderr": "",
+        "duration_seconds": 0.1945656249881722,
+        "details": {}
+      },
+      {
+        "name": "lint",
+        "command": "python3 -m compileall .",
+        "status": "passed",
+        "exit_code": 0,
+        "stdout": "Listing '.'...\nListing './.pytest_cache'...\nListing './.pytest_cache/v'...\nListing './.pytest_cache/v/cache'...\nCompiling './property_checks.py'...\nCompiling './slugify.py'...\nCompiling './test_slugify.py'...\n",
+        "stderr": "",
+        "duration_seconds": 0.0446276250295341,
+        "details": {}
+      },
+      {
+        "name": "typecheck",
+        "command": "disabled",
+        "status": "skipped",
+        "exit_code": null,
+        "stdout": "Type checking is disabled for this task.",
+        "stderr": "",
+        "duration_seconds": 0.0,
+        "details": {}
+      },
+      {
+        "name": "coverage",
+        "command": "disabled",
+        "status": "skipped",
+        "exit_code": null,
+        "stdout": "Coverage is disabled for this task.",
+        "stderr": "",
+        "duration_seconds": 0.0,
+        "details": {}
+      },
+      {
+        "name": "structural",
+        "command": "bounded structural analysis",
+        "status": "passed",
+        "exit_code": null,
+        "stdout": "No structural mismatches found in the bounded slice.",
+        "stderr": "",
+        "duration_seconds": 0.0,
+        "details": {
+          "slice": {
+            "changed_files": [
+              "slugify.py"
+            ],
+            "impacted_files": [
+              "property_checks.py",
+              "slugify.py",
+              "test_slugify.py"
+            ]
+          },
+          "callgraph": {
+            "property_checks.py": [
+              "slugify"
+            ],
+            "slugify.py": [],
+            "test_slugify.py": [
+              "slugify"
+            ]
+          },
+          "dependency_dag": {
+            "property_checks.py": [
+              "slugify"
+            ],
+            "slugify.py": [],
+            "test_slugify.py": [
+              "slugify"
+            ]
+          },
+          "mismatches": []
+        }
+      },
+      {
+        "name": "contracts",
+        "command": "static inspection",
+        "status": "skipped",
+        "exit_code": null,
+        "stdout": "Contracts are supported as an optional deeper verification layer.",
+        "stderr": "",
+        "duration_seconds": 0.0,
+        "details": {}
+      },
+      {
+        "name": "crosshair",
+        "command": "disabled",
+        "status": "skipped",
+        "exit_code": null,
+        "stdout": "Not implemented",
+        "stderr": "",
+        "duration_seconds": 0.0,
+        "details": {}
+      },
+      {
+        "name": "hypothesis",
+        "command": "property cases via property_checks.py:assert_slugify_properties",
+        "status": "passed",
+        "exit_code": null,
+        "stdout": "Property cases passed for 4 configured examples.",
+        "stderr": "",
+        "duration_seconds": 0.0,
+        "details": {
+          "cases_checked": 4
+        }
+      },
+      {
+        "name": "mutation",
+        "command": "disabled",
+        "status": "skipped",
+        "exit_code": null,
+        "stdout": "Mutation testing is intentionally cut by default.",
+        "stderr": "",
+        "duration_seconds": 0.0,
+        "details": {}
+      }
+    ],
+    "summary": "All deterministic checks passed.",
+    "counterexample": null
+  },
+  "artifacts": {
+    "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/44e5a06788c5",
+    "workspace_dir": "/var/folders/56/k6d868zx2c755lc49bbjkt740000gn/T/cbc-workspace-6g74_q7s/workspace"
+  },
+  "explorer": {
+    "summary": "Explorer found 1 likely target file(s), 1 nearby test file(s), and 2 related file(s).",
+    "likely_targets": [
+      "slugify.py"
+    ],
+    "nearby_tests": [
+      "test_slugify.py"
+    ],
+    "related_files": [
+      "property_checks.py",
+      "test_slugify.py"
+    ],
+    "notes": [
+      "python_files_scanned=3",
+      "allowed_scope=slugify.py"
+    ]
+  }
+}

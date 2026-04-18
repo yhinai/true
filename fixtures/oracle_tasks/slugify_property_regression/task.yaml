@@ -1,0 +1,32 @@
+task_id: slugify_property_regression
+title: Fix slugify and capture a regression test from a failing property case
+prompt: |
+  slugify should produce lowercase slugs with single hyphen separators and remain idempotent.
+  Update only slugify.py so the unit test passes and the configured property cases hold.
+workspace: workspace
+allowed_files:
+  - slugify.py
+required_checks:
+  - pytest
+  - hypothesis
+doubt_points:
+  - Keep the implementation minimal.
+oracles:
+  - name: pytest
+    kind: pytest
+    command: -q
+adapter: replay
+replay_file: replay.json
+retry_budget: 2
+tags:
+  - python
+hypothesis:
+  path: property_checks.py
+  function: assert_slugify_properties
+  cases:
+    - Hello World
+    - Hello  World
+    - Already-Slugged
+    - MiXeD   Case Value
+  artifact_name: slugify_counterexample.json
+  regression_test_path: test_slugify_property_regression.py

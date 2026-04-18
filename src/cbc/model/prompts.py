@@ -3,7 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from cbc.models import PlanArtifact, VerificationReport
+from cbc.models import ExplorerArtifact, PlanArtifact, VerificationReport
+from cbc.verify.core import format_counterexample
 
 
 JSON_RESPONSE_CONTRACT = {
@@ -27,7 +28,6 @@ JSON_RESPONSE_CONTRACT = {
         },
     },
     "required": ["summary", "claimed_success", "notes", "writes"],
-    "required": ["summary", "claimed_success", "notes", "writes"],
     "additionalProperties": False,
 }
 
@@ -37,7 +37,12 @@ def write_schema_file(path: Path) -> Path:
     return path
 
 
-def build_coder_prompt(task_prompt: str, plan: PlanArtifact, evidence: str | None = None) -> str:
+def build_coder_prompt(
+    task_prompt: str,
+    plan: PlanArtifact,
+    evidence: str | None = None,
+    explorer: ExplorerArtifact | None = None,
+) -> str:
     lines = [
         "You are the Coder role inside a verification-first harness.",
         "Return JSON that matches the provided schema exactly.",
@@ -50,6 +55,19 @@ def build_coder_prompt(task_prompt: str, plan: PlanArtifact, evidence: str | Non
     ]
     if plan.doubt_points:
         lines.append(f"Doubt points: {', '.join(plan.doubt_points)}")
+    if explorer is not None:
+        lines.extend(
+            [
+                "",
+                "Explorer brief:",
+                explorer.summary,
+                f"Likely targets: {', '.join(explorer.likely_targets) if explorer.likely_targets else '(none found)'}",
+                f"Nearby tests: {', '.join(explorer.nearby_tests) if explorer.nearby_tests else '(none found)'}",
+                f"Related files: {', '.join(explorer.related_files) if explorer.related_files else '(none found)'}",
+            ]
+        )
+        if explorer.notes:
+            lines.append(f"Explorer notes: {', '.join(explorer.notes)}")
     if evidence:
         lines.extend(["", "Retry evidence from the deterministic verifier:", evidence])
     return "\n".join(lines)
@@ -68,5 +86,5 @@ def summarize_verification_for_retry(report: VerificationReport) -> str:
             else:
                 details.append(f"{check.name} failed with exit code {check.exit_code}.")
     if report.counterexample:
-        details.append(f"Counterexample: {report.counterexample}")
+        details.append(f"Counterexample:\n{format_counterexample(report.counterexample)}")
     return "\n\n".join(details) if details else report.summary

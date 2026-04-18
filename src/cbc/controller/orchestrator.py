@@ -14,6 +14,7 @@ from cbc.model.prompts import summarize_verification_for_retry, write_schema_fil
 from cbc.model.replay import ReplayModelAdapter
 from cbc.models import AttemptRecord, ModelResponse, ProofCard, RetryTranscript, RunLedger, TaskSpec, VerificationVerdict
 from cbc.roles.coder import run_coder
+from cbc.roles.explorer import build_explorer_artifact
 from cbc.roles.planner import build_plan
 from cbc.storage.artifacts import create_artifact_dir
 from cbc.storage.runs import save_run
@@ -63,6 +64,7 @@ def run_task(task: TaskSpec, *, mode: str, config: AppConfig = DEFAULT_CONFIG) -
     started_at = datetime.now(UTC)
     workspace = stage_workspace(task.workspace)
     plan = build_plan(task)
+    explorer = build_explorer_artifact(task, workspace)
     adapter = load_adapter(task, config)
     max_attempts = normalize_max_attempts(task.retry_budget, config.retry.max_attempts, mode)
 
@@ -75,6 +77,7 @@ def run_task(task: TaskSpec, *, mode: str, config: AppConfig = DEFAULT_CONFIG) -
             adapter,
             task_prompt=task.prompt,
             plan=plan,
+            explorer=explorer,
             workspace=workspace,
             attempt=attempt,
             evidence=evidence,
@@ -86,6 +89,7 @@ def run_task(task: TaskSpec, *, mode: str, config: AppConfig = DEFAULT_CONFIG) -
             task=task,
             changed_files=changed_files,
             claimed_success=response.claimed_success,
+            artifact_dir=artifact_dir,
         )
         unsafe_claims += int(verification.unsafe_claim_detected)
         attempt_record = AttemptRecord(
@@ -139,6 +143,8 @@ def run_task(task: TaskSpec, *, mode: str, config: AppConfig = DEFAULT_CONFIG) -
             f"unsafe_claims={unsafe_claims}",
             f"adapter={adapter.name}",
             f"workspace_isolation={workspace}",
+            *_explorer_proof_points(explorer),
+            *_property_proof_points(attempts),
         ],
         artifact_dir=artifact_dir,
     )
@@ -149,6 +155,7 @@ def run_task(task: TaskSpec, *, mode: str, config: AppConfig = DEFAULT_CONFIG) -
         verification=final_verification,
         proof_card=proof_card,
         diff_summary=diff_summary,
+        explorer=explorer,
     )
     save_run(config.paths.storage_db, ledger)
     return ledger
@@ -168,6 +175,7 @@ def review_workspace(task: TaskSpec, workspace_path: Path, *, config: AppConfig 
         changed_files=changed_files,
         claimed_success=False,
         requested_checks=requested_checks,
+        artifact_dir=artifact_dir,
     )
     attempt = AttemptRecord(
         attempt=1,
@@ -213,6 +221,7 @@ def review_workspace(task: TaskSpec, workspace_path: Path, *, config: AppConfig 
             f"deterministic_verdict={ledger.verdict.value}",
             f"review_checks={', '.join(requested_checks)}",
             f"workspace_isolation={workspace}",
+            *_property_proof_points([attempt]),
         ],
         artifact_dir=artifact_dir,
     )
@@ -251,4 +260,28 @@ def _infer_review_checks(task: TaskSpec, changed_files: list[str]) -> list[str]:
             selected.add("typecheck")
         if task.verification.coverage_enabled:
             selected.add("coverage")
+        if task.hypothesis is not None:
+            selected.add("hypothesis")
     return sorted(selected)
+
+
+def _property_proof_points(attempts: list[AttemptRecord]) -> list[str]:
+    proof_points: list[str] = []
+    for attempt in attempts:
+        for check in attempt.verification.checks:
+            regression_artifact = check.details.get("regression_test_artifact")
+            if isinstance(regression_artifact, str):
+                proof_points.append(f"generated_regression_test={regression_artifact}")
+            counterexample_artifact = check.details.get("counterexample_artifact")
+            if isinstance(counterexample_artifact, str):
+                proof_points.append(f"counterexample_artifact={counterexample_artifact}")
+    return proof_points
+
+
+def _explorer_proof_points(explorer) -> list[str]:
+    proof_points: list[str] = []
+    if explorer.likely_targets:
+        proof_points.append(f"explorer_targets={','.join(explorer.likely_targets)}")
+    if explorer.nearby_tests:
+        proof_points.append(f"explorer_tests={','.join(explorer.nearby_tests)}")
+    return proof_points

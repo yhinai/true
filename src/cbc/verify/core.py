@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import shutil
 from pathlib import Path
 
@@ -26,6 +27,7 @@ def verify_workspace(
     changed_files: list[str],
     claimed_success: bool,
     requested_checks: list[str] | None = None,
+    artifact_dir: Path | None = None,
 ) -> VerificationReport:
     for cache_dir in workspace.rglob("__pycache__"):
         shutil.rmtree(cache_dir, ignore_errors=True)
@@ -60,7 +62,14 @@ def verify_workspace(
     if _should_run(selected, "crosshair"):
         checks.append(run_crosshair(workspace, enabled="python" in task.tags))
     if _should_run(selected, "hypothesis"):
-        checks.append(run_hypothesis(workspace, enabled="python" in task.tags))
+        checks.append(
+            run_hypothesis(
+                workspace,
+                enabled="python" in task.tags,
+                spec=task.hypothesis,
+                artifact_dir=artifact_dir,
+            )
+        )
     if _should_run(selected, "mutation"):
         checks.append(run_mutation(workspace, enabled=False))
 
@@ -69,7 +78,11 @@ def verify_workspace(
     counterexample = None
     if failed_checks:
         first = failed_checks[0]
-        counterexample = (first.stderr or first.stdout).strip()[:1500] or f"{first.name} failed"
+        structured = first.details.get("counterexample")
+        if structured is not None:
+            counterexample = structured
+        else:
+            counterexample = (first.stderr or first.stdout).strip()[:1500] or f"{first.name} failed"
 
     unsafe_claim = claimed_success and verdict != VerificationVerdict.VERIFIED
     verification_ledger = build_verification_ledger(checks)
@@ -85,6 +98,14 @@ def verify_workspace(
         failure_mode_ledger=derive_failure_modes(checks),
         verification_ledger=verification_ledger,
     )
+
+
+def format_counterexample(counterexample: dict[str, object] | str | None) -> str:
+    if counterexample is None:
+        return ""
+    if isinstance(counterexample, str):
+        return counterexample
+    return json.dumps(counterexample, indent=2, sort_keys=True)
 
 
 def _normalize_requested_checks(requested_checks: list[str] | None) -> set[str] | None:

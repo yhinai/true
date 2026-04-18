@@ -1,0 +1,48 @@
+{
+  "run_id": "43957e16060e",
+  "task_id": "slugify_property_regression",
+  "summary": {
+    "diff": {
+      "total_files": 1,
+      "files": [
+        {
+          "path": "slugify.py",
+          "status": "modified",
+          "additions": 2,
+          "deletions": 1,
+          "before_exists": true,
+          "after_exists": true
+        },
+        {
+          "path": "slugify.py",
+          "status": "modified",
+          "additions": 0,
+          "deletions": 0
+        }
+      ]
+    },
+    "risk": {
+      "risk_level": "CRITICAL",
+      "reasons": [
+        "1 changed files",
+        "unsafe claim detected"
+      ]
+    },
+    "verification": {
+      "state": "VERIFIED",
+      "passing_checks": [
+        "pytest",
+        "lint",
+        "structural",
+        "hypothesis"
+      ],
+      "failing_checks": [],
+      "unsafe_claims": 1
+    },
+    "merge_gate": {
+      "verdict": "UNSAFE",
+      "reason": "verification=VERIFIED, risk=CRITICAL"
+    }
+  },
+  "supporting_checks": []
+}

@@ -10,6 +10,8 @@
 - A live `adapter: codex` lane now exists for end-to-end agent runs against the same verifier loop.
 - Review and CI can now validate an existing workspace diff through the same verifier core.
 - Python tasks now run a bounded structural check that can fail locally-valid but signature-broken changes.
+- Python property checks can now emit counterexample artifacts and generated regression tests during the main retry loop.
+- A bounded read-only explorer role now identifies likely targets and nearby tests before the coder runs, and that brief is persisted as a run artifact.
 
 ## Evidence
 
@@ -20,6 +22,7 @@
 - review/CI artifact path is emitted after `review-workspace` and `ci`
 - live Codex task path: `./scripts/run_live_codex.sh`
 - live Codex compare path: `./scripts/run_live_compare.sh`
+- property-regression demo path: `PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/slugify_property_regression/task.yaml --mode treatment`
 
 ## Remaining Depth
 
@@ -30,3 +33,4 @@
 - live task specs can also pin task-specific Codex runtime knobs in checked-in config
 - the checked-in live lane is now standardized on `gpt-5.4`, `workspace-write`, `dangerously_bypass_approvals: false`, and `model_reasoning_effort="medium"`
 - the checked-in live lane intentionally leaves `profile` unset so it does not rely on a local user profile name
+- the next gap is extending the new explorer lane only where it proves value, rather than adding speculative multi-role complexity

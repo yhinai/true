@@ -41,6 +41,7 @@ def test_treatment_retries_to_verified(tmp_path: Path) -> None:
     assert (ledger.artifact_dir / "review_report.json").exists()
     assert (ledger.artifact_dir / "merge_gate.json").exists()
     assert (ledger.artifact_dir / "ci_report.json").exists()
+    assert (ledger.artifact_dir / "explorer_artifact.json").exists()
 
     review_report = compose_review_report_from_path(ledger.artifact_dir / "run_ledger.json")
     assert review_report["run_id"] == ledger.run_id
@@ -109,3 +110,25 @@ def test_review_workspace_builds_ci_ready_artifacts(tmp_path: Path) -> None:
 
     ci_report = build_ci_report(review_report)
     assert ci_report["exit_code"] == 0
+
+
+def test_property_task_generates_regression_artifact_on_retry(tmp_path: Path) -> None:
+    task = load_task(REPO_ROOT / "fixtures/oracle_tasks/slugify_property_regression/task.yaml")
+    ledger = run_task(task, mode="treatment", config=build_test_config(tmp_path))
+
+    assert ledger.verdict == VerificationVerdict.VERIFIED
+    assert len(ledger.attempts) == 2
+
+    first_attempt_checks = {check.name: check for check in ledger.attempts[0].verification.checks}
+    assert first_attempt_checks["hypothesis"].status.value == "failed"
+
+    regression_artifact = first_attempt_checks["hypothesis"].details["regression_test_artifact"]
+    counterexample_artifact = first_attempt_checks["hypothesis"].details["counterexample_artifact"]
+    assert Path(regression_artifact).exists()
+    assert Path(counterexample_artifact).exists()
+
+    run_artifact = compose_review_report_from_path(ledger.artifact_dir / "run_ledger.json")
+    assert run_artifact["summary"]["verification"]["state"] == "VERIFIED"
+    raw_run_artifact = (ledger.artifact_dir / "run_artifact.json").read_text(encoding="utf-8")
+    assert "generated_test_artifacts" in raw_run_artifact
+    assert '"explorer"' in raw_run_artifact

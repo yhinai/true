@@ -1,0 +1,13 @@
+{
+  "total_files": 1,
+  "files": [
+    {
+      "path": "slugify.py",
+      "status": "modified",
+      "additions": 2,
+      "deletions": 1,
+      "before_exists": true,
+      "after_exists": true
+    }
+  ]
+}

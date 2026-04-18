@@ -1,0 +1,30 @@
+[
+  {
+    "summary": "Implemented lowercase slugify with simple space replacement.",
+    "claimed_success": true,
+    "writes": [
+      {
+        "path": "slugify.py",
+        "content": "def slugify(value: str) -> str:\n    return value.strip().lower().replace(\" \", \"-\")\n",
+        "executable": false
+      }
+    ],
+    "notes": [
+      "This passes the direct pytest assertion but still leaves repeated hyphens."
+    ]
+  },
+  {
+    "summary": "Collapsed whitespace before joining with single hyphens.",
+    "claimed_success": true,
+    "writes": [
+      {
+        "path": "slugify.py",
+        "content": "def slugify(value: str) -> str:\n    words = value.strip().lower().split()\n    return \"-\".join(words)\n",
+        "executable": false
+      }
+    ],
+    "notes": [
+      "This satisfies the direct test and the configured property checks."
+    ]
+  }
+]

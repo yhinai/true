@@ -30,7 +30,8 @@ Current implementation:
 - real CLI for `run`, `compare`, `review`, `review-workspace`, `ci`, and `api`
 - replay-backed fixtures for a reproducible smoke benchmark
 - Codex adapter wired through `codex exec --json --output-schema`
-- deterministic verification via pytest, shell oracles, bounded structural checks, and lightweight gates
+- deterministic verification via pytest, shell oracles, bounded structural checks, and property-case checks that can emit counterexample artifacts plus generated regression tests
+- a bounded read-only explorer brief now feeds likely targets and nearby tests into the coder prompt and run artifacts
 - SQLite-backed run and benchmark index
 - proof cards, ledgers, diff summaries, CI reports, compare reports, and scoreboard output
 
@@ -84,4 +85,10 @@ Review/CI validation against an existing workspace diff:
 ```bash
 PYTHONPATH=src python3 -m cbc.main review-workspace fixtures/oracle_tasks/calculator_bug/task.yaml /path/to/workspace
 PYTHONPATH=src python3 -m cbc.main ci fixtures/oracle_tasks/calculator_bug/task.yaml /path/to/workspace
+```
+
+Property-regression task with counterexample and generated test artifacts:
+
+```bash
+PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/slugify_property_regression/task.yaml --mode treatment
 ```

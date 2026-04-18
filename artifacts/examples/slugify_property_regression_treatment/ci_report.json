@@ -1,0 +1,10 @@
+{
+  "run_id": "43957e16060e",
+  "task_id": "slugify_property_regression",
+  "merge_gate_verdict": "UNSAFE",
+  "verification_state": "VERIFIED",
+  "risk_level": "CRITICAL",
+  "failing_checks": [],
+  "supporting_checks": [],
+  "exit_code": 1
+}

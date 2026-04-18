@@ -1,0 +1,146 @@
+{
+  "verdict": "VERIFIED",
+  "checks": [
+    {
+      "name": "pytest",
+      "command": "python3 -m pytest -q",
+      "status": "passed",
+      "exit_code": 0,
+      "stdout": ".                                                                        [100%]\n1 passed in 0.00s\n",
+      "stderr": "",
+      "duration_seconds": 0.1945656249881722,
+      "details": {}
+    },
+    {
+      "name": "lint",
+      "command": "python3 -m compileall .",
+      "status": "passed",
+      "exit_code": 0,
+      "stdout": "Listing '.'...\nListing './.pytest_cache'...\nListing './.pytest_cache/v'...\nListing './.pytest_cache/v/cache'...\nCompiling './property_checks.py'...\nCompiling './slugify.py'...\nCompiling './test_slugify.py'...\n",
+      "stderr": "",
+      "duration_seconds": 0.0446276250295341,
+      "details": {}
+    },
+    {
+      "name": "typecheck",
+      "command": "disabled",
+      "status": "skipped",
+      "exit_code": null,
+      "stdout": "Type checking is disabled for this task.",
+      "stderr": "",
+      "duration_seconds": 0.0,
+      "details": {}
+    },
+    {
+      "name": "coverage",
+      "command": "disabled",
+      "status": "skipped",
+      "exit_code": null,
+      "stdout": "Coverage is disabled for this task.",
+      "stderr": "",
+      "duration_seconds": 0.0,
+      "details": {}
+    },
+    {
+      "name": "structural",
+      "command": "bounded structural analysis",
+      "status": "passed",
+      "exit_code": null,
+      "stdout": "No structural mismatches found in the bounded slice.",
+      "stderr": "",
+      "duration_seconds": 0.0,
+      "details": {
+        "slice": {
+          "changed_files": [
+            "slugify.py"
+          ],
+          "impacted_files": [
+            "property_checks.py",
+            "slugify.py",
+            "test_slugify.py"
+          ]
+        },
+        "callgraph": {
+          "property_checks.py": [
+            "slugify"
+          ],
+          "slugify.py": [],
+          "test_slugify.py": [
+            "slugify"
+          ]
+        },
+        "dependency_dag": {
+          "property_checks.py": [
+            "slugify"
+          ],
+          "slugify.py": [],
+          "test_slugify.py": [
+            "slugify"
+          ]
+        },
+        "mismatches": []
+      }
+    },
+    {
+      "name": "contracts",
+      "command": "static inspection",
+      "status": "skipped",
+      "exit_code": null,
+      "stdout": "Contracts are supported as an optional deeper verification layer.",
+      "stderr": "",
+      "duration_seconds": 0.0,
+      "details": {}
+    },
+    {
+      "name": "crosshair",
+      "command": "disabled",
+      "status": "skipped",
+      "exit_code": null,
+      "stdout": "Not implemented",
+      "stderr": "",
+      "duration_seconds": 0.0,
+      "details": {}
+    },
+    {
+      "name": "hypothesis",
+      "command": "property cases via property_checks.py:assert_slugify_properties",
+      "status": "passed",
+      "exit_code": null,
+      "stdout": "Property cases passed for 4 configured examples.",
+      "stderr": "",
+      "duration_seconds": 0.0,
+      "details": {
+        "cases_checked": 4
+      }
+    },
+    {
+      "name": "mutation",
+      "command": "disabled",
+      "status": "skipped",
+      "exit_code": null,
+      "stdout": "Mutation testing is intentionally cut by default.",
+      "stderr": "",
+      "duration_seconds": 0.0,
+      "details": {}
+    }
+  ],
+  "summary": "All deterministic checks passed.",
+  "unsafe_claim_detected": false,
+  "counterexample": null,
+  "changed_files": [
+    "slugify.py"
+  ],
+  "failure_mode_ledger": [],
+  "verification_ledger": [
+    "pytest: passed",
+    "lint: passed",
+    "typecheck: skipped",
+    "coverage: skipped",
+    "structural: passed",
+    "contracts: skipped",
+    "crosshair: skipped",
+    "hypothesis: passed",
+    "mutation: skipped",
+    "contract_graph_nodes=1"
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "checker": "assert_slugify_properties",
+  "input": "Hello  World",
+  "error_type": "AssertionError",
+  "message": "slugify must collapse repeated separators"
+}

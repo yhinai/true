@@ -54,6 +54,14 @@ class VerificationOptions(BaseModel):
     coverage_command: str | None = None
 
 
+class HypothesisCheckSpec(BaseModel):
+    path: str
+    function: str
+    cases: list[Any] = Field(default_factory=list)
+    artifact_name: str = "counterexample.json"
+    regression_test_path: str | None = None
+
+
 class CodexTaskConfig(BaseModel):
     model: str | None = None
     sandbox: SandboxMode | None = None
@@ -81,6 +89,7 @@ class TaskSpec(BaseModel):
     review_checks: list[str] = Field(default_factory=list)
     metadata: dict[str, Any] = Field(default_factory=dict)
     verification: VerificationOptions = Field(default_factory=VerificationOptions)
+    hypothesis: HypothesisCheckSpec | None = None
     codex: CodexTaskConfig = Field(default_factory=CodexTaskConfig)
 
     @model_validator(mode="after")
@@ -95,6 +104,14 @@ class PlanArtifact(BaseModel):
     allowed_files: list[str]
     required_checks: list[str]
     doubt_points: list[str]
+
+
+class ExplorerArtifact(BaseModel):
+    summary: str
+    likely_targets: list[str] = Field(default_factory=list)
+    nearby_tests: list[str] = Field(default_factory=list)
+    related_files: list[str] = Field(default_factory=list)
+    notes: list[str] = Field(default_factory=list)
 
 
 class CheckResult(BaseModel):
@@ -113,7 +130,7 @@ class VerificationReport(BaseModel):
     checks: list[CheckResult]
     summary: str
     unsafe_claim_detected: bool = False
-    counterexample: str | None = None
+    counterexample: dict[str, Any] | str | None = None
     changed_files: list[str] = Field(default_factory=list)
     failure_mode_ledger: list[str] = Field(default_factory=list)
     verification_ledger: list[str] = Field(default_factory=list)
