@@ -1,0 +1,23 @@
+task_id: slug_shell_bug_codex
+title: Fix slug rendering for shell validator with live Codex
+prompt: |
+  render_slug should replace spaces with hyphens and lowercase the value.
+  Update only app.py so the shell oracle passes.
+workspace: ../slug_shell_bug/workspace
+allowed_files:
+  - app.py
+  - oracle.sh
+required_checks:
+  - shell-oracle
+doubt_points:
+  - Keep the implementation simple.
+oracles:
+  - name: shell-oracle
+    kind: shell
+    command: ./oracle.sh
+adapter: codex
+retry_budget: 2
+tags:
+  - shell
+  - codex
+  - live
