@@ -4,6 +4,7 @@ import json
 import sys
 from contextlib import nullcontext as _nullcontext
 from pathlib import Path
+from typing import Any
 
 import typer
 from rich.console import Console
@@ -27,6 +28,18 @@ from cbc.workspace.backends import SandboxMode
 
 app = typer.Typer(help="Correct by Construction CLI")
 console = Console()
+
+
+def _spinner_enabled(*, json_output: bool, stream: bool = False) -> bool:
+    """Spinner shows only on interactive TTYs when not in JSON/stream mode."""
+    return (not json_output) and (not stream) and sys.stderr.isatty()
+
+
+def _spinner(console: Console, message: str, *, enabled: bool) -> Any:
+    """Return a rich status context manager, or nullcontext when spinners disabled."""
+    if enabled:
+        return console.status(f"[bold green]{message}[/]", spinner="dots")
+    return _nullcontext()
 
 
 @app.command()
@@ -78,16 +91,9 @@ def run(
     if weights is not None:
         run_kwargs["scoring_weights"] = weights
     spinner_console = Console(stderr=True)
-    show_spinner = (not json_output) and (not stream) and sys.stderr.isatty()
-    status_cm = (
-        spinner_console.status(
-            f"[bold green]Running CBC on {task.task_id}...[/]",
-            spinner="dots",
-        )
-        if show_spinner
-        else _nullcontext()
-    )
-    with status_cm:
+    spinner_enabled = _spinner_enabled(json_output=json_output, stream=stream)
+    message = f"Running CBC on {getattr(task, 'task_id', '')}..." if spinner_enabled else ""
+    with _spinner(spinner_console, message, enabled=spinner_enabled):
         ledger = run_task(task, **run_kwargs)
     if json_output:
         payload = _read_json_artifact(ledger.artifact_dir / "run_artifact.json")
@@ -124,7 +130,11 @@ def solve(
     if stream:
         ledger = run_task(task, mode="treatment", controller_mode=controller, agent_name=agent, event_sink=event_sink)
     else:
-        with console.status("[bold green]Solving with dynamic intake..."):
+        with _spinner(
+            console,
+            "Solving with dynamic intake...",
+            enabled=_spinner_enabled(json_output=json_output, stream=stream),
+        ):
             ledger = run_task(task, mode="treatment", controller_mode=controller, agent_name=agent)
     if json_output:
         payload = _read_json_artifact(ledger.artifact_dir / "run_artifact.json")
@@ -150,7 +160,11 @@ def compare(
     config_path: Path = typer.Option(Path("benchmark-configs/curated_subset.yaml")),
     json_output: bool = typer.Option(False, "--json"),
 ) -> None:
-    with console.status("[bold green]Running benchmark comparison..."):
+    with _spinner(
+        console,
+        "Running benchmark comparison...",
+        enabled=_spinner_enabled(json_output=json_output),
+    ):
         comparison = run_local_benchmark(config_path)
     if json_output:
         console.print_json(json.dumps(comparison.model_dump(mode="json")))
@@ -178,7 +192,11 @@ def controller_compare(
     config_path: Path = typer.Option(Path("benchmark-configs/controller_subset.yaml")),
     json_output: bool = typer.Option(False, "--json"),
 ) -> None:
-    with console.status("[bold green]Running controller comparison..."):
+    with _spinner(
+        console,
+        "Running controller comparison...",
+        enabled=_spinner_enabled(json_output=json_output),
+    ):
         comparison = run_local_controller_benchmark(config_path)
     if json_output:
         console.print_json(json.dumps(comparison.model_dump(mode="json")))
@@ -196,7 +214,11 @@ def poc(
     simulated: bool = typer.Option(False, "--simulated"),
     json_output: bool = typer.Option(False, "--json"),
 ) -> None:
-    with console.status("[bold green]Running POC comparison..."):
+    with _spinner(
+        console,
+        "Running POC comparison...",
+        enabled=_spinner_enabled(json_output=json_output),
+    ):
         comparison = run_poc_comparison(
             config_path,
             seed=seed,

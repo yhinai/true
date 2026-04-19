@@ -92,6 +92,64 @@ def test_run_json_mode_suppresses_spinner(tmp_path: Path, monkeypatch):
     assert "⠋" not in result.output and "⠙" not in result.output  # spinner glyphs
 
 
+def _stub_benchmark_comparison() -> object:
+    class _C:
+        def model_dump(self, *a, **kw):
+            return {"benchmark_verdict": "pass"}
+
+    return _C()
+
+
+def test_compare_json_suppresses_spinner(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "cbc.main.run_local_benchmark",
+        lambda path: _stub_benchmark_comparison(),
+    )
+    result = runner.invoke(app, ["compare", "--json"])
+    assert "\x1b[?25l" not in result.output
+    assert "⠋" not in result.output and "⠙" not in result.output
+
+
+def test_controller_compare_json_suppresses_spinner(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "cbc.main.run_local_controller_benchmark",
+        lambda path: _stub_benchmark_comparison(),
+    )
+    result = runner.invoke(app, ["controller-compare", "--json"])
+    assert "\x1b[?25l" not in result.output
+    assert "⠋" not in result.output and "⠙" not in result.output
+
+
+def test_poc_json_suppresses_spinner(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "cbc.main.run_poc_comparison",
+        lambda *a, **kw: _stub_benchmark_comparison(),
+    )
+    result = runner.invoke(app, ["poc", "--json", "--simulated"])
+    assert "\x1b[?25l" not in result.output
+    assert "⠋" not in result.output and "⠙" not in result.output
+
+
+def test_solve_json_suppresses_spinner(tmp_path: Path, monkeypatch) -> None:
+    def fake_run_task(*args, **kwargs):
+        return _stub_ledger(tmp_path)
+
+    monkeypatch.setattr("cbc.main.run_task", fake_run_task)
+    monkeypatch.setattr(
+        "cbc.main.build_dynamic_task",
+        lambda prompt, cwd, verify_cmd=None, agent_name=None: type(
+            "T", (), {"task_id": "t1", "oracles": ["x"]}
+        )(),
+    )
+    monkeypatch.setattr(
+        "cbc.main.ensure_dynamic_oracle",
+        lambda task, agent_name=None: task,
+    )
+    result = runner.invoke(app, ["solve", "do a thing", "--json"])
+    assert "\x1b[?25l" not in result.output
+    assert "⠋" not in result.output and "⠙" not in result.output
+
+
 def test_run_accepts_scoring_weights_flag(tmp_path: Path, monkeypatch) -> None:
     captured: dict[str, object] = {}
 
