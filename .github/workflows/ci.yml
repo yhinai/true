@@ -104,7 +104,7 @@ jobs:
         id: app-token
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         continue-on-error: true
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.CBC_BOT_APP_ID }}
           private-key: ${{ secrets.CBC_BOT_APP_PRIVATE_KEY }}
