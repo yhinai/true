@@ -718,7 +718,8 @@
         "diff_deletions": 0,
         "weighted_score": -60.0
       },
-      "selected": true
+      "selected": true,
+      "snapshot_id": null
     },
     {
       "candidate_id": "candidate_b",
@@ -962,7 +963,8 @@
         "diff_deletions": 0,
         "weighted_score": -60.0
       },
-      "selected": false
+      "selected": false,
+      "snapshot_id": null
     }
   ],
   "unsafe_claims": 1,
