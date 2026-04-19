@@ -136,16 +136,15 @@ jobs:
           EOF
           )
 
-          echo "--- invoking gemini CLI in YOLO / non-interactive mode ---"
-          # -y / --yolo: accept every tool call without confirmation
-          # -p / --prompt: one-shot non-interactive (no TTY required)
-          # --all-files: give the agent full workspace context
-          # Model override: the frontier Pro preview for autonomous edits.
+          echo "--- invoking gemini CLI in fully autonomous mode ---"
+          # --approval-mode=yolo : auto-approve every tool call (no prompts ever)
+          # -p (prompt)          : one-shot non-interactive (no TTY required)
+          # -m                   : frontier Pro preview for autonomous edits
+          # CLI scopes to cwd, so cd into the workspace first.
           cd "$WS"
           gemini \
-            -y \
-            --all-files \
-            --model "gemini-3.1-pro-preview" \
+            --approval-mode=yolo \
+            -m "gemini-3.1-pro-preview" \
             -p "$PROMPT" \
             2>/tmp/cbc/gemini.log \
             | tee /tmp/cbc/gemini.out || echo "::warning::gemini CLI returned non-zero"
