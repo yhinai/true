@@ -177,6 +177,18 @@ Same end result; used from CI jobs or automation that doesn't invoke git hooks.
 - **Auto-rebase:** `.github/workflows/auto-update-prs.yml` fires on every push to `main` and rebases any open PR that became `BEHIND`. No manual intervention.
 - **Auto-resolve:** `.github/workflows/auto-resolve-conflicts.yml` runs every 10 minutes (and on-demand) against `DIRTY` PRs. Safe classes (`artifacts/examples/**`, `reports/**`, `docs/**/*.md`) are auto-resolved with `-X theirs`; anything else is labeled `conflict-needs-review` and left for a human.
 
+### Daily regression detection
+
+`.github/workflows/daily-benchmark.yml` fires at 06:00 UTC every day and on-demand:
+
+1. Runs `run_compare.sh` + `run_controller_compare.sh`
+2. Compares JSON results vs checked-in baselines in `reports/examples/*/comparison.json`
+3. If `delta_verified_success_rate` dropped > 5pp or any task flipped VERIFIED → non-VERIFIED,
+   opens a GitHub issue with label `regression,automated`
+4. Otherwise exits clean
+
+Fully hands-off. No human action unless a regression fires.
+
 ### Dynamic test surface
 
 `tests/auto/` contains parametrized tests that auto-discover the current
