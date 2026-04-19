@@ -75,17 +75,20 @@ Quick start:
 
 ```bash
 uv run --extra dev pytest
+./scripts/run_baseline.sh
+./scripts/run_treatment.sh
 ./scripts/run_compare.sh
 ./scripts/run_expanded_compare.sh
 ./scripts/run_controller_compare.sh
-./scripts/run_treatment.sh
+PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/calculator_bug/task.yaml --mode treatment
 PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/calculator_bug/task.yaml --controller gearbox
+PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/slugify_property_regression/task.yaml --mode treatment
 python3 scripts/run_compare.py
 python3 scripts/run_controller_compare.py
 python3 scripts/refresh_examples.py
 ./scripts/run_live_codex.sh
 ./scripts/run_live_compare.sh
-./scripts/run_poc_compare.sh --sample-size 1 --seed 42
+./scripts/run_poc_compare.sh --sample-size 2 --seed 42 --repetitions 2
 ```
 
 Key docs:
@@ -93,6 +96,34 @@ Key docs:
 - [RUNBOOK.md](RUNBOOK.md)
 - [STATUS.md](STATUS.md)
 - [BENCHMARK_PLAN.md](BENCHMARK_PLAN.md)
+
+Full pipeline commands:
+
+Setup and test environment:
+
+```bash
+uv run --extra dev pytest
+```
+
+Single-task pipeline:
+
+```bash
+./scripts/run_baseline.sh
+./scripts/run_treatment.sh
+PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/calculator_bug/task.yaml --mode treatment
+PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/calculator_bug/task.yaml --mode treatment --controller gearbox
+PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/slugify_property_regression/task.yaml --mode treatment
+```
+
+Replay benchmarks:
+
+```bash
+./scripts/run_compare.sh
+./scripts/run_expanded_compare.sh
+./scripts/run_controller_compare.sh
+python3 scripts/run_compare.py
+python3 scripts/run_controller_compare.py
+```
 
 Live Codex task:
 
@@ -120,6 +151,13 @@ PYTHONPATH=src python3 -m cbc.main review-workspace fixtures/oracle_tasks/calcul
 PYTHONPATH=src python3 -m cbc.main ci fixtures/oracle_tasks/calculator_bug/task.yaml /path/to/workspace
 ```
 
+Artifact-based review/CI:
+
+```bash
+PYTHONPATH=src python3 -m cbc.main review-artifact artifacts/examples/calculator_treatment/run_ledger.json --json
+PYTHONPATH=src python3 -m cbc.main ci-artifact artifacts/examples/calculator_treatment/run_ledger.json --json
+```
+
 Property-regression task with counterexample and generated test artifacts:
 
 ```bash
@@ -133,6 +171,40 @@ PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/calculator_bug/task
 PYTHONPATH=src python3 -m cbc.main compare --json
 PYTHONPATH=src python3 -m cbc.main controller-compare --json
 PYTHONPATH=src python3 -m cbc.main poc --json
+PYTHONPATH=src python3 -m cbc.main review-workspace fixtures/oracle_tasks/calculator_bug/task.yaml /path/to/workspace --json
 PYTHONPATH=src python3 -m cbc.main review-artifact artifacts/examples/calculator_treatment/run_ledger.json --json
 PYTHONPATH=src python3 -m cbc.main ci-artifact artifacts/examples/calculator_treatment/run_ledger.json --json
 ```
+
+API:
+
+```bash
+uv run cbc api
+curl http://127.0.0.1:8000/health
+curl http://127.0.0.1:8000/runs
+curl http://127.0.0.1:8000/runs/<run_id>
+curl http://127.0.0.1:8000/benchmarks
+curl http://127.0.0.1:8000/benchmarks/<benchmark_id>
+```
+
+Refresh checked-in examples:
+
+```bash
+python3 scripts/refresh_examples.py
+```
+
+Full verification sweep:
+
+```bash
+PYTHONPATH=src pytest -q
+./scripts/run_compare.sh
+./scripts/run_expanded_compare.sh
+./scripts/run_controller_compare.sh
+python3 scripts/refresh_examples.py
+python3 -m compileall src tests scripts
+```
+
+Outputs:
+- run artifacts: `artifacts/runs`
+- benchmark reports: `reports/benchmarks`
+- checked-in examples: `artifacts/examples` and `reports/examples`
