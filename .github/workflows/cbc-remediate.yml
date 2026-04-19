@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -56,29 +56,8 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Install Codex CLI
-        id: codex_install
-        run: |
-          set -e
-          if npm install -g @openai/codex; then
-            echo "installed=npm" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          echo "::warning::npm install -g @openai/codex failed; trying pip fallback"
-          if pip install --user openai-codex; then
-            echo "installed=pip" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          echo "::warning::No Codex CLI package installable; --agent=codex may fail at runtime"
-          echo "installed=none" >> "$GITHUB_OUTPUT"
-
-      - name: Install project
-        run: uv sync --extra dev
+      - name: Install project with gemini extra
+        run: uv sync --extra gemini --extra dev
 
       - name: Configure git identity
         run: |
@@ -137,7 +116,7 @@ jobs:
           # task spec directly.
           uv run cbc run "$TASK_PATH" \
             --workspace-in-place "$WS" \
-            --agent=codex --allow-dangerous-codex \
+            --agent=gemini \
             --controller=gearbox \
             --mode=treatment \
             --json \
