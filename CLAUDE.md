@@ -91,6 +91,21 @@ Before committing any code change:
 
 If verification fails, fix before committing.
 
+### Pre-commit Hook
+
+A `.pre-commit-config.yaml` runs ruff + fast pytest on every `git commit`. Once per clone:
+
+```bash
+uv tool install pre-commit
+uv tool run pre-commit install
+```
+
+Manual run: `uv tool run pre-commit run --all-files`
+
+## CI Auto-Refresh
+
+On pull requests, CI runs `scripts/refresh_examples.py` and, if the example artifacts drift, auto-commits a `chore: refresh example snapshots` commit back to the PR branch. On direct pushes to `main` and on forked PRs, a stale snapshot still fails the build. This means schema changes to `RunLedger`/`CandidateResult` etc. no longer require manual artifact refreshes on PR branches.
+
 ## Sandboxing
 
 Local mode (`--sandbox=local`) is the default and always available — uses `tempfile.mkdtemp` + `shutil.copytree` for workspace isolation.
