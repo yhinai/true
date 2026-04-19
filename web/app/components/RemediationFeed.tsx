@@ -7,7 +7,10 @@ import { RemediationBadge } from "./RemediationBadge";
 export function RemediationFeed() {
   const [rows, setRows] = useState<CbcRemediationRow[]>([]);
   const [configured, setConfigured] = useState(true);
-  const [loading, setLoading] = useState(true);
+  // Start loading=false so SSR renders the empty state; we flip it true
+  // inside useEffect only while the initial fetch is in flight, with a
+  // 3s safety timeout to avoid a stuck "Loading..." if Supabase hangs.
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const sb = getSupabase();
@@ -17,6 +20,8 @@ export function RemediationFeed() {
       return;
     }
     let cancelled = false;
+    setLoading(true);
+    const safety = setTimeout(() => { if (!cancelled) setLoading(false); }, 3000);
 
     (async () => {
       const { data, error } = await sb
@@ -27,6 +32,7 @@ export function RemediationFeed() {
       if (!cancelled) {
         if (!error && data) setRows(data as CbcRemediationRow[]);
         setLoading(false);
+        clearTimeout(safety);
       }
     })();
 
