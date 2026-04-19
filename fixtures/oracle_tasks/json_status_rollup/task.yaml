@@ -1,27 +1,29 @@
-{
-  "id": "json_status_rollup",
-  "title": "Repair a derived JSON summary",
-  "category": "oracle_task",
-  "prompt_file": "PROMPT.md",
-  "allowed_paths": [
-    "summary.json"
-  ],
-  "workspace_dir": "workspace",
-  "solution_dir": "solution",
-  "oracle": {
-    "kind": "local_validator",
-    "command": [
-      "python3",
-      "oracle.py"
-    ]
-  },
-  "tags": [
-    "json",
-    "derived-state",
-    "golden"
-  ],
-  "success_criteria": [
-    "summary.json reflects the counts implied by checks.json.",
-    "summary.json sets verified to true only when every check passes."
-  ]
-}
+task_id: json_status_rollup
+title: Repair a derived JSON summary
+prompt: |
+  Update `summary.json` so it is derived from `checks.json`.
+
+  Requirements:
+  - `total_checks` must equal the number of entries in `checks.json`.
+  - `passing_checks` must equal the number of checks whose `"status"` is `"pass"`.
+  - `failing_checks` must equal the number of checks whose `"status"` is `"fail"`.
+  - `verified` must be `true` only when `failing_checks` is `0`.
+  - Do not modify `checks.json`.
+workspace: workspace
+allowed_files:
+  - summary.json
+required_checks:
+  - json-oracle
+doubt_points:
+  - Do not touch checks.json.
+oracles:
+  - name: json-oracle
+    kind: python
+    command: ../oracle.py
+adapter: replay
+replay_file: replay.json
+retry_budget: 2
+tags:
+  - json
+  - derived-state
+  - golden

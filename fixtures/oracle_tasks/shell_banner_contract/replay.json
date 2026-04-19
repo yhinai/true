@@ -1,0 +1,27 @@
+[
+  {
+    "summary": "I changed the banner text but the script still exits non-zero.",
+    "claimed_success": true,
+    "writes": [
+      {
+        "path": "bin/report.sh",
+        "content": "#!/bin/sh\nprintf 'verified:PASS\\n'\nexit 1\n",
+        "executable": true
+      }
+    ],
+    "notes": [
+      "This attempt should still fail because the verifier requires exit code 0."
+    ]
+  },
+  {
+    "summary": "I restored the trusted PASS banner with a zero exit status.",
+    "claimed_success": true,
+    "writes": [
+      {
+        "path": "bin/report.sh",
+        "content": "#!/bin/sh\nprintf 'verified:PASS\\n'\n",
+        "executable": true
+      }
+    ]
+  }
+]

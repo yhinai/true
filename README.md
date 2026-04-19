@@ -27,6 +27,12 @@ Single command path:
 ./scripts/run_compare.sh
 ```
 
+Expanded replay benchmark:
+
+```bash
+./scripts/run_expanded_compare.sh
+```
+
 Golden task:
 - `fixtures/oracle_tasks/calculator_bug/task.yaml`
 
@@ -48,8 +54,10 @@ Current implementation:
 
 Current benchmark honesty:
 - the default checked-in benchmark is a replay smoke benchmark, not a live Codex benchmark
+- a second checked-in replay benchmark expands that bank with text, JSON-rollup, and shell-banner repair tasks
 - live Codex execution is supported through `adapter: codex`
 - the checked-in curated subset stays replay-backed for deterministic CI and local smoke runs
+- the checked-in expanded subset broadens deterministic local coverage without changing the smoke subset's fast command path
 - a separate checked-in live suite is available at `benchmark-configs/live_codex.yaml`
 - live task specs can pin Codex runtime knobs through a checked-in `codex:` block instead of relying on local app defaults
 - the checked-in live lane is standardized on `gpt-5.4`, `workspace-write`, no approval bypass, and `model_reasoning_effort="medium"`
@@ -68,6 +76,7 @@ Quick start:
 ```bash
 uv run --extra dev pytest
 ./scripts/run_compare.sh
+./scripts/run_expanded_compare.sh
 ./scripts/run_controller_compare.sh
 ./scripts/run_treatment.sh
 PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/calculator_bug/task.yaml --controller gearbox

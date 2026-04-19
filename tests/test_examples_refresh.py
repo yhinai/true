@@ -47,3 +47,15 @@ def test_normalize_text_content_scrubs_transient_ids() -> None:
     assert "`example-calculator-treatment`" in normalized
     assert "artifacts/examples/calculator_treatment" in normalized
     assert str(REPO_ROOT) not in normalized
+
+
+def test_normalize_string_supports_expanded_benchmark_example_paths() -> None:
+    source_root = REPO_ROOT / "reports" / "benchmarks" / "abc123def456"
+    normalized = _normalize_string(
+        f"{source_root}/comparison.json",
+        source_root=source_root,
+        repo_root=REPO_ROOT,
+        example_dir=Path("reports/examples/expanded_benchmark"),
+    )
+
+    assert normalized == "reports/examples/expanded_benchmark/comparison.json"

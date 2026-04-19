@@ -37,6 +37,7 @@ def refresh_examples(repo_root: Path) -> dict[str, str]:
         slugify = load_task(repo_root / "fixtures/oracle_tasks/slugify_property_regression/task.yaml")
         slugify_ledger = run_task(slugify, mode="treatment", config=config)
         curated_benchmark = run_local_benchmark(repo_root / "benchmark-configs/curated_subset.yaml", config=config)
+        expanded_benchmark = run_local_benchmark(repo_root / "benchmark-configs/expanded_subset.yaml", config=config)
         controller_benchmark = run_local_controller_benchmark(
             repo_root / "benchmark-configs/controller_subset.yaml",
             config=config,
@@ -46,6 +47,7 @@ def refresh_examples(repo_root: Path) -> dict[str, str]:
             "calculator_treatment": repo_root / "artifacts/examples/calculator_treatment",
             "slugify_property_regression_treatment": repo_root / "artifacts/examples/slugify_property_regression_treatment",
             "curated_benchmark": repo_root / "reports/examples/curated_benchmark",
+            "expanded_benchmark": repo_root / "reports/examples/expanded_benchmark",
             "controller_benchmark": repo_root / "reports/examples/controller_benchmark",
         }
 
@@ -69,6 +71,13 @@ def refresh_examples(repo_root: Path) -> dict[str, str]:
             repo_root=repo_root,
             example_id="example-curated-benchmark",
             example_dir=Path("reports/examples/curated_benchmark"),
+        )
+        _replace_tree(
+            expanded_benchmark.report_dir,
+            destinations["expanded_benchmark"],
+            repo_root=repo_root,
+            example_id="example-expanded-benchmark",
+            example_dir=Path("reports/examples/expanded_benchmark"),
         )
         _replace_tree(
             controller_benchmark.report_dir,

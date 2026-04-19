@@ -1,0 +1,23 @@
+[
+  {
+    "summary": "I fixed the typo but also dropped the comma in the greeting.",
+    "claimed_success": true,
+    "writes": [
+      {
+        "path": "message.txt",
+        "content": "Hello verification-first world!\n"
+      }
+    ],
+    "notes": ["This attempt should still fail the exact-text oracle."]
+  },
+  {
+    "summary": "I restored the exact verified greeting including punctuation and newline.",
+    "claimed_success": true,
+    "writes": [
+      {
+        "path": "message.txt",
+        "content": "Hello, verification-first world!\n"
+      }
+    ]
+  }
+]

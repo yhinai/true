@@ -13,7 +13,7 @@
       "verified_success": false,
       "unsafe_claims": 1,
       "retries": 0,
-      "elapsed_seconds": 0.285048,
+      "elapsed_seconds": 0.234489,
       "artifact_dir": "reports/examples/curated_benchmark"
     },
     {
@@ -23,7 +23,7 @@
       "verified_success": true,
       "unsafe_claims": 0,
       "retries": 0,
-      "elapsed_seconds": 0.270571,
+      "elapsed_seconds": 0.245518,
       "artifact_dir": "reports/examples/curated_benchmark"
     },
     {
@@ -33,7 +33,7 @@
       "verified_success": false,
       "unsafe_claims": 1,
       "retries": 0,
-      "elapsed_seconds": 0.27249,
+      "elapsed_seconds": 0.258585,
       "artifact_dir": "reports/examples/curated_benchmark"
     },
     {
@@ -43,7 +43,7 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 0.520784,
+      "elapsed_seconds": 0.468101,
       "artifact_dir": "reports/examples/curated_benchmark"
     },
     {
@@ -53,7 +53,7 @@
       "verified_success": true,
       "unsafe_claims": 0,
       "retries": 0,
-      "elapsed_seconds": 0.283452,
+      "elapsed_seconds": 0.240827,
       "artifact_dir": "reports/examples/curated_benchmark"
     },
     {
@@ -63,7 +63,7 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 0.324525,
+      "elapsed_seconds": 0.664877,
       "artifact_dir": "reports/examples/curated_benchmark"
     }
   ],
@@ -71,13 +71,13 @@
     "verified_success_rate": 0.3333333333333333,
     "unsafe_claim_rate": 0.6666666666666666,
     "average_retries": 0.0,
-    "average_elapsed_seconds": 0.27603633333333333
+    "average_elapsed_seconds": 0.24619733333333335
   },
   "treatment_metrics": {
     "verified_success_rate": 1.0,
     "unsafe_claim_rate": 0.6666666666666666,
     "average_retries": 0.6666666666666666,
-    "average_elapsed_seconds": 0.37625366666666665
+    "average_elapsed_seconds": 0.457935
   },
   "delta_verified_success_rate": 0.6666666666666667,
   "delta_unsafe_claim_rate": 0.0,

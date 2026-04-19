@@ -14,6 +14,15 @@
 - `fixtures/oracle_tasks/title_case_bug/task.yaml`
 - `fixtures/oracle_tasks/slug_shell_bug/task.yaml`
 
+## Expanded Replay Subset
+
+- `fixtures/oracle_tasks/calculator_bug/task.yaml`
+- `fixtures/oracle_tasks/title_case_bug/task.yaml`
+- `fixtures/oracle_tasks/slug_shell_bug/task.yaml`
+- `fixtures/oracle_tasks/greeting_text_patch/task.yaml`
+- `fixtures/oracle_tasks/json_status_rollup/task.yaml`
+- `fixtures/oracle_tasks/shell_banner_contract/task.yaml`
+
 ## Primary Metrics
 
 - Verified Success Rate
@@ -49,6 +58,7 @@ Current evidence:
 
 ```bash
 ./scripts/run_compare.sh
+./scripts/run_expanded_compare.sh
 ./scripts/run_controller_compare.sh
 python3 scripts/run_compare.py
 python3 scripts/run_controller_compare.py

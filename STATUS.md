@@ -9,6 +9,7 @@
 - Deterministic verification gates every completion claim.
 - Treatment retries with concrete evidence.
 - Curated replay smoke comparison is reproducible from one command.
+- An expanded replay comparison now broadens the checked-in deterministic task bank beyond the smoke subset.
 - Treatment currently improves verified success rate on the checked-in replay subset.
 - A live `adapter: codex` lane now exists for end-to-end agent runs against the same verifier loop.
 - Review and CI can now validate an existing workspace diff through the same verifier core.
@@ -30,6 +31,7 @@
 
 - tests: `uv run --extra dev pytest`
 - benchmark: `./scripts/run_compare.sh`
+- expanded benchmark: `./scripts/run_expanded_compare.sh`
 - python wrapper: `python3 scripts/run_compare.py`
 - proof card path is emitted after each `run`
 - review/CI artifact path is emitted after `review-workspace` and `ci`
@@ -55,3 +57,4 @@
 - the checked-in live lane is now standardized on `gpt-5.4`, `workspace-write`, `dangerously_bypass_approvals: false`, and `model_reasoning_effort="medium"`
 - the checked-in live lane intentionally leaves `profile` unset so it does not rely on a local user profile name
 - the plan phases are now implemented end to end; the remaining work is post-plan maintenance, benchmark growth, and deeper optional verification rather than missing pipeline phases
+- the replay benchmark bank now includes additional text, JSON, and shell fixtures beyond the smoke subset, but benchmark growth is still an open area for future expansion

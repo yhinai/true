@@ -1,0 +1,23 @@
+[
+  {
+    "summary": "I corrected the counts but mistakenly left verified set to true.",
+    "claimed_success": true,
+    "writes": [
+      {
+        "path": "summary.json",
+        "content": "{\n  \"total_checks\": 3,\n  \"passing_checks\": 2,\n  \"failing_checks\": 1,\n  \"verified\": true\n}\n"
+      }
+    ],
+    "notes": ["This attempt should still fail because verified must be false."]
+  },
+  {
+    "summary": "I derived the full summary from checks.json, including verified=false.",
+    "claimed_success": true,
+    "writes": [
+      {
+        "path": "summary.json",
+        "content": "{\n  \"total_checks\": 3,\n  \"passing_checks\": 2,\n  \"failing_checks\": 1,\n  \"verified\": false\n}\n"
+      }
+    ]
+  }
+]

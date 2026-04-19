@@ -7,7 +7,7 @@ EXPECTED = "Hello, verification-first world!\n"
 
 
 def main() -> int:
-    candidate_dir = Path(os.environ["CANDIDATE_DIR"])
+    candidate_dir = Path(os.environ.get("CANDIDATE_DIR", Path.cwd()))
     actual = (candidate_dir / "message.txt").read_text(encoding="utf-8")
     if actual != EXPECTED:
         sys.stderr.write(

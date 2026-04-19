@@ -1,27 +1,27 @@
-{
-  "id": "shell_banner_contract",
-  "title": "Repair a shell-based verification banner",
-  "category": "oracle_task",
-  "prompt_file": "PROMPT.md",
-  "allowed_paths": [
-    "bin/report.sh"
-  ],
-  "workspace_dir": "workspace",
-  "solution_dir": "solution",
-  "oracle": {
-    "kind": "test_script",
-    "command": [
-      "sh",
-      "oracle.sh"
-    ]
-  },
-  "tags": [
-    "shell",
-    "stdout",
-    "command-exit"
-  ],
-  "success_criteria": [
-    "bin/report.sh exits with code 0.",
-    "bin/report.sh writes exactly verified:PASS to stdout."
-  ]
-}
+task_id: shell_banner_contract
+title: Repair a shell-based verification banner
+prompt: |
+  Fix `bin/report.sh` so a verifier can trust it.
+
+  Requirements:
+  - The script must exit with status `0`.
+  - The script must print exactly `verified:PASS`.
+  - Do not add extra output or trailing spaces.
+workspace: workspace
+allowed_files:
+  - bin/report.sh
+required_checks:
+  - shell-banner
+doubt_points:
+  - Keep the shell script minimal.
+oracles:
+  - name: shell-banner
+    kind: shell
+    command: sh ../oracle.sh
+adapter: replay
+replay_file: replay.json
+retry_budget: 2
+tags:
+  - shell
+  - stdout
+  - command-exit

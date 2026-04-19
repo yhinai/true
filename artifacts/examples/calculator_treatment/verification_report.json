@@ -8,7 +8,7 @@
       "exit_code": 0,
       "stdout": ".                                                                        [100%]\n1 passed in 0.00s\n",
       "stderr": "",
-      "duration_seconds": 0.20764891698490828,
+      "duration_seconds": 0.1837855419726111,
       "details": {}
     },
     {
@@ -18,7 +18,7 @@
       "exit_code": 0,
       "stdout": "Listing '.'...\nListing './.pytest_cache'...\nListing './.pytest_cache/v'...\nListing './.pytest_cache/v/cache'...\nCompiling './calculator.py'...\nCompiling './test_calculator.py'...\n",
       "stderr": "",
-      "duration_seconds": 0.04709041700698435,
+      "duration_seconds": 0.03933870798209682,
       "details": {}
     },
     {

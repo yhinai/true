@@ -1,26 +1,28 @@
-{
-  "id": "greeting_text_patch",
-  "title": "Fix the single-line greeting typo",
-  "category": "oracle_task",
-  "prompt_file": "PROMPT.md",
-  "allowed_paths": [
-    "message.txt"
-  ],
-  "workspace_dir": "workspace",
-  "solution_dir": "solution",
-  "oracle": {
-    "kind": "local_validator",
-    "command": [
-      "python3",
-      "oracle.py"
-    ]
-  },
-  "tags": [
-    "text",
-    "single-file",
-    "golden"
-  ],
-  "success_criteria": [
-    "message.txt exactly matches the expected greeting including the trailing newline."
-  ]
-}
+task_id: greeting_text_patch
+title: Fix the single-line greeting typo
+prompt: |
+  Fix `message.txt` so it contains the exact verified greeting:
+
+  `Hello, verification-first world!`
+
+  Constraints:
+  - Edit only `message.txt`.
+  - Preserve the trailing newline.
+workspace: workspace
+allowed_files:
+  - message.txt
+required_checks:
+  - text-oracle
+doubt_points:
+  - Preserve the exact punctuation and trailing newline.
+oracles:
+  - name: text-oracle
+    kind: python
+    command: ../oracle.py
+adapter: replay
+replay_file: replay.json
+retry_budget: 2
+tags:
+  - text
+  - single-file
+  - golden

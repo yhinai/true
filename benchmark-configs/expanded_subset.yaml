@@ -1,0 +1,7 @@
+tasks:
+  - ../fixtures/oracle_tasks/calculator_bug/task.yaml
+  - ../fixtures/oracle_tasks/title_case_bug/task.yaml
+  - ../fixtures/oracle_tasks/slug_shell_bug/task.yaml
+  - ../fixtures/oracle_tasks/greeting_text_patch/task.yaml
+  - ../fixtures/oracle_tasks/json_status_rollup/task.yaml
+  - ../fixtures/oracle_tasks/shell_banner_contract/task.yaml

@@ -30,6 +30,13 @@ PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/calculator_bug/task
 ./scripts/run_compare.sh
 ```
 
+## Run The Expanded Replay Comparison
+
+```bash
+./scripts/run_expanded_compare.sh
+```
+This keeps the same deterministic replay contract as the smoke subset, but broadens the checked-in replay bank with text, JSON-rollup, and shell-banner repair tasks.
+
 ## Run The Controller Proof Benchmark
 
 ```bash

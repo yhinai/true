@@ -5,7 +5,7 @@ import sys
 
 
 def main() -> int:
-    candidate_dir = Path(os.environ["CANDIDATE_DIR"])
+    candidate_dir = Path(os.environ.get("CANDIDATE_DIR", Path.cwd()))
     checks = json.loads((candidate_dir / "checks.json").read_text(encoding="utf-8"))
     summary = json.loads((candidate_dir / "summary.json").read_text(encoding="utf-8"))
 
