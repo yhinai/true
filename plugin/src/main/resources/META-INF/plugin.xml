@@ -1,0 +1,50 @@
+<idea-plugin>
+    <id>dev.cbc.intellij</id>
+    <name>CBC — Correct by Construction</name>
+    <vendor email="cbc@example.com" url="https://github.com/yhinai/true">CBC</vendor>
+
+    <description><![CDATA[
+        Surfaces <b>Correct by Construction (CBC)</b> verdicts inside JetBrains IDEs.
+        <ul>
+          <li>Streams <code>cbc solve --stream</code> lifecycle events into a live
+              Attempt → Check → Verdict tree in the <b>CBC</b> tool window.</li>
+          <li>Shows gutter verdict badges (VERIFIED / FALSIFIED / TIMED_OUT /
+              UNPROVEN) on changed files.</li>
+          <li>Adds a <b>Run CBC on selection</b> action that integrates with AI
+              Assistant / Codex so CBC becomes the "verify" button for any
+              suggestion.</li>
+        </ul>
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow id="CBC"
+                    anchor="right"
+                    icon="AllIcons.Actions.Lightning"
+                    factoryClass="dev.cbc.plugin.toolwindow.CbcToolWindowFactory"/>
+
+        <applicationService serviceImplementation="dev.cbc.plugin.settings.CbcSettings"/>
+        <projectService serviceImplementation="dev.cbc.plugin.run.CbcRunService"/>
+        <projectService serviceImplementation="dev.cbc.plugin.verdict.VerdictStore"/>
+
+        <applicationConfigurable parentId="tools"
+                                 instance="dev.cbc.plugin.settings.CbcConfigurable"
+                                 id="dev.cbc.plugin.settings.CbcConfigurable"
+                                 displayName="CBC"/>
+
+        <codeInsight.lineMarkerProvider language=""
+                                        implementationClass="dev.cbc.plugin.verdict.VerdictLineMarkerProvider"/>
+    </extensions>
+
+    <actions>
+        <action id="cbc.RunOnSelection"
+                class="dev.cbc.plugin.actions.RunCbcOnSelectionAction"
+                text="Run CBC on Selection"
+                description="Send the current editor selection to `cbc solve --stream` and show the verdict in the CBC tool window.">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="control alt V"/>
+        </action>
+    </actions>
+</idea-plugin>
