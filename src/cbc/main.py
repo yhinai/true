@@ -47,11 +47,21 @@ def run(
         "--max-seconds-per-attempt",
         help="Wall-clock budget per attempt in seconds (None = no limit)",
     ),
+    scoring_weights: Path | None = typer.Option(
+        None,
+        "--scoring-weights",
+        help="Path to a YAML file overriding default CandidateScoringEngine weights",
+    ),
 ) -> None:
     try:
         sandbox_mode = SandboxMode(sandbox)
     except ValueError as exc:
         raise typer.BadParameter(f"Invalid sandbox: {sandbox}") from exc
+    weights = None
+    if scoring_weights is not None:
+        from cbc.controller.scoring import CheckWeights
+
+        weights = CheckWeights.from_yaml(scoring_weights)
     task = load_task(task_path)
     event_sink = _make_stream_sink() if stream else None
     run_kwargs: dict[str, object] = {
@@ -65,6 +75,8 @@ def run(
         run_kwargs["event_sink"] = event_sink
     if max_seconds_per_attempt is not None:
         run_kwargs["max_wall_seconds_per_attempt"] = max_seconds_per_attempt
+    if weights is not None:
+        run_kwargs["scoring_weights"] = weights
     spinner_console = Console(stderr=True)
     show_spinner = (not json_output) and (not stream) and sys.stderr.isatty()
     status_cm = (
