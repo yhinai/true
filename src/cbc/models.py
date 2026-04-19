@@ -52,12 +52,18 @@ class VerificationOptions(BaseModel):
     typecheck_command: str | None = None
     coverage_enabled: bool = False
     coverage_command: str | None = None
+    crosshair_enabled: bool = False
+    crosshair_command: str | None = None
+    mutation_enabled: bool = False
+    mutation_command: str | None = None
 
 
 class HypothesisCheckSpec(BaseModel):
     path: str
     function: str
     cases: list[Any] = Field(default_factory=list)
+    generated_case_strategy: Literal["string_edge_cases", "small_integers"] | None = None
+    generated_case_limit: int = 0
     artifact_name: str = "counterexample.json"
     regression_test_path: str | None = None
 

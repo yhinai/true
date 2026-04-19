@@ -35,12 +35,13 @@ def run_hypothesis(
 
     if artifact_dir is None:
         artifact_dir = workspace / ".cbc-artifacts"
+    cases = expand_property_cases(spec)
 
     try:
         checker = load_checker(workspace, spec)
         result = run_property_cases(
             checker,
-            spec.cases,
+            cases,
             checker_name=spec.function,
             artifact_dir=artifact_dir / "counterexamples",
             artifact_name=spec.artifact_name,
@@ -76,8 +77,8 @@ def run_hypothesis(
         name="hypothesis",
         command=command,
         status=CheckStatus.PASSED,
-        stdout=f"Property cases passed for {len(spec.cases)} configured examples.",
-        details={"cases_checked": len(spec.cases)},
+        stdout=f"Property cases passed for {len(cases)} configured examples.",
+        details={"cases_checked": len(cases)},
     )
 
 
@@ -86,6 +87,19 @@ class PropertyCaseResult:
     status: str
     counterexample: dict[str, Any] | None = None
     artifact_path: str | None = None
+
+
+def expand_property_cases(spec: HypothesisCheckSpec) -> list[Any]:
+    generated = generate_cases(spec.generated_case_strategy, spec.generated_case_limit)
+    ordered: list[Any] = []
+    seen: set[str] = set()
+    for case in [*spec.cases, *generated]:
+        marker = json.dumps(case, sort_keys=True, ensure_ascii=True)
+        if marker in seen:
+            continue
+        seen.add(marker)
+        ordered.append(case)
+    return ordered
 
 
 def load_checker(workspace: Path, spec: HypothesisCheckSpec) -> Callable[[Any], None]:
@@ -158,6 +172,31 @@ def render_regression_test(
     )
     target.write_text(content, encoding="utf-8")
     return str(target)
+
+
+def generate_cases(strategy: str | None, limit: int) -> list[Any]:
+    if strategy is None:
+        return []
+    if strategy == "string_edge_cases":
+        corpus: list[Any] = [
+            "",
+            " ",
+            "  ",
+            "Hello",
+            "Hello  World",
+            "Already-Slugged",
+            "MiXeD   Case Value",
+            "tabs\tinside",
+            " punctuation! value ",
+            "123",
+        ]
+    elif strategy == "small_integers":
+        corpus = [-2, -1, 0, 1, 2, 7, 42]
+    else:
+        return []
+    if limit <= 0:
+        return corpus
+    return corpus[:limit]
 
 
 def _clear_workspace_modules(workspace: Path) -> None:

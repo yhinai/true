@@ -33,6 +33,8 @@ Current implementation:
 - replay-backed fixtures for a reproducible smoke benchmark
 - Codex adapter wired through `codex exec --json --output-schema`
 - deterministic verification via pytest, shell oracles, bounded structural checks, and property-case checks that can emit counterexample artifacts plus generated regression tests
+- Python contract inspection now extracts recognized decorators from the staged workspace and reports what contract annotations were actually found
+- optional CrossHair and mutation lanes are task-configurable command runners instead of fixed stubs
 - a bounded read-only explorer brief now feeds likely targets and nearby tests into the coder prompt and run artifacts
 - a treatment-only `gearbox` controller mode can run isolated primary and alternate coder candidates, score them deterministically, and persist scheduler and risk artifacts
 - SQLite-backed run and benchmark index
@@ -45,6 +47,7 @@ Current benchmark honesty:
 - a separate checked-in live suite is available at `benchmark-configs/live_codex.yaml`
 - live task specs can pin Codex runtime knobs through a checked-in `codex:` block instead of relying on local app defaults
 - the checked-in live lane is standardized on `gpt-5.4`, `workspace-write`, no approval bypass, and `model_reasoning_effort="medium"`
+- the main remaining orchestration question is whether `gearbox` earns enough measured value to become the default treatment path or should remain an explicit controller option
 
 Live Codex lane:
 - [benchmark-configs/live_codex.yaml](benchmark-configs/live_codex.yaml)

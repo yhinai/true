@@ -69,7 +69,7 @@ The growth model is:
     -> graph-aware loop
     -> test-growth loop
     -> multi-role loop
-    -> IDE/product shell
+    -> headless product completion
 
 Hard construction rule:
   Each phase = previous working system + one meaningful capability.
@@ -144,7 +144,7 @@ Principles:
   8. Every phase has one checked-in artifact example.
   9. Benchmarking begins early in a tiny way and grows with the system.
  10. Contracts/CrossHair are accelerators, not blockers.
- 11. IDE is a thin shell, never the core.
+ 11. Headless surfaces are thin shells, never the core.
  12. Subagents come last, not first.
  13. Add only one hard thing per phase.
  14. Preserve forward compatibility without overbuilding.
@@ -161,7 +161,7 @@ Final architecture:
     Benchmark Runner
     CI Adapter
     PR Adapter
-    IDE Adapter
+    API Adapter
         |
         v
   [Controller / Orchestrator]
@@ -1185,7 +1185,7 @@ PHASE 9
 - Add bounded multi-role/subagent orchestration only if it improves outcomes.
 
 PHASE 10
-- Add thin IDE surface last.
+- Add headless product completion last.
 
 Implementation rules:
 - Python 3.11+, typed models, small composable modules.
@@ -1224,6 +1224,6 @@ Hackathon done-enough:
 
 Long-term done-enough:
   - the final system is visibly the layered evolution of the first truthful loop
-  - debug/review/CI/IDE all reuse the same verification core
+  - debug/review/CI/API all reuse the same verification core
   - richer features were added without breaking the original invariants
   - the product and the development method both embody "correct by construction"

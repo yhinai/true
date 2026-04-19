@@ -38,9 +38,12 @@ Each run saves:
 - `retry_transcript.json`
 - `verification_report.json`
 - `proof_card.md`
+- `explorer_artifact.json` when exploration runs
 - `scheduler_trace.json`
 - `risk_artifact.json`
 - `candidate_artifacts/<candidate_id>/...` when gearbox mode runs
+
+The run artifact surface also carries the selected controller mode, candidate summary, and controller budget/budget-spent metadata so CLI, API, and checked-in examples all describe the same scheduling decisions.
 
 Each benchmark comparison saves:
 - `comparison.json`
@@ -54,6 +57,7 @@ Each benchmark comparison saves:
 - Phase 1.5: curated A/B comparison, metrics, compare report
 - Phase 2: real file-backed patching, scope guard, workspace safety
 - Phase 3-8: working deeper-verification, review, graph, and test-growth slices
+- deeper verification is still intentionally bounded: contract inspection is real, while CrossHair and mutation remain optional task-configured accelerators rather than default trust gates
 - Phase 9: bounded gearbox mode with sequential fallback
 - Phase 10: headless CLI/API/artifact completion
 - live Codex execution is wired through a checked-in `adapter: codex` task spec

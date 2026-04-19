@@ -107,6 +107,8 @@ def test_gearbox_selects_better_candidate_and_retries_selected_path(tmp_path: Pa
     run_artifact = json.loads((ledger.artifact_dir / "run_artifact.json").read_text(encoding="utf-8"))
     assert run_artifact["controller"]["mode"] == "gearbox"
     assert run_artifact["controller"]["selected_candidate_id"] == "candidate_b"
+    assert run_artifact["controller"]["budget_spent"]["candidate_evaluations"] == 2
+    assert run_artifact["controller"]["budget_spent"]["attempts_executed"] == 2
 
 
 def test_gearbox_budget_limits_first_attempt_candidates(tmp_path: Path) -> None:
@@ -145,3 +147,7 @@ def test_gearbox_budget_limits_first_attempt_candidates(tmp_path: Path) -> None:
     scheduler_trace = json.loads((ledger.artifact_dir / "scheduler_trace.json").read_text(encoding="utf-8"))
     assert scheduler_trace["model_calls_used"] == 1
     assert scheduler_trace["attempts"][0]["candidate_ids"] == ["candidate_a"]
+
+    run_artifact = json.loads((ledger.artifact_dir / "run_artifact.json").read_text(encoding="utf-8"))
+    assert run_artifact["controller"]["budget"]["max_model_calls_per_run"] == 1
+    assert run_artifact["controller"]["budget_spent"]["model_calls_used"] == 1

@@ -28,5 +28,7 @@ hypothesis:
     - Hello  World
     - Already-Slugged
     - MiXeD   Case Value
+  generated_case_strategy: string_edge_cases
+  generated_case_limit: 6
   artifact_name: slugify_counterexample.json
   regression_test_path: test_slugify_property_regression.py

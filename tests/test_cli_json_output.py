@@ -171,3 +171,38 @@ def test_review_and_ci_artifact_commands_emit_json(tmp_path: Path) -> None:
     ci_payload = json.loads(ci_result.stdout)
     assert ci_payload["merge_gate_verdict"] == "APPROVE"
     assert ci_payload["verification_state"] == "VERIFIED"
+
+
+def test_review_workspace_command_emits_json(monkeypatch, tmp_path: Path) -> None:
+    artifact_dir = tmp_path / "artifacts"
+    artifact_dir.mkdir()
+    monkeypatch.setattr("cbc.main.load_task", lambda path: object())
+    monkeypatch.setattr(
+        "cbc.main.review_workspace",
+        lambda task, workspace_path: SimpleNamespace(artifact_dir=artifact_dir),
+    )
+    monkeypatch.setattr(
+        "cbc.main.compose_review_report_from_path",
+        lambda path: {
+            "run_id": "review-123",
+            "summary": {
+                "verification": {"state": "VERIFIED"},
+                "merge_gate": {"verdict": "APPROVE"},
+            },
+        },
+    )
+
+    result = runner.invoke(
+        app,
+        [
+            "review-workspace",
+            "fixtures/oracle_tasks/calculator_bug/task.yaml",
+            str(tmp_path / "workspace"),
+            "--json",
+        ],
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload["run_id"] == "review-123"
+    assert payload["summary"]["merge_gate"]["verdict"] == "APPROVE"

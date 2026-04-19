@@ -75,6 +75,15 @@ def build_run_artifact(
     risk_artifact: dict[str, object] | None = None,
 ) -> dict[str, object]:
     generated_tests = []
+    controller_budget: dict[str, object] = {}
+    budget_spent: dict[str, object] = {}
+    if scheduler_trace is not None:
+        controller_budget = dict(scheduler_trace.get("budget", {}))
+        budget_spent = {
+            "model_calls_used": scheduler_trace.get("model_calls_used", 0),
+            "attempts_executed": len(ledger.attempts),
+            "candidate_evaluations": len(ledger.candidate_results),
+        }
     for attempt in ledger.attempts:
         for check in attempt.verification.checks:
             artifact_path = check.details.get("regression_test_artifact")
@@ -89,6 +98,8 @@ def build_run_artifact(
             "mode": ledger.controller_mode,
             "selected_candidate_id": ledger.selected_candidate_id,
             "candidate_count": len(ledger.candidate_results),
+            "budget": controller_budget,
+            "budget_spent": budget_spent,
             "scheduler_trace_path": str(ledger.artifact_dir / "scheduler_trace.json"),
         },
         "changed_files": verification.changed_files,

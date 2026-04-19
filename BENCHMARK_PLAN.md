@@ -25,6 +25,10 @@
 
 On the checked-in replay smoke benchmark, treatment outperforms baseline on Verified Success Rate while keeping the same task-level Unsafe Claim Rate.
 
+## Late-Phase Open Question
+
+The next benchmark question is no longer baseline versus treatment plumbing. It is whether treatment `--controller gearbox` earns its extra model calls versus sequential treatment on a bounded checked-in subset. That comparison should be treated as the Phase 9 proof gate before gearbox becomes the default controller.
+
 ## Live Codex Demo Candidate
 
 - `benchmark-configs/live_codex.yaml`

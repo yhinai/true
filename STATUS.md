@@ -16,6 +16,9 @@
 - The seeded POC harness now emits pairwise win/loss/tie summaries, rate deltas, and 95% confidence intervals so raw Codex and CBC can be compared numerically.
 - A treatment-only gearbox mode now evaluates isolated primary and alternate coder candidates, selects one deterministically, and persists scheduler plus risk artifacts.
 - The headless surface now includes JSON CLI outputs and benchmark detail lookup via the API/store path.
+- Python contract inspection is now real rather than placeholder-only: the verifier extracts recognized decorators from workspace modules and reports contract coverage honestly.
+- CrossHair and mutation lanes are now task-configurable command runners instead of hard-coded stubs, while remaining optional and non-blocking.
+- Property checks can now expand checked-in examples with bounded generated edge-case corpora before emitting counterexamples and regression artifacts.
 
 ## Evidence
 
@@ -34,7 +37,9 @@
 
 ## Remaining Depth
 
+- the main open gate is now Phase 9 proof, not raw plumbing: gearbox mode works, but it still needs clearer evidence about when it earns its cost versus sequential treatment
 - deeper verification runners are still intentionally lightweight and non-blocking outside the bounded structural path
+- contract inspection is now concrete, but runtime contract enforcement and stronger symbolic reasoning remain opt-in rather than default trust gates
 - review/graph/API shells are implemented and now emit diff-aware review and CI artifacts without moving trust logic
 - a checked-in live Codex benchmark lane now exists for calculator, title-case, and slug tasks
 - live benchmark configs can now pin lane-specific Codex runtime knobs in checked-in YAML

@@ -11,8 +11,10 @@ if str(SRC) not in sys.path:
 
 from cbc.models import HypothesisCheckSpec, OracleSpec, TaskSpec
 from cbc.graph.mismatch import detect_bounded_signature_mismatches
+from cbc.verify.contract_ir import build_contract_graph
+from cbc.verify.contracts import inspect_contracts
 from cbc.verify.core import verify_workspace
-from cbc.verify.hypothesis_runner import render_regression_test, run_property_cases
+from cbc.verify.hypothesis_runner import expand_property_cases, render_regression_test, run_property_cases
 
 
 def test_bounded_signature_reasoning_catches_mismatch() -> None:
@@ -92,6 +94,27 @@ def test_render_regression_test_writes_replayable_pytest_file(tmp_path: Path) ->
     assert 'assert_slugify_properties("Hello  World")' in content
 
 
+def test_contract_graph_and_contract_inspection_detect_decorated_symbols(tmp_path: Path) -> None:
+    (tmp_path / "contracts_demo.py").write_text(
+        "def require(fn):\n    return fn\n\n"
+        "def ensure(fn):\n    return fn\n\n"
+        "@require\n"
+        "def normalize(value: int) -> int:\n    return value + 1\n\n"
+        "@ensure\n"
+        "def finalize(value: int) -> int:\n    return value\n",
+        encoding="utf-8",
+    )
+
+    graph = build_contract_graph(tmp_path)
+    assert "contracts_demo:normalize:require" in graph
+    assert "contracts_demo:finalize:ensure" in graph
+
+    report = inspect_contracts(tmp_path)
+    assert report.status.value == "passed"
+    assert report.details["modules"] == ["contracts_demo"]
+    assert sorted(report.details["owners"]) == ["finalize", "normalize"]
+
+
 def test_verification_options_run_real_commands(tmp_path: Path) -> None:
     (tmp_path / "app.py").write_text("value = 1\n", encoding="utf-8")
     task = TaskSpec(
@@ -107,7 +130,12 @@ def test_verification_options_run_real_commands(tmp_path: Path) -> None:
             "typecheck_command": "python3 -m py_compile app.py",
             "coverage_enabled": True,
             "coverage_command": "python3 -c \"print('coverage-ok')\"",
+            "crosshair_enabled": True,
+            "crosshair_command": "python3 -c \"print('crosshair-ok')\"",
+            "mutation_enabled": True,
+            "mutation_command": "python3 -c \"print('mutation-ok')\"",
         },
+        tags=["python"],
     )
 
     report = verify_workspace(
@@ -121,6 +149,8 @@ def test_verification_options_run_real_commands(tmp_path: Path) -> None:
     by_name = {check.name: check for check in report.checks}
     assert by_name["typecheck"].status.value == "passed"
     assert by_name["coverage"].status.value == "passed"
+    assert by_name["crosshair"].status.value == "passed"
+    assert by_name["mutation"].status.value == "passed"
 
 
 def test_structural_check_catches_cross_file_signature_mismatch(tmp_path: Path) -> None:
@@ -208,6 +238,23 @@ def test_hypothesis_check_generates_counterexample_and_regression_artifacts(tmp_
     assert by_name["hypothesis"].status.value == "failed"
     assert Path(by_name["hypothesis"].details["counterexample_artifact"]).exists()
     assert Path(by_name["hypothesis"].details["regression_test_artifact"]).exists()
+
+
+def test_generated_property_cases_extend_configured_examples() -> None:
+    cases = expand_property_cases(
+        HypothesisCheckSpec(
+            path="property_checks.py",
+            function="assert_slugify_properties",
+            cases=["Hello World"],
+            generated_case_strategy="string_edge_cases",
+            generated_case_limit=4,
+        )
+    )
+
+    assert cases[0] == "Hello World"
+    assert "" in cases
+    assert " " in cases
+    assert len(cases) == 5
 
 
 def test_hypothesis_misconfiguration_returns_failed_check(tmp_path: Path) -> None:
