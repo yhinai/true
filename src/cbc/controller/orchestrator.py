@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Callable
@@ -39,7 +40,12 @@ from cbc.verify.core import verify_workspace
 from cbc.workspace.diffing import summarize_workspace_diff
 from cbc.workspace.git_safety import describe_workspace_safety
 from cbc.workspace.patching import apply_writes
-from cbc.workspace.staging import WorkspaceLease, create_workspace_lease
+from cbc.workspace.backends import SandboxMode
+from cbc.workspace.staging import (
+    WorkspaceLease,
+    create_workspace_lease,
+    create_workspace_lease_async,
+)
 
 
 RunEventSink = Callable[[dict[str, Any]], None]
@@ -84,6 +90,7 @@ def run_task(
     controller_mode: str | None = None,
     agent_name: str | None = None,
     event_sink: RunEventSink | None = None,
+    sandbox: SandboxMode = SandboxMode.LOCAL,
 ) -> RunLedger:
     run_id = uuid4().hex[:12]
     artifact_dir = create_artifact_dir(config.paths.artifacts_dir, "runs")
@@ -91,7 +98,14 @@ def run_task(
     write_schema_file(schema_path)
 
     started_at = datetime.now(UTC)
-    workspace_lease = create_workspace_lease(task.workspace)
+    if sandbox is SandboxMode.CONTREE:
+        workspace_lease = asyncio.run(
+            create_workspace_lease_async(
+                task.workspace, sandbox=sandbox, task_id=task.task_id
+            )
+        )
+    else:
+        workspace_lease = create_workspace_lease(task.workspace, sandbox=sandbox)
     scoring_engine = CandidateScoringEngine()
 
     try:

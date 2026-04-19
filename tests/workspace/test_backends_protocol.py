@@ -19,3 +19,11 @@ def test_local_backend_prepare_returns_path(tmp_path: Path):
     assert lease.root.exists()
     assert lease.root != tmp_path  # staged copy, not in-place
     backend.release(lease)
+
+
+def test_create_workspace_lease_defaults_to_local(tmp_path: Path):
+    from cbc.workspace.staging import create_workspace_lease
+
+    lease = create_workspace_lease(tmp_path)
+    assert lease is not None
+    assert lease.root.exists()
