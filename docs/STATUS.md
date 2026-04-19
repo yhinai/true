@@ -62,3 +62,5 @@
 - the checked-in live lane intentionally leaves `profile` unset so it does not rely on a local user profile name
 - the plan phases are now implemented end to end; the remaining work is post-plan maintenance, benchmark growth, and deeper optional verification rather than missing pipeline phases
 - the replay benchmark bank now includes additional text, JSON, and shell fixtures beyond the smoke subset, but benchmark growth is still an open area for future expansion
+
+<!-- verify App token flow -->
