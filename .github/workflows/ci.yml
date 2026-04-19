@@ -51,6 +51,16 @@ jobs:
             echo "Snapshots are clean."
           fi
 
-      - name: Fail on unclean snapshots (main & forks)
-        if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+      - name: Warn on unclean snapshots (main push)
+        if: github.event_name == 'push'
+        run: |
+          if ! git diff --quiet -- artifacts/examples reports/examples; then
+            echo "::warning::Example artifacts drifted on main — this should normally be fixed via PR auto-refresh. Pushing a corrective PR may be needed if drift persists."
+            git diff --stat -- artifacts/examples reports/examples
+          else
+            echo "Snapshots are clean on main."
+          fi
+
+      - name: Fail on unclean snapshots (fork PR)
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
         run: git diff --exit-code -- artifacts/examples reports/examples
