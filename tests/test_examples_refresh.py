@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from cbc.examples_refresh import _normalize_string, _normalize_text_content
+from cbc.examples_refresh import _normalize_string, _normalize_text_content, _normalize_timing_strings
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -73,3 +73,13 @@ def test_normalize_string_supports_expanded_benchmark_example_paths() -> None:
     )
 
     assert normalized == "reports/examples/expanded_benchmark/comparison.json"
+
+
+def test_normalize_timing_strings_scrubs_elapsed_fragments() -> None:
+    content = "1 failed in 0.02s\n1 passed in 0.01s\nelapsed in 0.37s\n"
+
+    normalized = _normalize_timing_strings(content)
+
+    assert "1 failed in 0.00s" in normalized
+    assert "1 passed in 0.00s" in normalized
+    assert "elapsed in 0.00s" in normalized

@@ -15,6 +15,7 @@ from cbc.intake.normalize import load_task
 
 FIXED_START = "2026-04-18T00:00:00Z"
 FIXED_END = "2026-04-18T00:00:01Z"
+FIXED_DURATION = 0.0
 
 
 def refresh_examples(repo_root: Path) -> dict[str, str]:
@@ -176,6 +177,15 @@ def _walk_normalize(value: Any, *, source_root: Path, repo_root: Path, example_d
             if key == "ended_at":
                 result[key] = FIXED_END
                 continue
+            if key in {
+                "elapsed_seconds",
+                "average_elapsed_seconds",
+                "delta_average_elapsed_seconds",
+                "duration_seconds",
+                "duration_s",
+            }:
+                result[key] = FIXED_DURATION
+                continue
             if key == "selected_candidate_id" and item is None:
                 result[key] = None
                 continue
@@ -214,6 +224,7 @@ def _normalize_text_content(
         rf"\g<1>{example_id}\g<2>",
         content,
     )
+    content = _normalize_timing_strings(content)
     content = _normalize_temp_paths(content)
     return content
 
@@ -221,6 +232,7 @@ def _normalize_text_content(
 def _normalize_string(value: str, *, source_root: Path, repo_root: Path, example_dir: Path) -> str:
     normalized = value.replace(str(source_root), example_dir.as_posix())
     normalized = normalized.replace(str(repo_root), "<repo>")
+    normalized = _normalize_timing_strings(normalized)
     normalized = _normalize_temp_paths(normalized)
     normalized = re.sub(r"(^|/)([0-9a-f]{12})(?=/|$)", r"\1<runtime-id>", normalized)
     return normalized
@@ -230,4 +242,11 @@ def _normalize_temp_paths(value: str) -> str:
     value = re.sub(r"/var/folders/[^ ]+/cbc-workspace-[^ /]+/workspace", "<staged_workspace>", value)
     value = re.sub(r"/tmp/[^ ]+", "<temp_path>", value)
     value = re.sub(r"/private/var/folders/[^ ]+/cbc-workspace-[^ /]+/workspace", "<staged_workspace>", value)
+    return value
+
+
+def _normalize_timing_strings(value: str) -> str:
+    value = re.sub(r"(?<=\bpassed in )\d+\.\d+s\b", "0.00s", value)
+    value = re.sub(r"(?<=\bfailed in )\d+\.\d+s\b", "0.00s", value)
+    value = re.sub(r"(?<=\bin )\d+\.\d+s\b", "0.00s", value)
     return value

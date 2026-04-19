@@ -13,7 +13,7 @@
       "verified_success": false,
       "unsafe_claims": 1,
       "retries": 0,
-      "elapsed_seconds": 0.255753,
+      "elapsed_seconds": 0.0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "artifact_dir": "reports/examples/curated_benchmark"
@@ -25,7 +25,7 @@
       "verified_success": true,
       "unsafe_claims": 0,
       "retries": 0,
-      "elapsed_seconds": 0.231194,
+      "elapsed_seconds": 0.0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "artifact_dir": "reports/examples/curated_benchmark"
@@ -37,7 +37,7 @@
       "verified_success": false,
       "unsafe_claims": 1,
       "retries": 0,
-      "elapsed_seconds": 0.163595,
+      "elapsed_seconds": 0.0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "artifact_dir": "reports/examples/curated_benchmark"
@@ -49,7 +49,7 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 0.458506,
+      "elapsed_seconds": 0.0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "artifact_dir": "reports/examples/curated_benchmark"
@@ -61,7 +61,7 @@
       "verified_success": true,
       "unsafe_claims": 0,
       "retries": 0,
-      "elapsed_seconds": 0.224737,
+      "elapsed_seconds": 0.0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "artifact_dir": "reports/examples/curated_benchmark"
@@ -73,7 +73,7 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 0.231017,
+      "elapsed_seconds": 0.0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "artifact_dir": "reports/examples/curated_benchmark"
@@ -83,7 +83,7 @@
     "verified_success_rate": 0.3333333333333333,
     "unsafe_claim_rate": 0.6666666666666666,
     "average_retries": 0.0,
-    "average_elapsed_seconds": 0.2168473333333333,
+    "average_elapsed_seconds": 0.0,
     "average_total_tokens": 0.0,
     "average_estimated_cost_usd": 0.0
   },
@@ -91,7 +91,7 @@
     "verified_success_rate": 1.0,
     "unsafe_claim_rate": 0.6666666666666666,
     "average_retries": 0.6666666666666666,
-    "average_elapsed_seconds": 0.3047533333333334,
+    "average_elapsed_seconds": 0.0,
     "average_total_tokens": 0.0,
     "average_estimated_cost_usd": 0.0
   },

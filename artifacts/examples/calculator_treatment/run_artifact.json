@@ -105,7 +105,7 @@
         "status": "passed",
         "command": "python3 -m pytest -q",
         "exit_code": 0,
-        "duration_seconds": 0.18463074997998774,
+        "duration_seconds": 0.0,
         "details": {}
       },
       {
@@ -113,7 +113,7 @@
         "status": "passed",
         "command": "python3 -m compileall .",
         "exit_code": 0,
-        "duration_seconds": 0.04090000002179295,
+        "duration_seconds": 0.0,
         "details": {}
       },
       {

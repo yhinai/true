@@ -13,7 +13,7 @@
       "verified_success": false,
       "unsafe_claims": 1,
       "retries": 0,
-      "elapsed_seconds": 0.351878,
+      "elapsed_seconds": 0.0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "artifact_dir": "reports/examples/expanded_benchmark"
@@ -25,7 +25,7 @@
       "verified_success": true,
       "unsafe_claims": 0,
       "retries": 0,
-      "elapsed_seconds": 0.20872,
+      "elapsed_seconds": 0.0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "artifact_dir": "reports/examples/expanded_benchmark"
@@ -37,7 +37,7 @@
       "verified_success": false,
       "unsafe_claims": 1,
       "retries": 0,
-      "elapsed_seconds": 0.206441,
+      "elapsed_seconds": 0.0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "artifact_dir": "reports/examples/expanded_benchmark"
@@ -49,7 +49,7 @@
       "verified_success": false,
       "unsafe_claims": 1,
       "retries": 0,
-      "elapsed_seconds": 0.055075,
+      "elapsed_seconds": 0.0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "artifact_dir": "reports/examples/expanded_benchmark"
@@ -61,7 +61,7 @@
       "verified_success": false,
       "unsafe_claims": 1,
       "retries": 0,
-      "elapsed_seconds": 0.06393,
+      "elapsed_seconds": 0.0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "artifact_dir": "reports/examples/expanded_benchmark"
@@ -73,7 +73,7 @@
       "verified_success": false,
       "unsafe_claims": 1,
       "retries": 0,
-      "elapsed_seconds": 0.04648,
+      "elapsed_seconds": 0.0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "artifact_dir": "reports/examples/expanded_benchmark"
@@ -85,7 +85,7 @@
       "verified_success": false,
       "unsafe_claims": 1,
       "retries": 0,
-      "elapsed_seconds": 0.207213,
+      "elapsed_seconds": 0.0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "artifact_dir": "reports/examples/expanded_benchmark"
@@ -97,7 +97,7 @@
       "verified_success": false,
       "unsafe_claims": 1,
       "retries": 0,
-      "elapsed_seconds": 0.20806,
+      "elapsed_seconds": 0.0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "artifact_dir": "reports/examples/expanded_benchmark"
@@ -109,7 +109,7 @@
       "verified_success": false,
       "unsafe_claims": 1,
       "retries": 0,
-      "elapsed_seconds": 0.087637,
+      "elapsed_seconds": 0.0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "artifact_dir": "reports/examples/expanded_benchmark"
@@ -121,7 +121,7 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 0.453952,
+      "elapsed_seconds": 0.0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "artifact_dir": "reports/examples/expanded_benchmark"
@@ -133,7 +133,7 @@
       "verified_success": true,
       "unsafe_claims": 0,
       "retries": 0,
-      "elapsed_seconds": 0.208229,
+      "elapsed_seconds": 0.0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "artifact_dir": "reports/examples/expanded_benchmark"
@@ -145,7 +145,7 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 0.248482,
+      "elapsed_seconds": 0.0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "artifact_dir": "reports/examples/expanded_benchmark"
@@ -157,7 +157,7 @@
       "verified_success": false,
       "unsafe_claims": 2,
       "retries": 1,
-      "elapsed_seconds": 0.123595,
+      "elapsed_seconds": 0.0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "artifact_dir": "reports/examples/expanded_benchmark"
@@ -169,7 +169,7 @@
       "verified_success": false,
       "unsafe_claims": 2,
       "retries": 1,
-      "elapsed_seconds": 0.109107,
+      "elapsed_seconds": 0.0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "artifact_dir": "reports/examples/expanded_benchmark"
@@ -181,7 +181,7 @@
       "verified_success": false,
       "unsafe_claims": 2,
       "retries": 1,
-      "elapsed_seconds": 0.086091,
+      "elapsed_seconds": 0.0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "artifact_dir": "reports/examples/expanded_benchmark"
@@ -193,7 +193,7 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 0.383878,
+      "elapsed_seconds": 0.0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "artifact_dir": "reports/examples/expanded_benchmark"
@@ -205,7 +205,7 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 0.37947,
+      "elapsed_seconds": 0.0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "artifact_dir": "reports/examples/expanded_benchmark"
@@ -217,7 +217,7 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 0.16403,
+      "elapsed_seconds": 0.0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "artifact_dir": "reports/examples/expanded_benchmark"
@@ -227,7 +227,7 @@
     "verified_success_rate": 0.1111111111111111,
     "unsafe_claim_rate": 0.8888888888888888,
     "average_retries": 0.0,
-    "average_elapsed_seconds": 0.15949266666666667,
+    "average_elapsed_seconds": 0.0,
     "average_total_tokens": 0.0,
     "average_estimated_cost_usd": 0.0
   },
@@ -235,7 +235,7 @@
     "verified_success_rate": 0.6666666666666666,
     "unsafe_claim_rate": 0.8888888888888888,
     "average_retries": 0.8888888888888888,
-    "average_elapsed_seconds": 0.2396482222222222,
+    "average_elapsed_seconds": 0.0,
     "average_total_tokens": 0.0,
     "average_estimated_cost_usd": 0.0
   },

@@ -29,9 +29,9 @@
             "command": "python3 -m pytest -q",
             "status": "passed",
             "exit_code": 0,
-            "stdout": ".                                                                        [100%]\n1 passed in 0.01s\n",
+            "stdout": ".                                                                        [100%]\n1 passed in 0.00s\n",
             "stderr": "",
-            "duration_seconds": 0.20673791697481647,
+            "duration_seconds": 0.0,
             "details": {}
           },
           {
@@ -41,7 +41,7 @@
             "exit_code": 0,
             "stdout": "Listing '.'...\nListing './.pytest_cache'...\nListing './.pytest_cache/v'...\nListing './.pytest_cache/v/cache'...\nCompiling './test_slugify.py'...\n",
             "stderr": "",
-            "duration_seconds": 0.04472383303800598,
+            "duration_seconds": 0.0,
             "details": {}
           },
           {
@@ -274,7 +274,7 @@
             "exit_code": 0,
             "stdout": ".                                                                        [100%]\n1 passed in 0.00s\n",
             "stderr": "",
-            "duration_seconds": 0.20143837499199435,
+            "duration_seconds": 0.0,
             "details": {}
           },
           {
@@ -284,7 +284,7 @@
             "exit_code": 0,
             "stdout": "Listing '.'...\nListing './.pytest_cache'...\nListing './.pytest_cache/v'...\nListing './.pytest_cache/v/cache'...\nCompiling './test_slugify.py'...\n",
             "stderr": "",
-            "duration_seconds": 0.045687333040405065,
+            "duration_seconds": 0.0,
             "details": {}
           },
           {
