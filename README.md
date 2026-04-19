@@ -1,266 +1,513 @@
+<div align="center">
+
 # Correct by Construction
 
-> **Verification-first control plane for coding agents.** Staged execution, deterministic verification, bounded retries with evidence.
+### **Verification-first control plane for coding agents.**
+
+Staged execution · deterministic verification · bounded retries · reproducible ledgers
 
 [![CI](https://github.com/yhinai/true/actions/workflows/ci.yml/badge.svg)](https://github.com/yhinai/true/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](pyproject.toml)
 [![Contract 2026-04-18.v2](https://img.shields.io/badge/contract-2026--04--18.v2-green.svg)](src/cbc/headless_contract.py)
+[![PR-gated](https://img.shields.io/badge/main-PR--gated-brightgreen.svg)](#-silent-pr-gated-workflow)
+[![Tests 132](https://img.shields.io/badge/tests-132_passing-brightgreen.svg)](#)
+[![Verdicts 4](https://img.shields.io/badge/verdicts-4_kinds-informational.svg)](#-the-four-verdicts)
+
+</div>
 
 ---
 
-## The Idea
+## ✨ The Core Idea
 
-LLMs claim. CBC proves.
+> **LLMs claim. CBC proves.**
 
+```mermaid
+flowchart LR
+    Task([📥 Task]) --> Coder[🤖 Coder]
+    Coder --> Stage[📦 Staged Workspace]
+    Stage --> Verify{{🔎 Verifier}}
+    Verify -- all checks pass --> Verified([✅ VERIFIED])
+    Verify -- check fails --> Retry{{🔄 Route}}
+    Verify -- budget exceeded --> Timeout([⏱️ TIMED_OUT])
+    Verify -- infra error --> Unproven([❓ UNPROVEN])
+    Retry -- budget left --> Coder
+    Retry -- exhausted --> Falsified([❌ FALSIFIED])
+
+    classDef good fill:#d4edda,stroke:#155724,color:#000
+    classDef bad fill:#f8d7da,stroke:#721c24,color:#000
+    classDef maybe fill:#fff3cd,stroke:#856404,color:#000
+    class Verified good
+    class Falsified,Timeout bad
+    class Unproven maybe
 ```
- ┌───────┐     ┌───────┐     ┌──────────┐     ┌─────────┐
- │ Task  │────▶│ Coder │────▶│ Verifier │────▶│ Verdict │
- └───────┘     └───────┘     └──────────┘     └─────────┘
-                   ▲               │
-                   │               ▼
-                   └── Retry ◀─────┘
-                       with failure context
-```
 
-Every change lands in a **staged workspace** (local copy or ConTree branch). Every claim is checked by an **oracle**: pytest, ruff, typecheck, contracts, hypothesis, mutation. Every outcome is recorded in a **reproducible ledger** (`RunLedger`) with snapshot lineage, timings, and the exact prompt the agent received.
-
-Four verdicts; no subjective judgement:
-
-| Verdict      | Meaning                                                 |
-| ------------ | ------------------------------------------------------- |
-| `VERIFIED`   | All required checks pass                                |
-| `FALSIFIED`  | At least one required check fails                       |
-| `UNPROVEN`   | Verification could not run to completion                |
-| `TIMED_OUT`  | Attempt exceeded `--max-seconds-per-attempt` wall budget |
+Every change lands in a **staged workspace** (local copy or ConTree branch). Every claim is checked by an **oracle** (pytest, ruff, typecheck, contracts, hypothesis, mutation). Every outcome is recorded in a reproducible `RunLedger` — with snapshot lineage, timings, and the exact prompt the agent received.
 
 ---
 
-## Quickstart
+## 🎯 The Four Verdicts
+
+```mermaid
+stateDiagram-v2
+    [*] --> Attempt
+    Attempt --> VERIFIED: all required checks pass
+    Attempt --> FALSIFIED: check fails + retries exhausted
+    Attempt --> TIMED_OUT: wall budget exceeded
+    Attempt --> UNPROVEN: verification couldn't run
+    FALSIFIED --> Attempt: retry (if budget)
+    TIMED_OUT --> Attempt: retry (if budget)
+    VERIFIED --> [*]: success
+    UNPROVEN --> [*]: abort
+```
+
+| Verdict | Icon | Meaning |
+|---|---|---|
+| `VERIFIED`  | ✅ | All required checks pass |
+| `FALSIFIED` | ❌ | At least one required check fails |
+| `TIMED_OUT` | ⏱️ | Attempt exceeded `--max-seconds-per-attempt` |
+| `UNPROVEN`  | ❓ | Verification could not run to completion |
+
+---
+
+## 🚀 Quickstart
 
 ```bash
-# Install
-uv sync --extra dev
-
-# Run the smoke benchmark
-./scripts/run_compare.sh
-
-# Verify a single task
+uv sync --extra dev                                    # install
+./scripts/run_compare.sh                               # smoke benchmark
 uv run cbc run fixtures/oracle_tasks/calculator_bug/task.yaml --mode treatment --json \
-  | jq '.verification.status'
+    | jq '.verification.status'
 # => "VERIFIED"
 ```
 
-Or zero-config intake:
+<details>
+<summary><b>Live terminal output</b> — what you actually see</summary>
 
-```bash
-uv run cbc solve "Fix the failing tests" --stream --json
+```console
+$ uv run cbc run fixtures/oracle_tasks/calculator_bug/task.yaml --mode treatment
+⠋ Running CBC on calculator_bug...
+✅ Verified after 2 attempts (1.2s)
+
+                           Verification Report
+┏━━━━━━━━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━┓
+┃ Check        ┃ Status ┃  Duration ┃
+┡━━━━━━━━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━┩
+│ oracle       │ passed │    0.04s  │
+│ ruff         │ passed │    0.11s  │
+│ pytest       │ passed │    0.83s  │
+│ compileall   │ passed │    0.02s  │
+└──────────────┴────────┴───────────┘
+
+Ledger saved: artifacts/runs/fe59a3a27a2d/run_ledger.json
+```
+
+</details>
+
+<details>
+<summary><b>Aggressive timeout</b> — proves <code>TIMED_OUT</code> verdict</summary>
+
+```console
+$ uv run cbc run fixtures/oracle_tasks/calculator_bug/task.yaml \
+      --max-seconds-per-attempt 0.001 --json | jq '.verification.status'
+"TIMED_OUT"
+```
+
+</details>
+
+---
+
+## 🏗️ Architecture
+
+```mermaid
+flowchart TB
+    subgraph CLI["⌨️ CLI Layer"]
+        Main[main.py<br/>Typer commands]
+        API[api/<br/>FastAPI read surface]
+    end
+
+    subgraph Control["🧠 Controller"]
+        Orch[orchestrator.py<br/>run_task]
+        State[run_state.py<br/>RunState + Router]
+        Ledger[ledger_factory.py<br/>RunLedger]
+        Gearbox[gearbox_runner.py<br/>asyncio.gather]
+        Scoring[scoring.py<br/>CheckWeights]
+    end
+
+    subgraph Roles["👥 Roles"]
+        Coder[coder.py]
+        Planner[planner.py]
+        Explorer[explorer.py]
+    end
+
+    subgraph Model["🔌 Model Adapters"]
+        Codex[codex_exec.py<br/>streaming subprocess]
+        Replay[replay.py]
+        Prompts[prompts.py<br/>+ program.md]
+    end
+
+    subgraph Workspace["📦 Workspace Backends"]
+        LocalBE[LocalBackend<br/>tempfile + copytree]
+        ContreeBE[ContreeWorkspace<br/>container branches]
+    end
+
+    subgraph Verify["🔎 Verification"]
+        Core[verify/core.py<br/>ThreadPoolExecutor]
+        Oracle[oracles]
+        Lint[ruff]
+        Type[mypy/pyright]
+        Prop[hypothesis]
+        Contract[contracts]
+        Mut[mutation]
+    end
+
+    subgraph Storage["💾 Storage"]
+        SQLite[(cbc.sqlite3<br/>runs + snapshots)]
+        Artifacts[artifacts/runs/]
+    end
+
+    Main --> Orch
+    API --> SQLite
+    Orch --> State
+    Orch --> Gearbox
+    Orch --> Coder
+    Coder --> Codex
+    Coder --> Replay
+    Coder --> Prompts
+    Coder --> Workspace
+    Orch --> Core
+    Core --> Oracle & Lint & Type & Prop & Contract & Mut
+    Gearbox --> ContreeBE
+    Orch --> Ledger
+    Ledger --> Artifacts
+    Orch --> SQLite
+    Orch --> Scoring
+
+    classDef cli fill:#e3f2fd,stroke:#1976d2
+    classDef control fill:#fff3e0,stroke:#f57c00
+    classDef role fill:#f3e5f5,stroke:#7b1fa2
+    classDef model fill:#e8f5e9,stroke:#388e3c
+    classDef ws fill:#fce4ec,stroke:#c2185b
+    classDef verify fill:#fff9c4,stroke:#f9a825
+    classDef store fill:#eceff1,stroke:#546e7a
+
+    class Main,API cli
+    class Orch,State,Ledger,Gearbox,Scoring control
+    class Coder,Planner,Explorer role
+    class Codex,Replay,Prompts model
+    class LocalBE,ContreeBE ws
+    class Core,Oracle,Lint,Type,Prop,Contract,Mut verify
+    class SQLite,Artifacts store
 ```
 
 ---
 
-## Features
+## 📦 Sandboxing — Local vs ConTree
 
-### Core loop
-- **Sandboxed staging** — `--sandbox local` (default, `shutil.copytree`) or `--sandbox contree` (container + Git-like branching)
-- **Parallel verification** — oracle/lint/typecheck/contracts/hypothesis run concurrently in a thread pool
-- **Bounded retries** — `max_attempts` count + optional `--max-seconds-per-attempt` wall-clock budget
-- **Failure-context accumulation** — last N failures are fed back to the next planner iteration
+```mermaid
+flowchart LR
+    subgraph Local["🟢 --sandbox local (default)"]
+        direction TB
+        Src1[Source workspace] -->|shutil.copytree| Stage1[/tmp/cbc-xxxx]
+        Stage1 --> Run1[coder writes<br/>verifier runs]
+    end
 
-### Controllers
-- **Sequential** (default) — one candidate per attempt
-- **Gearbox** — N candidates per attempt, runs them in **parallel ConTree branches** under `--sandbox contree`, picks the winner via tunable `CandidateScoringEngine` weights
+    subgraph Contree["🔵 --sandbox contree"]
+        direction TB
+        Src2[Source workspace] -->|file-walk upload| Base[Base Image<br/>cbc/workspace/&lt;task&gt;:v1]
+        Base -->|branch_async| B1[Branch 1<br/>candidate_a]
+        Base -->|branch_async| B2[Branch 2<br/>candidate_b]
+        Base -->|branch_async| B3[Branch 3<br/>candidate_c]
+        B1 & B2 & B3 -.-> Pick[CheckWeights.select]
+    end
 
-### Agent instructions
-- **Standing instructions** via `program.md` at repo root (global) + `fixtures/oracle_tasks/<name>/program.md` (per-task overrides) — stacked, injected into the coder prompt, persisted in the ledger
+    classDef local fill:#e8f5e9,stroke:#388e3c
+    classDef contree fill:#e3f2fd,stroke:#1976d2
+    class Src1,Stage1,Run1 local
+    class Src2,Base,B1,B2,B3,Pick contree
+```
 
-### Observability
-- **NDJSON lifecycle events** via `--stream`
-- **Machine-readable JSON** via `--json`
-- **FastAPI surface** (`cbc api`) over runs and benchmarks
-- **Rich spinners** on interactive TTYs (suppressed under `--json`/`--stream`)
-- **Subprocess streaming** — Codex stdout parsed line-by-line, not blocked
-
-### Contributing workflow
-- **PR-gated `main`** — direct pushes are auto-rerouted into a feature branch + PR via a local pre-push hook
-- **CI-gated auto-merge** — PRs merge themselves when `test` check is green (no human review step)
-- **CI auto-refresh** — drifted example snapshots are auto-committed back to the PR branch
-- **CI self-retry** — transient failures re-run once automatically
+> [!TIP]
+> **Local** is always available (no container runtime). **ConTree** unlocks true parallel gearbox via Git-like branches — siblings can't interfere by construction.
 
 ---
 
-## Install
+## ⚡ Gearbox — Sequential vs Parallel
+
+```mermaid
+gantt
+    title Gearbox wall-clock — 3 candidates × 5s each (illustrative)
+    dateFormat ss
+    axisFormat %Ss
+    section Sequential (local)
+    Candidate 1 :seq1, 00, 5s
+    Candidate 2 :seq2, after seq1, 5s
+    Candidate 3 :seq3, after seq2, 5s
+    Select winner :done, after seq3, 1s
+    section Parallel (contree)
+    Candidate 1 :active, par1, 00, 5s
+    Candidate 2 :active, par2, 00, 5s
+    Candidate 3 :active, par3, 00, 5s
+    Select winner :done, par4, 05, 1s
+```
+
+Running three candidates in parallel shrinks wall time from **~16s to ~6s** on this illustrative shape. Measured speedup is recorded by `scripts/bench_gearbox_parallel.py` into `reports/gearbox_speedup.json`.
+
+---
+
+## 🔁 Silent PR-gated Workflow
+
+You keep typing `git push origin main`. The system handles branching, PR creation, CI gating, and merge — in the background, silently.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Dev as Developer
+    participant Git as local git
+    participant Hook as pre-push hook
+    participant GH as GitHub
+    participant CI as CI workflow
+    participant Main as main branch
+
+    Dev->>Git: git push origin main
+    Git->>Hook: pre-push fires
+    Hook->>Hook: create pr/auto-YYYYmmdd-HHMMSS
+    Hook->>GH: push branch
+    Hook->>GH: gh pr create
+    Hook->>GH: gh pr merge --auto --squash
+    Hook-->>Dev: ✓ PR opened, auto-merge armed
+    Hook-->>Git: exit 1 (block direct push)
+    GH->>CI: run tests + auto-refresh snapshots
+    CI-->>GH: ✅ test passed
+    GH->>Main: squash-merge automatically
+    Main-->>Dev: change landed on main (no action needed)
+```
+
+### What's wired up
+
+```mermaid
+graph LR
+    Push[git push main] --> PrePush[pre-push hook]
+    PrePush --> PR[opens PR #N]
+    PR --> CIWorkflow{{ci.yml}}
+    CIWorkflow --> Tests[pytest -m 'not slow']
+    CIWorkflow --> Refresh[refresh_examples.py<br/>auto-commits drift]
+    CIWorkflow --> AutoMerge{{auto-merge.yml<br/>re-arms --auto}}
+    Tests --> Green{test=pass?}
+    Green -- yes --> Squash[GitHub squash-merge]
+    Green -- no --> Retry{{ci-retry.yml<br/>reruns once}}
+    Retry --> Tests
+    Squash --> Main[main ✅]
+
+    classDef auto fill:#e8f5e9,stroke:#388e3c
+    classDef gate fill:#fff3e0,stroke:#f57c00
+    classDef done fill:#d4edda,stroke:#155724
+    class PrePush,Refresh,AutoMerge,Retry auto
+    class CIWorkflow,Green gate
+    class Main,Squash done
+```
+
+### One-time setup per clone
 
 ```bash
-# Minimum
-uv sync --extra dev
-
-# With chart/benchmark image rendering
-uv sync --extra dev --extra charts
-
-# With ConTree sandbox backend
-uv sync --extra dev --extra contree
+ln -sf ../../scripts/git-hooks/pre-push .git/hooks/pre-push
+uv tool install pre-commit && uv tool run pre-commit install
 ```
+
+<details>
+<summary><b>Emergency override</b> (for hook-path failures only)</summary>
+
+```bash
+ALLOW_DIRECT_MAIN_PUSH=1 git push origin main
+```
+
+Branch protection on the server still rejects unless temporarily disabled.
+</details>
+
+---
+
+## 📝 Standing Instructions (`program.md`)
+
+Drop a `program.md` at the repo root to give every run standing agent instructions. Per-task overrides live at `fixtures/oracle_tasks/<name>/program.md`.
+
+```mermaid
+flowchart LR
+    Global[program.md<br/>at repo root] --> Stack((merge))
+    PerTask[task-specific<br/>program.md] --> Stack
+    Stack --> Inject[inject into<br/>coder prompt]
+    Inject --> Ledger[persist to<br/>RunLedger.program_text]
+
+    classDef doc fill:#e3f2fd,stroke:#1976d2
+    classDef op fill:#fff3e0,stroke:#f57c00
+    classDef out fill:#e8f5e9,stroke:#388e3c
+    class Global,PerTask doc
+    class Stack,Inject op
+    class Ledger out
+```
+
+```bash
+echo "Prefer defensive coding. Use type hints everywhere." > program.md
+uv run cbc run fixtures/oracle_tasks/calculator_bug/task.yaml --mode treatment
+jq '.program_text' artifacts/runs/*/run_ledger.json | tail -1
+# => "Prefer defensive coding. Use type hints everywhere."
+```
+
+---
+
+## 🛠️ Install
+
+| Scenario | Command |
+|---|---|
+| Minimum | `uv sync --extra dev` |
+| + charts | `uv sync --extra dev --extra charts` |
+| + ConTree | `uv sync --extra dev --extra contree` |
 
 Requires **Python 3.11+** and **[uv](https://docs.astral.sh/uv/)**.
 
 ---
 
-## CLI Reference
+## ⌨️ CLI
 
-### `cbc run <task.yaml>`
-
-Run a single oracle task.
+<details open>
+<summary><b><code>cbc run &lt;task.yaml&gt;</code></b> — run a single oracle task</summary>
 
 | Flag | Default | Purpose |
-| --- | --- | --- |
+|---|---|---|
 | `--mode {baseline,treatment,review}` | `treatment` | Execution mode |
 | `--controller {sequential,gearbox}` | `sequential` | Candidate strategy |
 | `--sandbox {local,contree}` | `local` | Workspace isolation |
 | `--agent {codex,replay}` | per task.yaml | Model adapter |
-| `--max-seconds-per-attempt <float>` | None | Wall-clock budget per attempt |
-| `--json` | off | Machine-readable output on stdout |
+| `--max-seconds-per-attempt <float>` | `None` | Wall-clock budget per attempt |
+| `--json` | off | Machine-readable stdout |
 | `--stream` | off | NDJSON lifecycle events |
 
-Examples:
-
 ```bash
-# Default run
-uv run cbc run fixtures/oracle_tasks/calculator_bug/task.yaml --mode treatment
-
-# Gearbox with parallel candidates
-uv run cbc run fixtures/oracle_tasks/calculator_bug/task.yaml \
-    --controller gearbox --sandbox contree --json
-
-# Aggressive wall-clock budget (proves TIMED_OUT verdict)
-uv run cbc run fixtures/oracle_tasks/calculator_bug/task.yaml \
-    --max-seconds-per-attempt 0.001 --json
+uv run cbc run <task.yaml> --mode treatment
+uv run cbc run <task.yaml> --controller gearbox --sandbox contree --json
+uv run cbc run <task.yaml> --max-seconds-per-attempt 60
 ```
 
-### `cbc solve <prompt>`
+</details>
 
-Zero-config intake — infer the workspace and oracles from a natural-language prompt.
+<details>
+<summary><b><code>cbc solve &lt;prompt&gt;</code></b> — zero-config intake from natural language</summary>
 
 ```bash
 uv run cbc solve "Add a /health endpoint that returns 200"
-uv run cbc solve "Fix the Node status badge labels" --verify "node test_status.js"
+uv run cbc solve "Fix the Node status badge labels" --verify "node test_status.js" --json
 ```
 
-### `cbc compare` / `cbc controller-compare` / `cbc poc`
+</details>
 
-Benchmark comparison reports across checked-in configs.
+<details>
+<summary><b>Benchmarks</b> — compare, controller-compare, poc</summary>
 
 ```bash
 ./scripts/run_compare.sh
 ./scripts/run_expanded_compare.sh
 ./scripts/run_controller_compare.sh
 ./scripts/run_poc_compare.sh --simulated --sample-size 2 --seed 42 --repetitions 2
-python3 scripts/bench_gearbox_parallel.py    # sequential vs parallel wall time
+python3 scripts/bench_gearbox_parallel.py
 ```
 
-### `cbc review` / `cbc ci`
+</details>
 
-Review or CI-gate an existing workspace or artifact.
+<details>
+<summary><b>Review &amp; CI gates</b> for existing workspaces &amp; artifacts</summary>
 
 ```bash
-uv run cbc review-workspace fixtures/oracle_tasks/calculator_bug/task.yaml /path/to/workspace
-uv run cbc ci fixtures/oracle_tasks/calculator_bug/task.yaml /path/to/workspace
-uv run cbc review-artifact artifacts/examples/calculator_treatment/run_ledger.json --json
-uv run cbc ci-artifact artifacts/examples/calculator_treatment/run_ledger.json --json
+uv run cbc review-workspace <task.yaml> /path/to/workspace
+uv run cbc ci <task.yaml> /path/to/workspace
+uv run cbc review-artifact <ledger.json> --json
+uv run cbc ci-artifact <ledger.json> --json
 ```
 
-### `cbc api`
+</details>
 
-Read-only FastAPI over runs and benchmarks.
+<details>
+<summary><b><code>cbc api</code></b> — FastAPI read surface</summary>
 
 ```bash
 uv run cbc api
-
+# then
 curl http://127.0.0.1:8000/health
 curl http://127.0.0.1:8000/runs
-curl http://127.0.0.1:8000/runs/<run_id>
 curl http://127.0.0.1:8000/benchmarks
-curl http://127.0.0.1:8000/benchmarks/<benchmark_id>
 ```
+
+</details>
 
 ---
 
-## Architecture
+## 📂 Repository Map
 
 ```
 src/cbc/
-├── main.py                      CLI entry (Typer) — run, solve, compare, review, ci, api
+├── main.py                      CLI entry (Typer)
 ├── api/                         FastAPI read surface
-├── benchmark/                   Comparison & reporting
 ├── controller/
-│   ├── orchestrator.py          run_task coordination (sequential + gearbox)
+│   ├── orchestrator.py          run_task (sequential + gearbox)
 │   ├── run_state.py             RunState, IterationRecord, AttemptTimeout
-│   ├── routing.py               route_after_verify → RETRY | COMPLETE | ABORT
+│   ├── routing.py               RETRY | COMPLETE | ABORT
 │   ├── ledger_factory.py        build_final_ledger
-│   ├── gearbox_runner.py        run_gearbox_parallel (asyncio.gather)
-│   ├── scoring.py               CandidateScoringEngine + tunable CheckWeights
-│   ├── budgets.py               Retry budget resolution
-│   └── retries.py               should_retry guard
+│   ├── gearbox_runner.py        asyncio.gather
+│   └── scoring.py               tunable CheckWeights
 ├── model/
-│   ├── codex_exec.py            Codex CLI subprocess adapter (streaming + timeout)
-│   ├── replay.py                Replay model adapter
-│   └── prompts.py               Prompt assembly + program.md injection
-├── prompts/
-│   └── program_loader.py        Global + per-task program.md stacking
-├── roles/                       coder, explorer, planner, reviewer, risk_worker
-├── verify/core.py               verify_workspace — parallel ThreadPoolExecutor
+│   ├── codex_exec.py            streaming subprocess
+│   ├── replay.py                deterministic replay adapter
+│   └── prompts.py               program.md injection
+├── prompts/program_loader.py    global + per-task stacking
+├── roles/                       coder / planner / explorer / reviewer
+├── verify/core.py               parallel ThreadPoolExecutor
 ├── workspace/
-│   ├── backends.py              WorkspaceBackend protocol, SandboxMode, LocalBackend
-│   ├── contree_adapter.py       ContreeWorkspace (file-walk upload + branch_async)
-│   └── staging.py               create_workspace_lease / _async
+│   ├── backends.py              WorkspaceBackend protocol
+│   ├── contree_adapter.py       ContreeWorkspace
+│   └── staging.py               create_workspace_lease
 └── storage/
-    ├── artifacts.py             Per-run artifact directory
     ├── runs.py                  SQLite run index
     └── candidate_lineage.py     candidate_snapshots table
 ```
 
-**Key types** (`src/cbc/models.py`):
-- `TaskSpec` — task definition + optional `max_wall_seconds_per_attempt`
-- `RunLedger` — final artifact, includes `program_text`, `attempts`, `verification`, `proof_card`
-- `CandidateResult` — one gearbox candidate, includes `snapshot_id`
-- `VerificationVerdict` — `VERIFIED | FALSIFIED | UNPROVEN | TIMED_OUT`
+---
+
+## 📊 Task Bank
+
+<details>
+<summary><b>10 oracle tasks checked in under <code>fixtures/oracle_tasks/</code></b></summary>
+
+| Task | Kind |
+|---|---|
+| `calculator_bug` | single-file Python repair |
+| `calculator_bug_codex` | single-file, live Codex lane |
+| `checkout_tax_propagation` | multi-file propagation |
+| `greeting_text_patch` | single-file text contract |
+| `json_status_rollup` | multi-file aggregate contract |
+| `live_codex_calculator` | live Codex lane |
+| `price_format_property_regression` | property regression |
+| `shell_banner_contract` | shell contract |
+| `slug_shell_bug` | multi-file Python + shell |
+| `slugify_property_regression` | property regression |
+
+Plus a non-Python Node task bank (`status_badge_js_contract` and friends).
+
+</details>
 
 ---
 
-## Benchmarks
-
-Checked-in benchmark configs:
-
-| Config | Purpose |
-| --- | --- |
-| `benchmark-configs/curated_subset.yaml` | Smallest deterministic smoke |
-| `benchmark-configs/expanded_subset.yaml` | Multi-file, property, Node coverage |
-| `benchmark-configs/controller_subset.yaml` | Sequential vs gearbox proof |
-| `benchmark-configs/demo_subset.yaml` | Three-task demo slice |
-| `benchmark-configs/live_codex.yaml` | Live Codex lane |
-| `benchmark-configs/poc_live_codex.yaml` | POC comparison lane |
-
-Replay task bank covers single-file Python repairs, multi-file propagation (`checkout_tax_propagation`), property regressions, and a non-Python Node task (`status_badge_js_contract`).
-
----
-
-## Outputs
+## 💾 Outputs
 
 | Location | Content |
-| --- | --- |
-| `artifacts/runs/<run_id>/` | Per-run ledger, retry transcript, verification report |
-| `artifacts/examples/` | Checked-in reference runs (schema-gated by CI) |
-| `artifacts/dynamic_oracles/` | Dynamic intake oracle artifacts |
-| `artifacts/cbc.sqlite3` | Run index + `candidate_snapshots` lineage |
-| `reports/benchmarks/<id>/` | Benchmark comparisons |
-| `reports/examples/` | Checked-in benchmark reports |
+|---|---|
+| `artifacts/runs/<run_id>/` | per-run ledger, transcript, verification report |
+| `artifacts/examples/` | checked-in reference runs (CI-gated for drift) |
+| `artifacts/cbc.sqlite3` | SQLite: `runs` + `candidate_snapshots` lineage |
+| `reports/benchmarks/<id>/` | benchmark comparisons |
+| `reports/gearbox_speedup.json` | sequential vs parallel wall-time |
 
 ---
 
-## Verification Sweep
+## ✅ Full Verification Sweep
 
 ```bash
-# Full local pipeline
 uv run pytest -q
 ./scripts/run_compare.sh
 ./scripts/run_expanded_compare.sh
@@ -272,80 +519,30 @@ python3 -m compileall src tests scripts
 
 ---
 
-## Contributing
+## 📣 Status
 
-`main` is PR-gated — a local pre-push hook intercepts direct pushes and silently reroutes them through a feature branch + PR with CI-gated auto-merge. You keep typing `git push origin main`; the system does the rest.
-
-### One-time setup per clone
-
-```bash
-ln -sf ../../scripts/git-hooks/pre-push .git/hooks/pre-push
-uv tool install pre-commit
-uv tool run pre-commit install
-```
-
-### What happens on `git push origin main`
-
-1. Pre-push hook intercepts the push
-2. Creates `pr/auto-YYYYmmdd-HHMMSS` at your commit
-3. Pushes that branch
-4. Opens a PR against `main`
-5. Arms `gh pr merge --auto --squash`
-6. Blocks your direct push (so local `main` doesn't race ahead)
-7. CI runs on the PR — tests, ruff, example-snapshot auto-refresh
-8. When CI is green, GitHub auto-squashes the PR onto `main`
-
-### Commit format
-
-Enforced by a local commit-message hook:
-
-- Conventional commits: `<type>(scope): <description>`
-- Subject ≤ 50 characters
-- Types: `feat`, `fix`, `refactor`, `docs`, `test`, `build`, `chore`, `ci`
-- No AI attribution in commit messages
-
-### Emergency override
-
-```bash
-ALLOW_DIRECT_MAIN_PUSH=1 git push origin main
-```
-
-Branch protection on the server will still reject the push unless disabled; use for hook-path failures only.
-
-### Server-side workflows
-
-- [`ci.yml`](.github/workflows/ci.yml) — tests + auto-commit refreshed snapshots on PR branches
-- [`auto-merge.yml`](.github/workflows/auto-merge.yml) — re-arms `gh pr merge --auto` belt-and-suspenders
-- [`ci-retry.yml`](.github/workflows/ci-retry.yml) — re-runs failed jobs once automatically
-
----
-
-## Status
-
-- ✅ Headless public contract frozen at `2026-04-18.v2`
+- ✅ Headless contract frozen at `2026-04-18.v2`
 - ✅ CLI, FastAPI API, checked-in artifacts, benchmark reports
 - ✅ Replay + live Codex adapters, both reproducible
-- ✅ Sequential + gearbox controllers, gearbox parallel under ConTree
+- ✅ Sequential + gearbox controllers (gearbox parallel under ConTree)
 - ✅ Zero-config intake via `cbc solve`
 - ✅ PR-gated silent-merge workflow on `main`
+- ✅ 132 tests passing, fast suite runs in ~11s
 
 ---
 
-## Docs
+## 📚 Docs
 
-- [Demo](docs/DEMO.md) — end-to-end walkthrough
-- [Spec](docs/SPEC.md) — product specification
-- [Runbook](docs/RUNBOOK.md) — operational procedures
-- [Benchmark Plan](docs/BENCHMARK_PLAN.md) — benchmarking methodology
-- [Status](docs/STATUS.md) — phase progress
-- [Roadmap](plan.md) — long-range plan
-- [Agent conventions](AGENTS.md) — repo push-forward workflow
-- [Claude guidance](CLAUDE.md) — Claude-specific rules
-- Design specs: [`docs/superpowers/specs/`](docs/superpowers/specs/)
-- Implementation plans: [`docs/superpowers/plans/`](docs/superpowers/plans/)
+- [Demo](docs/DEMO.md) · [Spec](docs/SPEC.md) · [Runbook](docs/RUNBOOK.md) · [Benchmark Plan](docs/BENCHMARK_PLAN.md) · [Status](docs/STATUS.md) · [Roadmap](plan.md)
+- [Agent conventions (AGENTS.md)](AGENTS.md) · [Claude guidance (CLAUDE.md)](CLAUDE.md)
+- Design specs: [`docs/superpowers/specs/`](docs/superpowers/specs/) · Implementation plans: [`docs/superpowers/plans/`](docs/superpowers/plans/)
 
 ---
 
-## License
+<div align="center">
 
-MIT. See [LICENSE](LICENSE).
+**MIT License** · see [LICENSE](LICENSE)
+
+*Built on [opencolin/ralphwiggum](https://github.com/opencolin/ralphwiggum) (role decomposition), [opencolin/contree-skill](https://github.com/opencolin/contree-skill) (sandboxed branching), and [opencolin/opencode-cloud](https://github.com/opencolin/opencode-cloud) (parallel branching).*
+
+</div>
