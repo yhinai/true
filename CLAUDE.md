@@ -189,6 +189,14 @@ Same end result; used from CI jobs or automation that doesn't invoke git hooks.
 
 Fully hands-off. No human action unless a regression fires.
 
+### LLM PR reviewer (advisory)
+
+`.github/workflows/llm-pr-reviewer.yml` runs on every PR event against the same-repo
+branches. It sends the git diff (excluding `artifacts/`, `reports/`, `*.json`, `uv.lock`)
+to `gpt-4o-mini` with a strict high-signal prompt, then posts a single review comment
+with a verdict + findings. It is **non-blocking** — auto-merge still depends on `test`
+check. Gated on `OPENAI_API_KEY` secret; skips cleanly if unset.
+
 ### Dynamic test surface
 
 `tests/auto/` contains parametrized tests that auto-discover the current
