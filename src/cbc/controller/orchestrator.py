@@ -10,6 +10,7 @@ from cbc.config import AppConfig, DEFAULT_CONFIG
 from cbc.controller.artifact_flow import persist_run_artifacts
 from cbc.controller.budgets import normalize_max_attempts
 from cbc.controller.checkpoints import checkpoint_name
+from cbc.controller.gearbox_runner import ParallelCandidateSpec, run_gearbox_parallel
 from cbc.controller.ledger_factory import build_final_ledger
 from cbc.controller.routing import RouteDecision, route_after_verify
 from cbc.controller.run_state import IterationRecord, RunState
@@ -35,6 +36,11 @@ from cbc.roles.explorer import build_explorer_artifact
 from cbc.roles.planner import build_plan
 from cbc.roles.risk_worker import build_risk_artifact
 from cbc.storage.artifacts import create_artifact_dir
+from cbc.storage.candidate_lineage import (
+    CandidateSnapshot,
+    init_lineage_schema,
+    insert_snapshot,
+)
 from cbc.storage.runs import save_run
 from cbc.verify.core import verify_workspace
 from cbc.workspace.diffing import summarize_workspace_diff
@@ -156,12 +162,15 @@ def run_task(
                     plan=plan,
                     explorer=explorer,
                     base_workspace=workspace,
+                    workspace_lease=workspace_lease,
                     artifact_dir=artifact_dir,
                     attempt=attempt,
                     evidence=evidence,
                     schema_path=schema_path,
                     candidate_count=candidate_count,
                     scoring_engine=scoring_engine,
+                    run_id=run_id,
+                    db_path=config.paths.storage_db,
                     event_sink=event_sink,
                 )
                 if not candidate_bundle["candidates"]:
@@ -440,14 +449,48 @@ def _run_gearbox_attempt(
     plan,
     explorer: ExplorerArtifact,
     base_workspace: Path,
+    workspace_lease: WorkspaceLease,
     artifact_dir: Path,
     attempt: int,
     evidence: str | None,
     schema_path: Path,
     candidate_count: int,
     scoring_engine: CandidateScoringEngine,
+    run_id: str,
+    db_path: Path,
     event_sink: RunEventSink | None = None,
 ) -> dict[str, Any]:
+    if workspace_lease.sandbox is SandboxMode.CONTREE:
+        init_lineage_schema(db_path)
+        insert_snapshot(
+            db_path,
+            CandidateSnapshot(
+                snapshot_id=f"{run_id}-a{attempt}-base",
+                parent_id=None,
+                run_id=run_id,
+                candidate_index=-1,
+                verdict="UNPROVEN",
+            ),
+        )
+        return asyncio.run(
+            _run_candidates_parallel(
+                task=task,
+                adapter=adapter,
+                plan=plan,
+                explorer=explorer,
+                workspace_lease=workspace_lease,
+                artifact_dir=artifact_dir,
+                attempt=attempt,
+                evidence=evidence,
+                schema_path=schema_path,
+                candidate_count=candidate_count,
+                scoring_engine=scoring_engine,
+                run_id=run_id,
+                db_path=db_path,
+                event_sink=event_sink,
+            )
+        )
+
     candidates: list[CandidateResult] = []
     candidate_leases: dict[str, WorkspaceLease] = {}
     usage_by_candidate: dict[str, Any] = {}
@@ -545,6 +588,191 @@ def _run_gearbox_attempt(
             "model_calls_used": len(candidates),
         },
 }
+
+
+async def _run_candidates_parallel(
+    *,
+    task: TaskSpec,
+    adapter,
+    plan,
+    explorer: ExplorerArtifact,
+    workspace_lease: WorkspaceLease,
+    artifact_dir: Path,
+    attempt: int,
+    evidence: str | None,
+    schema_path: Path,
+    candidate_count: int,
+    scoring_engine: CandidateScoringEngine,
+    run_id: str,
+    db_path: Path,
+    event_sink: RunEventSink | None = None,
+) -> dict[str, Any]:
+    """Dispatch N candidates concurrently, one ConTree branch each."""
+
+    base_workspace = workspace_lease.root
+    candidate_workspace = workspace_lease.path
+
+    def _candidate_id(index: int) -> str:
+        return f"candidate_{chr(ord('a') + index)}"
+
+    def _candidate_role(index: int) -> str:
+        return "primary" if index == 0 else "alternate"
+
+    async def run_coder_async(idx: int) -> dict[str, Any]:
+        candidate_id = _candidate_id(idx)
+        candidate_role = _candidate_role(idx)
+        _emit_event(
+            event_sink,
+            "adapter.started",
+            attempt=attempt,
+            candidate_id=candidate_id,
+            candidate_role=candidate_role,
+        )
+        adapter_result, prompt = await asyncio.to_thread(
+            run_coder,
+            adapter,
+            task_prompt=task.prompt,
+            plan=plan,
+            explorer=explorer,
+            workspace=candidate_workspace,
+            attempt=attempt,
+            candidate_index=idx,
+            candidate_role=candidate_role,
+            evidence=evidence,
+            schema_path=schema_path,
+        )
+        _emit_event(
+            event_sink,
+            "adapter.completed" if adapter_result.failure_reason is None else "adapter.failed",
+            attempt=attempt,
+            candidate_id=candidate_id,
+            failure_reason=adapter_result.failure_reason,
+            total_tokens=adapter_result.usage.total_tokens,
+        )
+        return {
+            "index": idx,
+            "candidate_id": candidate_id,
+            "candidate_role": candidate_role,
+            "adapter_result": adapter_result,
+            "prompt": prompt,
+        }
+
+    async def verify_async(ctx: dict[str, Any]) -> dict[str, Any]:
+        candidate_id = ctx["candidate_id"]
+        adapter_result = ctx["adapter_result"]
+        response = adapter_result.response
+        changed_files = await asyncio.to_thread(
+            apply_writes,
+            candidate_workspace,
+            response.writes,
+            plan.allowed_files,
+        )
+        _emit_event(event_sink, "verification.started", attempt=attempt, candidate_id=candidate_id)
+        verification = await asyncio.to_thread(
+            verify_workspace,
+            candidate_workspace,
+            task=task,
+            changed_files=changed_files,
+            claimed_success=response.claimed_success,
+            artifact_dir=artifact_dir / "candidate_artifacts" / candidate_id,
+        )
+        _emit_event(
+            event_sink,
+            "verification.completed",
+            attempt=attempt,
+            candidate_id=candidate_id,
+            verdict=verification.verdict.value,
+        )
+        diff_summary = await asyncio.to_thread(
+            summarize_workspace_diff,
+            base_workspace,
+            candidate_workspace,
+            changed_files=changed_files,
+        )
+        risk_artifact = build_risk_artifact(
+            diff_summary=diff_summary,
+            verification=verification,
+            unsafe_claims=int(verification.unsafe_claim_detected),
+        )
+        ctx.update(
+            {
+                "verification": verification,
+                "diff_summary": diff_summary,
+                "risk_artifact": risk_artifact,
+                "changed_files": changed_files,
+            }
+        )
+        return ctx
+
+    specs = [
+        ParallelCandidateSpec(
+            index=i,
+            run_coder=(lambda i=i: run_coder_async(i)),
+            verify=verify_async,
+        )
+        for i in range(candidate_count)
+    ]
+    raw_results = await run_gearbox_parallel(specs)
+
+    candidates: list[CandidateResult] = []
+    candidate_leases: dict[str, WorkspaceLease] = {}
+    usage_by_candidate: dict[str, Any] = {}
+    failure_by_candidate: dict[str, str | None] = {}
+    for ctx in raw_results:
+        idx = ctx["index"]
+        candidate_id = ctx["candidate_id"]
+        adapter_result = ctx["adapter_result"]
+        verification = ctx["verification"]
+        snapshot_id = f"{run_id}-a{attempt}-c{idx}"
+        insert_snapshot(
+            db_path,
+            CandidateSnapshot(
+                snapshot_id=snapshot_id,
+                parent_id=f"{run_id}-a{attempt}-base",
+                run_id=run_id,
+                candidate_index=idx,
+                verdict=str(verification.verdict.value),
+            ),
+        )
+        usage_by_candidate[candidate_id] = adapter_result.usage
+        failure_by_candidate[candidate_id] = adapter_result.failure_reason
+        candidates.append(
+            CandidateResult(
+                candidate_id=candidate_id,
+                candidate_role=ctx["candidate_role"],
+                attempt=attempt,
+                prompt=ctx["prompt"],
+                model_response=adapter_result.response,
+                verification=verification,
+                workspace_dir=candidate_workspace,
+                diff_summary=ctx["diff_summary"],
+                risk_artifact=ctx["risk_artifact"],
+                score=scoring_engine.score(verification, ctx["diff_summary"]),
+                snapshot_id=snapshot_id,
+            )
+        )
+
+    selected = scoring_engine.select(candidates)
+    selected.selected = True
+    return {
+        "selected": selected,
+        "selected_lease": workspace_lease,
+        "selected_usage": usage_by_candidate[selected.candidate_id],
+        "candidates": candidates,
+        "leases": candidate_leases,
+        "selected_failure_reason": failure_by_candidate[selected.candidate_id],
+        "scheduler": {
+            "attempt": attempt,
+            "controller_mode": "gearbox",
+            "selected_candidate_id": selected.candidate_id,
+            "candidate_ids": [candidate.candidate_id for candidate in candidates],
+            "scores": {
+                candidate.candidate_id: candidate.score.model_dump(mode="json")
+                for candidate in candidates
+            },
+            "model_calls_used": len(candidates),
+        },
+    }
 
 
 def _resolve_controller_mode(mode: str, config: AppConfig, override: str | None) -> str:

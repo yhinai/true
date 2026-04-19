@@ -206,6 +206,7 @@ class CandidateResult(BaseModel):
     risk_artifact: dict[str, Any] = Field(default_factory=dict)
     score: CandidateScore = Field(default_factory=CandidateScore)
     selected: bool = False
+    snapshot_id: str | None = None
 
 
 class RetryTranscript(BaseModel):
