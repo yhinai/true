@@ -9,7 +9,7 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](pyproject.toml)
 [![Contract](https://img.shields.io/badge/contract-2026--04--18.v2-green.svg)](src/cbc/headless_contract.py)
 [![main: PR-gated](https://img.shields.io/badge/main-PR--gated-brightgreen.svg)](#silent-pr-gated-workflow)
-[![tests: 132](https://img.shields.io/badge/tests-132_passing-brightgreen.svg)](#)
+[![tests: 191](https://img.shields.io/badge/tests-191_passing-brightgreen.svg)](#)
 
 </div>
 
@@ -471,7 +471,60 @@ python3 -m compileall src tests scripts
 - Sequential + gearbox controllers; parallel gearbox under ConTree
 - Zero-config intake via `cbc solve`
 - `main` is PR-gated with silent auto-merge
-- 132 tests; fast suite ~11s
+- 191 tests; fast suite ~10s
+- Live UI (`web/`) + optional Supabase ledger mirror
+
+---
+
+## Live UI & Supabase mirror
+
+A small Next.js app under [`web/`](web/) tails the FastAPI control plane over
+Server-Sent Events and falls back to a Supabase ledger mirror when the API is
+not reachable (e.g. a deployed frontend with no tunnel to `cbc-api`).
+
+```bash
+# 1. Start the CBC API (exposes /runs, /runs/{id}/stream, /runs.stream, /health)
+uv run cbc-api
+
+# 2. Start the web UI
+cd web && cp .env.local.example .env.local   # edit to taste
+npm install && npm run dev                    # → http://localhost:3000
+```
+
+Endpoints added in [`src/cbc/api/`](src/cbc/api/):
+
+| Route | Kind | Purpose |
+|---|---|---|
+| `GET /runs/{run_id}/stream` | SSE | Tails `run_ledger.json`; emits `snapshot`, `update`, `done`, `error` |
+| `GET /runs.stream`          | SSE | Emits the runs index whenever a verdict changes |
+| `POST /runs/{run_id}/mirror`| REST | Force-mirrors a completed run to Supabase |
+
+### Optional: Supabase ledger mirror
+
+Any completed run can be mirrored to Postgres via Supabase's REST API. The
+writer is best-effort and has **zero new Python runtime dependencies** —
+failures are logged and the on-disk ledger remains the source of truth.
+
+```bash
+# apply the schema (idempotent)
+psql "$POSTGRES_URL_NON_POOLING" -f migrations/supabase/0001_cbc_ledger.sql
+
+# activate the mirror
+export SUPABASE_URL=https://YOUR-REF.supabase.co
+export SUPABASE_SERVICE_ROLE_KEY=eyJ...   # or SUPABASE_ANON_KEY for dev
+```
+
+See [`.env.example`](.env.example) for the full set of variables.
+
+### Deploy to Vercel
+
+```bash
+cd web
+vercel link            # one-time
+vercel --prod          # deploy
+# required env vars in Vercel project settings:
+#   NEXT_PUBLIC_CBC_API_URL, NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY
+```
 
 ---
 

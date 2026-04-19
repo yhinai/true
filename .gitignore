@@ -13,9 +13,13 @@ reports/benchmarks/
 .env
 .env.*
 !.env.example
+!.env.local.example
+!.env.*.example
 
 # Next.js / web
 web/node_modules/
 web/.next/
 web/out/
 web/.vercel/
+web/tsconfig.tsbuildinfo
+web/.env.local

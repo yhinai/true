@@ -1,0 +1,46 @@
+:root {
+  --bg: #0b0d10;
+  --fg: #e6e8eb;
+  --muted: #8b95a1;
+  --panel: #14181d;
+  --border: #222831;
+  --ok: #3ddc97;
+  --bad: #ff5c5c;
+  --warn: #ffb547;
+  --info: #4ea8ff;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg); font-family: ui-sans-serif, -apple-system, "SF Pro Text", "Inter", system-ui, sans-serif; }
+a { color: var(--info); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code, pre { font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace; }
+
+.topbar {
+  display: flex; gap: 12px; align-items: baseline;
+  padding: 12px 20px; border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+.muted { color: var(--muted); font-size: 0.9rem; }
+main { padding: 20px; max-width: 1100px; margin: 0 auto; }
+
+.verdict { font-weight: 600; padding: 2px 8px; border-radius: 999px; font-size: 0.8rem; }
+.verdict.VERIFIED  { background: rgba(61,220,151,0.15); color: var(--ok); }
+.verdict.FALSIFIED { background: rgba(255,92,92,0.15);  color: var(--bad); }
+.verdict.TIMED_OUT { background: rgba(255,181,71,0.15); color: var(--warn); }
+.verdict.UNPROVEN  { background: rgba(78,168,255,0.15); color: var(--info); }
+.verdict.UNKNOWN, .verdict.PENDING { background: rgba(139,149,161,0.15); color: var(--muted); }
+
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); font-size: 0.92rem; }
+th { color: var(--muted); font-weight: 500; }
+
+.panel {
+  background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px 16px; margin-top: 14px;
+}
+.row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+pre.ledger { overflow: auto; max-height: 60vh; font-size: 0.82rem; line-height: 1.4; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: var(--muted); }
+.dot.live { background: var(--ok); box-shadow: 0 0 10px var(--ok); animation: pulse 1.2s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
