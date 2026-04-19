@@ -39,7 +39,7 @@
             "command": "python3 -m compileall .",
             "status": "passed",
             "exit_code": 0,
-            "stdout": "Listing '.'...\nListing './.pytest_cache'...\nListing './.pytest_cache/v'...\nListing './.pytest_cache/v/cache'...\nCompiling './test_slugify.py'...\n",
+            "stdout": "Listing '.'...\nListing './.pytest_cache'...\nListing './.pytest_cache/v'...\nListing './.pytest_cache/v/cache'...\nCompiling './property_checks.py'...\nCompiling './test_slugify.py'...\n",
             "stderr": "",
             "duration_seconds": 0.0,
             "details": {}
