@@ -20,8 +20,6 @@ def route_after_verify(state: RunState) -> RouteDecision:
     latest = state.iteration_history[-1]
     if latest.verdict is VerificationVerdict.VERIFIED:
         return RouteDecision.COMPLETE
-    if latest.verdict is VerificationVerdict.UNPROVEN:
-        return RouteDecision.ABORT
     if state.iteration >= state.max_iterations:
         return RouteDecision.ABORT
     return RouteDecision.RETRY
