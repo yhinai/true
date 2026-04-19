@@ -1,12 +1,24 @@
 name: Auto-update PRs
 
+# Continuous: fires on every main push (merge event), on a 5-minute cron
+# as a safety net, when any PR changes (opened/synchronize/closed), and on
+# manual dispatch. Any open PR that is BEHIND gets rebased automatically.
 on:
   push:
     branches: ["main"]
+  schedule:
+    - cron: '*/5 * * * *'
+  pull_request_target:
+    types: [opened, synchronize, closed, reopened]
+  workflow_dispatch:
 
 permissions:
   contents: write
   pull-requests: write
+
+concurrency:
+  group: auto-update-prs
+  cancel-in-progress: false
 
 jobs:
   update-open-prs:
@@ -34,5 +46,6 @@ jobs:
           fi
           for pr in $prs; do
             echo "Updating PR #$pr..."
-            gh pr update-branch --repo "$REPO" "$pr" || echo "  (could not update; likely conflicting — will be handled by resolver)"
+            gh pr update-branch --repo "$REPO" "$pr" \
+              || echo "  (could not update; likely conflicting — will be handled by resolver)"
           done
