@@ -99,7 +99,10 @@ def test_cli_workspace_in_place_rejects_home(tmp_path: Path) -> None:
         ["run", str(CALCULATOR_TASK), "--workspace-in-place", str(home)],
     )
     assert result.exit_code != 0
-    assert "workspace-in-place" in (result.output + (result.stderr or ""))
+    # Strip ANSI escapes so Rich-formatted help text matches on Linux CI.
+    import re
+    combined = re.sub(r"\x1b\[[0-9;]*m", "", result.output + (result.stderr or ""))
+    assert "in-place" in combined
 
 
 def test_cli_workspace_in_place_and_sandbox_mutually_exclusive(tmp_path: Path) -> None:
