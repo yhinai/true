@@ -58,7 +58,7 @@ export default function CommandCenter() {
 
       <Section
         id="checks"
-        tag="Verification — 005"
+        tag="Verification — 006"
         title={<>What a <em>run</em> can prove</>}
         meta="DETERMINISTIC · REPLAYABLE · BOUNDED"
       >
@@ -67,7 +67,7 @@ export default function CommandCenter() {
 
       <Section
         id="capabilities"
-        tag="Capabilities — 006"
+        tag="Capabilities — 007"
         title={<>Tools <em>at hand</em></>}
         meta="CLI · API · REVIEW · BENCHMARK"
       >
@@ -76,7 +76,7 @@ export default function CommandCenter() {
 
       <Section
         id="tasks"
-        tag="Library — 007"
+        tag="Library — 008"
         title={<>Task <em>fixtures</em></>}
         meta="REPLAY + LIVE AGENT FIXTURES"
       >
@@ -85,7 +85,7 @@ export default function CommandCenter() {
 
       <Section
         id="flow"
-        tag="Pipeline — 008"
+        tag="Pipeline — 009"
         title={<>How a <em>task</em> moves</>}
         meta="TASK → PLAN → PATCH → VERIFY → VERDICT"
       >
