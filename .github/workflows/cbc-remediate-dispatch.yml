@@ -1,0 +1,40 @@
+name: cbc-remediate-dispatch
+
+# Drain the cbc_remediations queue and fire workflow_dispatch events
+# for cbc-remediate.yml. Runs every 5 minutes and on demand.
+# Closes the FALSIFIED -> codex-remediate -> PR -> auto-merge loop.
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  actions: write      # required to dispatch cbc-remediate.yml
+  contents: read
+
+concurrency:
+  group: cbc-remediate-dispatch
+  cancel-in-progress: false
+
+jobs:
+  drain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: astral-sh/setup-uv@v8
+        with:
+          python-version: "3.11"
+
+      - name: Drain queue (one pass)
+        env:
+          POSTGRES_URL_NON_POOLING: ${{ secrets.POSTGRES_URL_NON_POOLING }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          GH_REF: main
+          GH_WORKFLOW: cbc-remediate.yml
+        run: |
+          uv run --with 'psycopg[binary]' \
+            python scripts/remediate_dispatcher.py --run-once
