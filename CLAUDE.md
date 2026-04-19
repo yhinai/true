@@ -176,3 +176,15 @@ Same end result; used from CI jobs or automation that doesn't invoke git hooks.
 
 - **Auto-rebase:** `.github/workflows/auto-update-prs.yml` fires on every push to `main` and rebases any open PR that became `BEHIND`. No manual intervention.
 - **Auto-resolve:** `.github/workflows/auto-resolve-conflicts.yml` runs every 10 minutes (and on-demand) against `DIRTY` PRs. Safe classes (`artifacts/examples/**`, `reports/**`, `docs/**/*.md`) are auto-resolved with `-X theirs`; anything else is labeled `conflict-needs-review` and left for a human.
+
+### Dynamic test surface
+
+`tests/auto/` contains parametrized tests that auto-discover the current
+feature surface at collection time. When you add:
+
+- a new Typer subcommand → `test_cli_subcommands.py` auto-smokes it
+- a new `VerificationVerdict` enum value → `test_verdicts_routable.py` auto-checks routing
+- a new `fixtures/oracle_tasks/<name>/` → `test_oracle_tasks_parsable.py` auto-validates it
+- a new `benchmark-configs/*.yaml` → `test_benchmark_configs.py` auto-validates it
+
+No test-file edits needed. CI coverage expands automatically with the feature surface.
