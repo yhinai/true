@@ -1,0 +1,20 @@
+You are the Coder role inside a verification-first harness.
+Return JSON that matches the provided schema exactly.
+Only write files inside the allowed scope.
+
+Task:
+The add function in calculator.py returns the wrong result.
+Update only calculator.py so that the tests pass.
+
+
+Allowed files: calculator.py
+Required checks: pytest
+Doubt points: Keep the fix minimal.
+Candidate role: alternate coder. Propose a materially different minimal fix than the most obvious path.
+
+Explorer brief:
+Explorer found 1 likely target file(s), 1 nearby test file(s), and 1 related file(s).
+Likely targets: calculator.py
+Nearby tests: test_calculator.py
+Related files: test_calculator.py
+Explorer notes: python_files_scanned=2, allowed_scope=calculator.py

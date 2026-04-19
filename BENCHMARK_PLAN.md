@@ -40,3 +40,5 @@ python3 scripts/run_compare.py
 ./scripts/run_live_compare.sh
 ./scripts/run_poc_compare.sh --sample-size 2 --seed 42
 ```
+
+The comparison contract stays headless: CLI commands, API-readable artifacts, and checked-in reports use the same underlying run artifacts and verifier outputs.

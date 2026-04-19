@@ -1,8 +1,14 @@
 {
-  "run_id": "43957e16060e",
+  "run_id": "6c613e0bf0ad",
   "task_id": "slugify_property_regression",
   "title": "Fix slugify and capture a regression test from a failing property case",
   "mode": "treatment",
+  "controller": {
+    "mode": "sequential",
+    "selected_candidate_id": null,
+    "candidate_count": 0,
+    "scheduler_trace_path": "/Users/alhinai/Desktop/TRUE/artifacts/runs/55569012e4fa/scheduler_trace.json"
+  },
   "changed_files": [
     "slugify.py"
   ],
@@ -21,7 +27,7 @@
     ]
   },
   "generated_test_artifacts": [
-    "/Users/alhinai/Desktop/TRUE/artifacts/runs/44e5a06788c5/generated_tests/test_slugify_property_regression.py"
+    "/Users/alhinai/Desktop/TRUE/artifacts/runs/55569012e4fa/generated_tests/test_slugify_property_regression.py"
   ],
   "verification": {
     "status": "VERIFIED",
@@ -33,7 +39,7 @@
         "exit_code": 0,
         "stdout": ".                                                                        [100%]\n1 passed in 0.00s\n",
         "stderr": "",
-        "duration_seconds": 0.1945656249881722,
+        "duration_seconds": 0.19062449998455122,
         "details": {}
       },
       {
@@ -43,7 +49,7 @@
         "exit_code": 0,
         "stdout": "Listing '.'...\nListing './.pytest_cache'...\nListing './.pytest_cache/v'...\nListing './.pytest_cache/v/cache'...\nCompiling './property_checks.py'...\nCompiling './slugify.py'...\nCompiling './test_slugify.py'...\n",
         "stderr": "",
-        "duration_seconds": 0.0446276250295341,
+        "duration_seconds": 0.04756220895797014,
         "details": {}
       },
       {
@@ -153,8 +159,8 @@
     "counterexample": null
   },
   "artifacts": {
-    "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/44e5a06788c5",
-    "workspace_dir": "/var/folders/56/k6d868zx2c755lc49bbjkt740000gn/T/cbc-workspace-6g74_q7s/workspace"
+    "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/55569012e4fa",
+    "workspace_dir": "/var/folders/56/k6d868zx2c755lc49bbjkt740000gn/T/cbc-workspace-uq1y_1hs/workspace"
   },
   "explorer": {
     "summary": "Explorer found 1 likely target file(s), 1 nearby test file(s), and 2 related file(s).",
@@ -172,5 +178,42 @@
       "python_files_scanned=3",
       "allowed_scope=slugify.py"
     ]
+  },
+  "candidates": [],
+  "scheduler_trace": {
+    "controller_mode": "sequential",
+    "budget": {
+      "max_model_calls_per_run": 4,
+      "max_candidates_first_attempt": 2,
+      "allow_alternate_candidates_on_retry": false
+    },
+    "model_calls_used": 2,
+    "selected_candidate_id": null,
+    "attempts": [
+      {
+        "attempt": 1,
+        "controller_mode": "sequential",
+        "selected_candidate_id": null,
+        "candidate_ids": [],
+        "model_calls_used": 1
+      },
+      {
+        "attempt": 2,
+        "controller_mode": "sequential",
+        "selected_candidate_id": null,
+        "candidate_ids": [],
+        "model_calls_used": 2
+      }
+    ]
+  },
+  "risk_artifact": {
+    "risk_level": "CRITICAL",
+    "reasons": [
+      "1 changed files",
+      "unsafe claim detected"
+    ],
+    "verification_state": "VERIFIED",
+    "unsafe_claims": 1,
+    "failure_modes": []
   }
 }

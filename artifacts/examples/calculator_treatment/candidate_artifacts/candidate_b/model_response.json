@@ -1,0 +1,14 @@
+{
+  "summary": "I updated the function, but I kept the same subtraction logic by mistake.",
+  "claimed_success": true,
+  "writes": [
+    {
+      "path": "calculator.py",
+      "content": "def add(a: int, b: int) -> int:\n    return a - b\n",
+      "executable": false
+    }
+  ],
+  "notes": [
+    "This first attempt should still fail the oracle."
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "total_files": 1,
+  "files": [
+    {
+      "path": "calculator.py",
+      "status": "modified",
+      "additions": 1,
+      "deletions": 1,
+      "before_exists": true,
+      "after_exists": true
+    }
+  ]
+}

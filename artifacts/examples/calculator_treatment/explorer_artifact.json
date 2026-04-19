@@ -1,0 +1,16 @@
+{
+  "summary": "Explorer found 1 likely target file(s), 1 nearby test file(s), and 1 related file(s).",
+  "likely_targets": [
+    "calculator.py"
+  ],
+  "nearby_tests": [
+    "test_calculator.py"
+  ],
+  "related_files": [
+    "test_calculator.py"
+  ],
+  "notes": [
+    "python_files_scanned=2",
+    "allowed_scope=calculator.py"
+  ]
+}

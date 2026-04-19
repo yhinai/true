@@ -1,0 +1,26 @@
+{
+  "controller_mode": "sequential",
+  "budget": {
+    "max_model_calls_per_run": 4,
+    "max_candidates_first_attempt": 2,
+    "allow_alternate_candidates_on_retry": false
+  },
+  "model_calls_used": 2,
+  "selected_candidate_id": null,
+  "attempts": [
+    {
+      "attempt": 1,
+      "controller_mode": "sequential",
+      "selected_candidate_id": null,
+      "candidate_ids": [],
+      "model_calls_used": 1
+    },
+    {
+      "attempt": 2,
+      "controller_mode": "sequential",
+      "selected_candidate_id": null,
+      "candidate_ids": [],
+      "model_calls_used": 2
+    }
+  ]
+}

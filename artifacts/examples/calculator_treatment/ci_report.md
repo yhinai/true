@@ -1,7 +1,7 @@
 # CI Report
 
-- Run ID: `6c613e0bf0ad`
-- Task: `slugify_property_regression`
+- Run ID: `7d73212025fb`
+- Task: `calculator_bug`
 - Merge Gate: `UNSAFE`
 - Verification: `VERIFIED`
 - Risk: `CRITICAL`

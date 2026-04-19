@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import typer
@@ -7,6 +8,7 @@ from rich.console import Console
 from rich.table import Table
 
 from cbc.api.app import create_app
+from cbc.api.store import get_benchmark
 from cbc.benchmark.local_runner import run_local_benchmark
 from cbc.benchmark.poc_compare import RawPromptStyle, run_poc_comparison
 from cbc.controller.artifact_flow import render_proof_card
@@ -23,9 +25,18 @@ console = Console()
 
 
 @app.command()
-def run(task_path: Path, mode: str = typer.Option("treatment", "--mode", "-m")) -> None:
+def run(
+    task_path: Path,
+    mode: str = typer.Option("treatment", "--mode", "-m"),
+    controller: str = typer.Option("sequential", "--controller"),
+    json_output: bool = typer.Option(False, "--json"),
+) -> None:
     task = load_task(task_path)
-    ledger = run_task(task, mode=mode)
+    ledger = run_task(task, mode=mode, controller_mode=controller)
+    if json_output:
+        payload = _read_json_artifact(ledger.artifact_dir / "run_artifact.json")
+        console.print_json(json.dumps(payload))
+        return
     proof_card = ProofCard(
         run_id=ledger.run_id,
         task_id=ledger.task_id,
@@ -42,8 +53,14 @@ def run(task_path: Path, mode: str = typer.Option("treatment", "--mode", "-m")) 
 
 
 @app.command()
-def compare(config_path: Path = typer.Option(Path("benchmark-configs/curated_subset.yaml"))) -> None:
+def compare(
+    config_path: Path = typer.Option(Path("benchmark-configs/curated_subset.yaml")),
+    json_output: bool = typer.Option(False, "--json"),
+) -> None:
     comparison = run_local_benchmark(config_path)
+    if json_output:
+        console.print_json(json.dumps(comparison.model_dump(mode="json")))
+        return
     table = Table(title="Benchmark")
     table.add_column("Metric")
     table.add_column("Baseline")
@@ -107,8 +124,11 @@ def review(task_path: Path, mode: str = typer.Option("treatment", "--mode", "-m"
 
 
 @app.command("review-artifact")
-def review_artifact(artifact_path: Path) -> None:
+def review_artifact(artifact_path: Path, json_output: bool = typer.Option(False, "--json")) -> None:
     report = compose_review_report_from_path(artifact_path)
+    if json_output:
+        console.print_json(json.dumps(report))
+        return
     console.print(f"Review artifact: {report['run_id']}")
     console.print(f"Verification: {report['summary']['verification']['state']}")
     console.print(f"Merge gate: {report['summary']['merge_gate']['verdict']}")
@@ -116,10 +136,17 @@ def review_artifact(artifact_path: Path) -> None:
 
 
 @app.command("review-workspace")
-def review_workspace_command(task_path: Path, workspace_path: Path) -> None:
+def review_workspace_command(
+    task_path: Path,
+    workspace_path: Path,
+    json_output: bool = typer.Option(False, "--json"),
+) -> None:
     task = load_task(task_path)
     ledger = review_workspace(task, workspace_path)
     report = compose_review_report_from_path(ledger.artifact_dir / "run_ledger.json")
+    if json_output:
+        console.print_json(json.dumps(report))
+        return
     console.print(f"Review workspace: {ledger.run_id}")
     console.print(f"Verification: {report['summary']['verification']['state']}")
     console.print(f"Merge gate: {report['summary']['merge_gate']['verdict']}")
@@ -139,9 +166,12 @@ def ci(task_path: Path, workspace_path: Path) -> None:
 
 
 @app.command("ci-artifact")
-def ci_artifact(artifact_path: Path) -> None:
+def ci_artifact(artifact_path: Path, json_output: bool = typer.Option(False, "--json")) -> None:
     report = compose_review_report_from_path(artifact_path)
     ci_report = build_ci_report(report)
+    if json_output:
+        console.print_json(json.dumps(ci_report))
+        raise typer.Exit(code=int(ci_report["exit_code"]))
     console.print(f"CI verdict: {ci_report['merge_gate_verdict']}")
     console.print(f"Verification: {ci_report['verification_state']}")
     raise typer.Exit(code=int(ci_report["exit_code"]))
@@ -163,6 +193,22 @@ def _add_poc_row(table: Table, arm: str, metrics: PocMetrics) -> None:
         f"{metrics.average_elapsed_seconds:.2f}",
         f"{metrics.average_changed_files:.2f}",
     )
+
+
+@app.command("benchmark-artifact")
+def benchmark_artifact(benchmark_id: str, json_output: bool = typer.Option(False, "--json")) -> None:
+    payload = get_benchmark(Path.cwd() / "reports", benchmark_id)
+    if payload is None:
+        raise typer.Exit(code=1)
+    if json_output:
+        console.print_json(json.dumps(payload))
+        return
+    console.print(f"Benchmark artifact: {payload['benchmark_id']}")
+    console.print(f"Tasks: {payload.get('task_results') and len(payload['task_results']) or payload.get('total_tasks', 'unknown')}")
+
+
+def _read_json_artifact(path: Path) -> dict[str, object]:
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

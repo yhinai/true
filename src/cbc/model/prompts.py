@@ -42,6 +42,7 @@ def build_coder_prompt(
     plan: PlanArtifact,
     evidence: str | None = None,
     explorer: ExplorerArtifact | None = None,
+    candidate_role: str = "primary",
 ) -> str:
     lines = [
         "You are the Coder role inside a verification-first harness.",
@@ -55,6 +56,12 @@ def build_coder_prompt(
     ]
     if plan.doubt_points:
         lines.append(f"Doubt points: {', '.join(plan.doubt_points)}")
+    if candidate_role == "alternate":
+        lines.append(
+            "Candidate role: alternate coder. Propose a materially different minimal fix than the most obvious path."
+        )
+    else:
+        lines.append("Candidate role: primary coder. Prefer the most direct minimal fix.")
     if explorer is not None:
         lines.extend(
             [

@@ -13,6 +13,8 @@
 - Python property checks can now emit counterexample artifacts and generated regression tests during the main retry loop.
 - A bounded read-only explorer role now identifies likely targets and nearby tests before the coder runs, and that brief is persisted as a run artifact.
 - A seeded POC harness now compares direct raw Codex against CBC baseline and treatment on a checked-in live task bank.
+- A treatment-only gearbox mode now evaluates isolated primary and alternate coder candidates, selects one deterministically, and persists scheduler plus risk artifacts.
+- The headless surface now includes JSON CLI outputs and benchmark detail lookup via the API/store path.
 
 ## Evidence
 
@@ -25,6 +27,8 @@
 - live Codex compare path: `./scripts/run_live_compare.sh`
 - automated raw-vs-CBC POC path: `./scripts/run_poc_compare.sh --sample-size 2 --seed 42`
 - property-regression demo path: `PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/slugify_property_regression/task.yaml --mode treatment`
+- gearbox demo path: `PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/calculator_bug/task.yaml --controller gearbox`
+- json CLI path: `PYTHONPATH=src python3 -m cbc.main compare --json`
 
 ## Remaining Depth
 
@@ -35,4 +39,4 @@
 - live task specs can also pin task-specific Codex runtime knobs in checked-in config
 - the checked-in live lane is now standardized on `gpt-5.4`, `workspace-write`, `dangerously_bypass_approvals: false`, and `model_reasoning_effort="medium"`
 - the checked-in live lane intentionally leaves `profile` unset so it does not rely on a local user profile name
-- the next gap is extending the new explorer lane only where it proves value, rather than adding speculative multi-role complexity
+- the next gap is deciding whether gearbox mode should become the default treatment path or remain an explicit headless controller option

@@ -11,8 +11,8 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from cbc.api.routes import benchmarks_payload, run_payload, runs_payload
-from cbc.api.store import get_run, list_benchmarks, list_runs
+from cbc.api.routes import benchmark_payload, benchmarks_payload, run_payload, runs_payload
+from cbc.api.store import get_benchmark, get_run, list_benchmarks, list_runs
 
 
 class ApiStoreTests(unittest.TestCase):
@@ -69,6 +69,10 @@ class ApiStoreTests(unittest.TestCase):
             self.assertEqual(len(benches), 1)
             self.assertEqual(benches[0]["benchmark_id"], "bench-1")
             self.assertEqual(benches[0]["total_tasks"], 2)
+            benchmark = get_benchmark(root, "bench-1")
+            self.assertIsNotNone(benchmark)
+            assert benchmark is not None
+            self.assertEqual(benchmark["benchmark_id"], "bench-1")
 
     def test_route_payload_helpers(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -95,6 +99,7 @@ class ApiStoreTests(unittest.TestCase):
             self.assertEqual(detail_payload["summary"]["verification"]["state"], "UNPROVEN")
 
             self.assertEqual(benchmarks_payload(root, limit=5), {"benchmarks": []})
+            self.assertIsNone(benchmark_payload(root, "missing"))
 
     def test_real_comparison_shape_is_summarized(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

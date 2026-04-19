@@ -1,0 +1,12 @@
+{
+  "risk_level": "CRITICAL",
+  "reasons": [
+    "1 failing deterministic checks",
+    "unsafe claim detected"
+  ],
+  "verification_state": "FALSIFIED",
+  "unsafe_claims": 1,
+  "failure_modes": [
+    "pytest: deterministic verifier found a failing oracle or gate"
+  ]
+}

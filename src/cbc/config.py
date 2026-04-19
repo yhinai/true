@@ -22,6 +22,17 @@ class RetryConfig(BaseModel):
     stop_on_unproven: bool = False
 
 
+class ControllerBudgetConfig(BaseModel):
+    max_model_calls_per_run: int = 4
+    max_candidates_first_attempt: int = 2
+    allow_alternate_candidates_on_retry: bool = False
+
+
+class ControllerConfig(BaseModel):
+    mode: Literal["sequential", "gearbox"] = "sequential"
+    budget: ControllerBudgetConfig = Field(default_factory=ControllerBudgetConfig)
+
+
 class CodexConfig(BaseModel):
     executable: str = "codex"
     default_model: str | None = None
@@ -36,6 +47,7 @@ class CodexConfig(BaseModel):
 class AppConfig(BaseModel):
     paths: PathsConfig = Field(default_factory=PathsConfig)
     retry: RetryConfig = Field(default_factory=RetryConfig)
+    controller: ControllerConfig = Field(default_factory=ControllerConfig)
     codex: CodexConfig = Field(default_factory=CodexConfig)
 
 

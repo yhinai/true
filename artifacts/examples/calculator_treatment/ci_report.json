@@ -1,6 +1,6 @@
 {
-  "run_id": "6c613e0bf0ad",
-  "task_id": "slugify_property_regression",
+  "run_id": "7d73212025fb",
+  "task_id": "calculator_bug",
   "merge_gate_verdict": "UNSAFE",
   "verification_state": "VERIFIED",
   "risk_level": "CRITICAL",

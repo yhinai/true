@@ -24,6 +24,8 @@ class CodexExecAdapter(ModelAdapter):
         prompt: str,
         workspace: Path,
         attempt: int,
+        candidate_index: int = 0,
+        candidate_role: str = "primary",
         schema_path: Path | None = None,
     ) -> tuple[ModelResponse, list[ModelEvent]]:
         command = [

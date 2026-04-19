@@ -130,3 +130,23 @@ def list_benchmarks(artifacts_root: Path | str, limit: int = 50) -> list[dict[st
             break
     results.sort(key=lambda entry: str(entry["benchmark_id"]))
     return results
+
+
+def get_benchmark(artifacts_root: Path | str, benchmark_id: str) -> dict[str, Any] | None:
+    root = _choose_artifact_root(artifacts_root)
+    for path in _iter_benchmark_files(root):
+        try:
+            payload = read_json(path)
+        except Exception:
+            continue
+        candidate_id = str(
+            payload.get("benchmark_id")
+            or payload.get("benchmark_name")
+            or payload.get("run_id")
+            or path.stem
+        )
+        if candidate_id != benchmark_id:
+            continue
+        payload["artifact_path"] = str(path)
+        return payload
+    return None

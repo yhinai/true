@@ -114,6 +114,14 @@ class ExplorerArtifact(BaseModel):
     notes: list[str] = Field(default_factory=list)
 
 
+class CandidateScore(BaseModel):
+    passed_checks: int = 0
+    unsafe_claim: bool = False
+    changed_files: int = 0
+    diff_additions: int = 0
+    diff_deletions: int = 0
+
+
 class CheckResult(BaseModel):
     name: str
     command: str
@@ -138,12 +146,28 @@ class VerificationReport(BaseModel):
 
 class AttemptRecord(BaseModel):
     attempt: int
+    candidate_id: str | None = None
+    candidate_role: Literal["primary", "alternate"] | None = None
     prompt: str
     evidence: str | None = None
     model_response: ModelResponse
     verification: VerificationReport
     started_at: datetime = Field(default_factory=utc_now)
     ended_at: datetime = Field(default_factory=utc_now)
+
+
+class CandidateResult(BaseModel):
+    candidate_id: str
+    candidate_role: Literal["primary", "alternate"]
+    attempt: int
+    prompt: str
+    model_response: ModelResponse
+    verification: VerificationReport
+    workspace_dir: Path
+    diff_summary: dict[str, Any] = Field(default_factory=dict)
+    risk_artifact: dict[str, Any] = Field(default_factory=dict)
+    score: CandidateScore = Field(default_factory=CandidateScore)
+    selected: bool = False
 
 
 class RetryTranscript(BaseModel):
@@ -168,12 +192,15 @@ class RunLedger(BaseModel):
     task_id: str
     title: str
     mode: Literal["baseline", "treatment", "review"]
+    controller_mode: Literal["sequential", "gearbox"] = "sequential"
+    selected_candidate_id: str | None = None
     verdict: VerificationVerdict
     adapter: str
     artifact_dir: Path
     workspace_dir: Path
     plan: PlanArtifact
     attempts: list[AttemptRecord]
+    candidate_results: list[CandidateResult] = Field(default_factory=list)
     unsafe_claims: int = 0
     final_summary: str
     started_at: datetime = Field(default_factory=utc_now)

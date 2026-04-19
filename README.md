@@ -29,10 +29,12 @@ Golden task:
 Current implementation:
 - real CLI for `run`, `compare`, `review`, `review-workspace`, `ci`, and `api`
 - a seeded POC harness compares direct raw Codex against CBC baseline and treatment on a checked-in live task bank
+- headless-only product surface: CLI, FastAPI API, and checked-in artifacts/reports
 - replay-backed fixtures for a reproducible smoke benchmark
 - Codex adapter wired through `codex exec --json --output-schema`
 - deterministic verification via pytest, shell oracles, bounded structural checks, and property-case checks that can emit counterexample artifacts plus generated regression tests
 - a bounded read-only explorer brief now feeds likely targets and nearby tests into the coder prompt and run artifacts
+- a treatment-only `gearbox` controller mode can run isolated primary and alternate coder candidates, score them deterministically, and persist scheduler and risk artifacts
 - SQLite-backed run and benchmark index
 - proof cards, ledgers, diff summaries, CI reports, compare reports, and scoreboard output
 
@@ -58,6 +60,7 @@ Quick start:
 uv run --extra dev pytest
 ./scripts/run_compare.sh
 ./scripts/run_treatment.sh
+PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/calculator_bug/task.yaml --controller gearbox
 python3 scripts/run_compare.py
 ./scripts/run_live_codex.sh
 ./scripts/run_live_compare.sh
@@ -99,4 +102,13 @@ Property-regression task with counterexample and generated test artifacts:
 
 ```bash
 PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/slugify_property_regression/task.yaml --mode treatment
+```
+
+Machine-readable CLI outputs:
+
+```bash
+PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/calculator_bug/task.yaml --json
+PYTHONPATH=src python3 -m cbc.main compare --json
+PYTHONPATH=src python3 -m cbc.main review-artifact artifacts/examples/calculator_treatment/run_ledger.json --json
+PYTHONPATH=src python3 -m cbc.main ci-artifact artifacts/examples/calculator_treatment/run_ledger.json --json
 ```

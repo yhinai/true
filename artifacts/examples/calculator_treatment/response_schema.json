@@ -30,7 +30,8 @@
         },
         "required": [
           "path",
-          "content"
+          "content",
+          "executable"
         ],
         "additionalProperties": false
       }
@@ -39,6 +40,7 @@
   "required": [
     "summary",
     "claimed_success",
+    "notes",
     "writes"
   ],
   "additionalProperties": false

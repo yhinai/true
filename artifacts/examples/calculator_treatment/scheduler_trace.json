@@ -1,0 +1,45 @@
+{
+  "controller_mode": "gearbox",
+  "budget": {
+    "max_model_calls_per_run": 4,
+    "max_candidates_first_attempt": 2,
+    "allow_alternate_candidates_on_retry": false
+  },
+  "model_calls_used": 3,
+  "selected_candidate_id": "candidate_a",
+  "attempts": [
+    {
+      "attempt": 1,
+      "controller_mode": "gearbox",
+      "selected_candidate_id": "candidate_a",
+      "candidate_ids": [
+        "candidate_a",
+        "candidate_b"
+      ],
+      "scores": {
+        "candidate_a": {
+          "passed_checks": 2,
+          "unsafe_claim": true,
+          "changed_files": 1,
+          "diff_additions": 0,
+          "diff_deletions": 0
+        },
+        "candidate_b": {
+          "passed_checks": 2,
+          "unsafe_claim": true,
+          "changed_files": 1,
+          "diff_additions": 0,
+          "diff_deletions": 0
+        }
+      },
+      "model_calls_used": 2
+    },
+    {
+      "attempt": 2,
+      "controller_mode": "sequential",
+      "selected_candidate_id": null,
+      "candidate_ids": [],
+      "model_calls_used": 3
+    }
+  ]
+}

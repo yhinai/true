@@ -1,0 +1,10 @@
+{
+  "risk_level": "CRITICAL",
+  "reasons": [
+    "1 changed files",
+    "unsafe claim detected"
+  ],
+  "verification_state": "VERIFIED",
+  "unsafe_claims": 1,
+  "failure_modes": []
+}

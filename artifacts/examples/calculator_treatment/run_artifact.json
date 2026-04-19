@@ -1,12 +1,32 @@
 {
-  "run_id": "1018cf22170d",
+  "run_id": "7d73212025fb",
   "task_id": "calculator_bug",
   "title": "Fix addition in calculator.py",
   "mode": "treatment",
+  "controller": {
+    "mode": "gearbox",
+    "selected_candidate_id": "candidate_a",
+    "candidate_count": 2,
+    "scheduler_trace_path": "/Users/alhinai/Desktop/TRUE/artifacts/runs/179d812a8b55/scheduler_trace.json"
+  },
   "changed_files": [
     "calculator.py"
   ],
   "unsafe_claim": true,
+  "diff": {
+    "total_files": 1,
+    "files": [
+      {
+        "path": "calculator.py",
+        "status": "modified",
+        "additions": 1,
+        "deletions": 1,
+        "before_exists": true,
+        "after_exists": true
+      }
+    ]
+  },
+  "generated_test_artifacts": [],
   "verification": {
     "status": "VERIFIED",
     "checks": [
@@ -15,9 +35,9 @@
         "command": "python3 -m pytest -q",
         "status": "passed",
         "exit_code": 0,
-        "stdout": ".                                                                        [100%]\n1 passed in 0.01s\n",
+        "stdout": ".                                                                        [100%]\n1 passed in 0.00s\n",
         "stderr": "",
-        "duration_seconds": 0.2681332500069402,
+        "duration_seconds": 0.2524287920095958,
         "details": {}
       },
       {
@@ -27,14 +47,217 @@
         "exit_code": 0,
         "stdout": "Listing '.'...\nListing './.pytest_cache'...\nListing './.pytest_cache/v'...\nListing './.pytest_cache/v/cache'...\nCompiling './calculator.py'...\nCompiling './test_calculator.py'...\n",
         "stderr": "",
-        "duration_seconds": 0.05647845898056403,
+        "duration_seconds": 0.04676783399190754,
+        "details": {}
+      },
+      {
+        "name": "typecheck",
+        "command": "disabled",
+        "status": "skipped",
+        "exit_code": null,
+        "stdout": "Type checking is disabled for this task.",
+        "stderr": "",
+        "duration_seconds": 0.0,
+        "details": {}
+      },
+      {
+        "name": "coverage",
+        "command": "disabled",
+        "status": "skipped",
+        "exit_code": null,
+        "stdout": "Coverage is disabled for this task.",
+        "stderr": "",
+        "duration_seconds": 0.0,
+        "details": {}
+      },
+      {
+        "name": "structural",
+        "command": "bounded structural analysis",
+        "status": "passed",
+        "exit_code": null,
+        "stdout": "No structural mismatches found in the bounded slice.",
+        "stderr": "",
+        "duration_seconds": 0.0,
+        "details": {
+          "slice": {
+            "changed_files": [
+              "calculator.py"
+            ],
+            "impacted_files": [
+              "calculator.py",
+              "test_calculator.py"
+            ]
+          },
+          "callgraph": {
+            "calculator.py": [],
+            "test_calculator.py": [
+              "add"
+            ]
+          },
+          "dependency_dag": {
+            "calculator.py": [],
+            "test_calculator.py": [
+              "calculator"
+            ]
+          },
+          "mismatches": []
+        }
+      },
+      {
+        "name": "contracts",
+        "command": "static inspection",
+        "status": "skipped",
+        "exit_code": null,
+        "stdout": "Contracts are supported as an optional deeper verification layer.",
+        "stderr": "",
+        "duration_seconds": 0.0,
+        "details": {}
+      },
+      {
+        "name": "crosshair",
+        "command": "disabled",
+        "status": "skipped",
+        "exit_code": null,
+        "stdout": "Not implemented",
+        "stderr": "",
+        "duration_seconds": 0.0,
+        "details": {}
+      },
+      {
+        "name": "hypothesis",
+        "command": "disabled",
+        "status": "skipped",
+        "exit_code": null,
+        "stdout": "No configured property cases for this task.",
+        "stderr": "",
+        "duration_seconds": 0.0,
+        "details": {}
+      },
+      {
+        "name": "mutation",
+        "command": "disabled",
+        "status": "skipped",
+        "exit_code": null,
+        "stdout": "Mutation testing is intentionally cut by default.",
+        "stderr": "",
+        "duration_seconds": 0.0,
         "details": {}
       }
     ],
-    "summary": "All deterministic checks passed."
+    "summary": "All deterministic checks passed.",
+    "counterexample": null
   },
   "artifacts": {
-    "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/ff43318ae5d2",
-    "workspace_dir": "/var/folders/56/k6d868zx2c755lc49bbjkt740000gn/T/cbc-workspace-xuc8rn_i/workspace"
+    "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/179d812a8b55",
+    "workspace_dir": "/var/folders/56/k6d868zx2c755lc49bbjkt740000gn/T/cbc-workspace-6y43q1ej/workspace"
+  },
+  "explorer": {
+    "summary": "Explorer found 1 likely target file(s), 1 nearby test file(s), and 1 related file(s).",
+    "likely_targets": [
+      "calculator.py"
+    ],
+    "nearby_tests": [
+      "test_calculator.py"
+    ],
+    "related_files": [
+      "test_calculator.py"
+    ],
+    "notes": [
+      "python_files_scanned=2",
+      "allowed_scope=calculator.py"
+    ]
+  },
+  "candidates": [
+    {
+      "candidate_id": "candidate_a",
+      "candidate_role": "primary",
+      "attempt": 1,
+      "selected": true,
+      "workspace_dir": "/var/folders/56/k6d868zx2c755lc49bbjkt740000gn/T/cbc-workspace-6y43q1ej/workspace",
+      "score": {
+        "passed_checks": 2,
+        "unsafe_claim": true,
+        "changed_files": 1,
+        "diff_additions": 0,
+        "diff_deletions": 0
+      },
+      "verification": {
+        "status": "FALSIFIED",
+        "unsafe_claim": true
+      }
+    },
+    {
+      "candidate_id": "candidate_b",
+      "candidate_role": "alternate",
+      "attempt": 1,
+      "selected": false,
+      "workspace_dir": "/var/folders/56/k6d868zx2c755lc49bbjkt740000gn/T/cbc-workspace-2ajkez2j/workspace",
+      "score": {
+        "passed_checks": 2,
+        "unsafe_claim": true,
+        "changed_files": 1,
+        "diff_additions": 0,
+        "diff_deletions": 0
+      },
+      "verification": {
+        "status": "FALSIFIED",
+        "unsafe_claim": true
+      }
+    }
+  ],
+  "scheduler_trace": {
+    "controller_mode": "gearbox",
+    "budget": {
+      "max_model_calls_per_run": 4,
+      "max_candidates_first_attempt": 2,
+      "allow_alternate_candidates_on_retry": false
+    },
+    "model_calls_used": 3,
+    "selected_candidate_id": "candidate_a",
+    "attempts": [
+      {
+        "attempt": 1,
+        "controller_mode": "gearbox",
+        "selected_candidate_id": "candidate_a",
+        "candidate_ids": [
+          "candidate_a",
+          "candidate_b"
+        ],
+        "scores": {
+          "candidate_a": {
+            "passed_checks": 2,
+            "unsafe_claim": true,
+            "changed_files": 1,
+            "diff_additions": 0,
+            "diff_deletions": 0
+          },
+          "candidate_b": {
+            "passed_checks": 2,
+            "unsafe_claim": true,
+            "changed_files": 1,
+            "diff_additions": 0,
+            "diff_deletions": 0
+          }
+        },
+        "model_calls_used": 2
+      },
+      {
+        "attempt": 2,
+        "controller_mode": "sequential",
+        "selected_candidate_id": null,
+        "candidate_ids": [],
+        "model_calls_used": 3
+      }
+    ]
+  },
+  "risk_artifact": {
+    "risk_level": "CRITICAL",
+    "reasons": [
+      "1 changed files",
+      "unsafe claim detected"
+    ],
+    "verification_state": "VERIFIED",
+    "unsafe_claims": 1,
+    "failure_modes": []
   }
 }

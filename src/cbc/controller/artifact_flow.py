@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from cbc.models import ExplorerArtifact, ProofCard, RetryTranscript, RunLedger, VerificationReport
+from cbc.models import CandidateResult, ExplorerArtifact, ProofCard, RetryTranscript, RunLedger, VerificationReport
 from cbc.review.ci import build_ci_report, render_ci_report
 from cbc.review.report import compose_review_report
 from cbc.storage.artifacts import write_json, write_markdown
@@ -17,8 +17,17 @@ def persist_run_artifacts(
     proof_card: ProofCard,
     diff_summary: dict[str, object],
     explorer: ExplorerArtifact | None = None,
+    scheduler_trace: dict[str, object] | None = None,
+    risk_artifact: dict[str, object] | None = None,
 ) -> None:
-    run_artifact = build_run_artifact(ledger, verification, diff_summary=diff_summary, explorer=explorer)
+    run_artifact = build_run_artifact(
+        ledger,
+        verification,
+        diff_summary=diff_summary,
+        explorer=explorer,
+        scheduler_trace=scheduler_trace,
+        risk_artifact=risk_artifact,
+    )
     review_report = compose_review_report(run_artifact)
     ci_report = build_ci_report(review_report)
 
@@ -32,6 +41,11 @@ def persist_run_artifacts(
     write_json(artifact_dir / "ci_report.json", ci_report)
     if explorer is not None:
         write_json(artifact_dir / "explorer_artifact.json", explorer.model_dump(mode="json"))
+    if scheduler_trace is not None:
+        write_json(artifact_dir / "scheduler_trace.json", scheduler_trace)
+    if risk_artifact is not None:
+        write_json(artifact_dir / "risk_artifact.json", risk_artifact)
+    persist_candidate_artifacts(artifact_dir, ledger.candidate_results)
     write_markdown(artifact_dir / "proof_card.md", render_proof_card(proof_card))
     write_markdown(artifact_dir / "ci_report.md", render_ci_report(ci_report))
 
@@ -57,6 +71,8 @@ def build_run_artifact(
     *,
     diff_summary: dict[str, object],
     explorer: ExplorerArtifact | None = None,
+    scheduler_trace: dict[str, object] | None = None,
+    risk_artifact: dict[str, object] | None = None,
 ) -> dict[str, object]:
     generated_tests = []
     for attempt in ledger.attempts:
@@ -69,6 +85,12 @@ def build_run_artifact(
         "task_id": ledger.task_id,
         "title": ledger.title,
         "mode": ledger.mode,
+        "controller": {
+            "mode": ledger.controller_mode,
+            "selected_candidate_id": ledger.selected_candidate_id,
+            "candidate_count": len(ledger.candidate_results),
+            "scheduler_trace_path": str(ledger.artifact_dir / "scheduler_trace.json"),
+        },
         "changed_files": verification.changed_files,
         "unsafe_claim": ledger.unsafe_claims > 0,
         "diff": diff_summary,
@@ -84,4 +106,32 @@ def build_run_artifact(
             "workspace_dir": str(ledger.workspace_dir),
         },
         "explorer": explorer.model_dump(mode="json") if explorer is not None else None,
+        "candidates": [
+            {
+                "candidate_id": candidate.candidate_id,
+                "candidate_role": candidate.candidate_role,
+                "attempt": candidate.attempt,
+                "selected": candidate.selected,
+                "workspace_dir": str(candidate.workspace_dir),
+                "score": candidate.score.model_dump(mode="json"),
+                "verification": {
+                    "status": candidate.verification.verdict.value,
+                    "unsafe_claim": candidate.verification.unsafe_claim_detected,
+                },
+            }
+            for candidate in ledger.candidate_results
+        ],
+        "scheduler_trace": scheduler_trace,
+        "risk_artifact": risk_artifact,
     }
+
+
+def persist_candidate_artifacts(artifact_dir: Path, candidates: list[CandidateResult]) -> None:
+    for candidate in candidates:
+        candidate_dir = artifact_dir / "candidate_artifacts" / candidate.candidate_id
+        write_json(candidate_dir / "model_response.json", candidate.model_response.model_dump(mode="json"))
+        write_json(candidate_dir / "verification_report.json", candidate.verification.model_dump(mode="json"))
+        write_json(candidate_dir / "diff_summary.json", candidate.diff_summary)
+        write_json(candidate_dir / "risk_artifact.json", candidate.risk_artifact)
+        write_json(candidate_dir / "score.json", candidate.score.model_dump(mode="json"))
+        write_markdown(candidate_dir / "prompt.txt", candidate.prompt)

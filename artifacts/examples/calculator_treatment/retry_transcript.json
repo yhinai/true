@@ -1,9 +1,11 @@
 {
-  "run_id": "fe4bf913d8f5",
+  "run_id": "7d73212025fb",
   "attempts": [
     {
       "attempt": 1,
-      "prompt": "You are the Coder role inside a verification-first harness.\nReturn JSON that matches the provided schema exactly.\nOnly write files inside the allowed scope.\n\nTask:\nThe add function in calculator.py returns the wrong result.\nUpdate only calculator.py so that the tests pass.\n\n\nAllowed files: calculator.py\nRequired checks: pytest\nDoubt points: Keep the fix minimal.",
+      "candidate_id": "candidate_a",
+      "candidate_role": "primary",
+      "prompt": "You are the Coder role inside a verification-first harness.\nReturn JSON that matches the provided schema exactly.\nOnly write files inside the allowed scope.\n\nTask:\nThe add function in calculator.py returns the wrong result.\nUpdate only calculator.py so that the tests pass.\n\n\nAllowed files: calculator.py\nRequired checks: pytest\nDoubt points: Keep the fix minimal.\nCandidate role: primary coder. Prefer the most direct minimal fix.\n\nExplorer brief:\nExplorer found 1 likely target file(s), 1 nearby test file(s), and 1 related file(s).\nLikely targets: calculator.py\nNearby tests: test_calculator.py\nRelated files: test_calculator.py\nExplorer notes: python_files_scanned=2, allowed_scope=calculator.py",
       "evidence": null,
       "model_response": {
         "summary": "I updated the function, but I kept the same subtraction logic by mistake.",
@@ -29,7 +31,7 @@
             "exit_code": 1,
             "stdout": "F                                                                        [100%]\n=================================== FAILURES ===================================\n___________________________________ test_add ___________________________________\n\n    def test_add() -> None:\n>       assert add(2, 3) == 5\nE       assert -1 == 5\nE        +  where -1 = add(2, 3)\n\ntest_calculator.py:5: AssertionError\n=========================== short test summary info ============================\nFAILED test_calculator.py::test_add - assert -1 == 5\n1 failed in 0.02s\n",
             "stderr": "",
-            "duration_seconds": 0.27892562496708706,
+            "duration_seconds": 0.32642783399205655,
             "details": {}
           },
           {
@@ -39,7 +41,7 @@
             "exit_code": 0,
             "stdout": "Listing '.'...\nListing './.pytest_cache'...\nListing './.pytest_cache/v'...\nListing './.pytest_cache/v/cache'...\nCompiling './calculator.py'...\nCompiling './test_calculator.py'...\n",
             "stderr": "",
-            "duration_seconds": 0.05560299998614937,
+            "duration_seconds": 0.048143416992388666,
             "details": {}
           },
           {
@@ -47,7 +49,7 @@
             "command": "disabled",
             "status": "skipped",
             "exit_code": null,
-            "stdout": "Type checking is opt-in for this minimal build.",
+            "stdout": "Type checking is disabled for this task.",
             "stderr": "",
             "duration_seconds": 0.0,
             "details": {}
@@ -57,10 +59,43 @@
             "command": "disabled",
             "status": "skipped",
             "exit_code": null,
-            "stdout": "Coverage is opt-in for this minimal build.",
+            "stdout": "Coverage is disabled for this task.",
             "stderr": "",
             "duration_seconds": 0.0,
             "details": {}
+          },
+          {
+            "name": "structural",
+            "command": "bounded structural analysis",
+            "status": "passed",
+            "exit_code": null,
+            "stdout": "No structural mismatches found in the bounded slice.",
+            "stderr": "",
+            "duration_seconds": 0.0,
+            "details": {
+              "slice": {
+                "changed_files": [
+                  "calculator.py"
+                ],
+                "impacted_files": [
+                  "calculator.py",
+                  "test_calculator.py"
+                ]
+              },
+              "callgraph": {
+                "calculator.py": [],
+                "test_calculator.py": [
+                  "add"
+                ]
+              },
+              "dependency_dag": {
+                "calculator.py": [],
+                "test_calculator.py": [
+                  "calculator"
+                ]
+              },
+              "mismatches": []
+            }
           },
           {
             "name": "contracts",
@@ -87,7 +122,7 @@
             "command": "disabled",
             "status": "skipped",
             "exit_code": null,
-            "stdout": "Not implemented",
+            "stdout": "No configured property cases for this task.",
             "stderr": "",
             "duration_seconds": 0.0,
             "details": {}
@@ -117,6 +152,7 @@
           "lint: passed",
           "typecheck: skipped",
           "coverage: skipped",
+          "structural: passed",
           "contracts: skipped",
           "crosshair: skipped",
           "hypothesis: skipped",
@@ -124,13 +160,15 @@
           "contract_graph_nodes=1"
         ]
       },
-      "started_at": "2026-04-18T22:52:27.156511Z",
-      "ended_at": "2026-04-18T22:52:27.493141Z"
+      "started_at": "2026-04-18T23:58:33.160508Z",
+      "ended_at": "2026-04-18T23:58:33.806810Z"
     },
     {
       "attempt": 2,
-      "prompt": "You are the Coder role inside a verification-first harness.\nReturn JSON that matches the provided schema exactly.\nOnly write files inside the allowed scope.\n\nTask:\nThe add function in calculator.py returns the wrong result.\nUpdate only calculator.py so that the tests pass.\n\n\nAllowed files: calculator.py\nRequired checks: pytest\nDoubt points: Keep the fix minimal.\n\nRetry evidence from the deterministic verifier:\npytest failed:\nF                                                                        [100%]\n=================================== FAILURES ===================================\n___________________________________ test_add ___________________________________\n\n    def test_add() -> None:\n>       assert add(2, 3) == 5\nE       assert -1 == 5\nE        +  where -1 = add(2, 3)\n\ntest_calculator.py:5: AssertionError\n=========================== short test summary info ============================\nFAILED test_calculator.py::test_add - assert -1 == 5\n1 failed in 0.02s\n\nCounterexample: F                                                                        [100%]\n=================================== FAILURES ===================================\n___________________________________ test_add ___________________________________\n\n    def test_add() -> None:\n>       assert add(2, 3) == 5\nE       assert -1 == 5\nE        +  where -1 = add(2, 3)\n\ntest_calculator.py:5: AssertionError\n=========================== short test summary info ============================\nFAILED test_calculator.py::test_add - assert -1 == 5\n1 failed in 0.02s",
-      "evidence": "pytest failed:\nF                                                                        [100%]\n=================================== FAILURES ===================================\n___________________________________ test_add ___________________________________\n\n    def test_add() -> None:\n>       assert add(2, 3) == 5\nE       assert -1 == 5\nE        +  where -1 = add(2, 3)\n\ntest_calculator.py:5: AssertionError\n=========================== short test summary info ============================\nFAILED test_calculator.py::test_add - assert -1 == 5\n1 failed in 0.02s\n\nCounterexample: F                                                                        [100%]\n=================================== FAILURES ===================================\n___________________________________ test_add ___________________________________\n\n    def test_add() -> None:\n>       assert add(2, 3) == 5\nE       assert -1 == 5\nE        +  where -1 = add(2, 3)\n\ntest_calculator.py:5: AssertionError\n=========================== short test summary info ============================\nFAILED test_calculator.py::test_add - assert -1 == 5\n1 failed in 0.02s",
+      "candidate_id": null,
+      "candidate_role": null,
+      "prompt": "You are the Coder role inside a verification-first harness.\nReturn JSON that matches the provided schema exactly.\nOnly write files inside the allowed scope.\n\nTask:\nThe add function in calculator.py returns the wrong result.\nUpdate only calculator.py so that the tests pass.\n\n\nAllowed files: calculator.py\nRequired checks: pytest\nDoubt points: Keep the fix minimal.\nCandidate role: primary coder. Prefer the most direct minimal fix.\n\nExplorer brief:\nExplorer found 1 likely target file(s), 1 nearby test file(s), and 1 related file(s).\nLikely targets: calculator.py\nNearby tests: test_calculator.py\nRelated files: test_calculator.py\nExplorer notes: python_files_scanned=2, allowed_scope=calculator.py\n\nRetry evidence from the deterministic verifier:\npytest failed:\nF                                                                        [100%]\n=================================== FAILURES ===================================\n___________________________________ test_add ___________________________________\n\n    def test_add() -> None:\n>       assert add(2, 3) == 5\nE       assert -1 == 5\nE        +  where -1 = add(2, 3)\n\ntest_calculator.py:5: AssertionError\n=========================== short test summary info ============================\nFAILED test_calculator.py::test_add - assert -1 == 5\n1 failed in 0.02s\n\nCounterexample:\nF                                                                        [100%]\n=================================== FAILURES ===================================\n___________________________________ test_add ___________________________________\n\n    def test_add() -> None:\n>       assert add(2, 3) == 5\nE       assert -1 == 5\nE        +  where -1 = add(2, 3)\n\ntest_calculator.py:5: AssertionError\n=========================== short test summary info ============================\nFAILED test_calculator.py::test_add - assert -1 == 5\n1 failed in 0.02s",
+      "evidence": "pytest failed:\nF                                                                        [100%]\n=================================== FAILURES ===================================\n___________________________________ test_add ___________________________________\n\n    def test_add() -> None:\n>       assert add(2, 3) == 5\nE       assert -1 == 5\nE        +  where -1 = add(2, 3)\n\ntest_calculator.py:5: AssertionError\n=========================== short test summary info ============================\nFAILED test_calculator.py::test_add - assert -1 == 5\n1 failed in 0.02s\n\nCounterexample:\nF                                                                        [100%]\n=================================== FAILURES ===================================\n___________________________________ test_add ___________________________________\n\n    def test_add() -> None:\n>       assert add(2, 3) == 5\nE       assert -1 == 5\nE        +  where -1 = add(2, 3)\n\ntest_calculator.py:5: AssertionError\n=========================== short test summary info ============================\nFAILED test_calculator.py::test_add - assert -1 == 5\n1 failed in 0.02s",
       "model_response": {
         "summary": "I corrected add() to perform addition.",
         "claimed_success": true,
@@ -153,7 +191,7 @@
             "exit_code": 0,
             "stdout": ".                                                                        [100%]\n1 passed in 0.00s\n",
             "stderr": "",
-            "duration_seconds": 0.21866362501168624,
+            "duration_seconds": 0.2524287920095958,
             "details": {}
           },
           {
@@ -163,7 +201,7 @@
             "exit_code": 0,
             "stdout": "Listing '.'...\nListing './.pytest_cache'...\nListing './.pytest_cache/v'...\nListing './.pytest_cache/v/cache'...\nCompiling './calculator.py'...\nCompiling './test_calculator.py'...\n",
             "stderr": "",
-            "duration_seconds": 0.04804595897439867,
+            "duration_seconds": 0.04676783399190754,
             "details": {}
           },
           {
@@ -171,7 +209,7 @@
             "command": "disabled",
             "status": "skipped",
             "exit_code": null,
-            "stdout": "Type checking is opt-in for this minimal build.",
+            "stdout": "Type checking is disabled for this task.",
             "stderr": "",
             "duration_seconds": 0.0,
             "details": {}
@@ -181,10 +219,43 @@
             "command": "disabled",
             "status": "skipped",
             "exit_code": null,
-            "stdout": "Coverage is opt-in for this minimal build.",
+            "stdout": "Coverage is disabled for this task.",
             "stderr": "",
             "duration_seconds": 0.0,
             "details": {}
+          },
+          {
+            "name": "structural",
+            "command": "bounded structural analysis",
+            "status": "passed",
+            "exit_code": null,
+            "stdout": "No structural mismatches found in the bounded slice.",
+            "stderr": "",
+            "duration_seconds": 0.0,
+            "details": {
+              "slice": {
+                "changed_files": [
+                  "calculator.py"
+                ],
+                "impacted_files": [
+                  "calculator.py",
+                  "test_calculator.py"
+                ]
+              },
+              "callgraph": {
+                "calculator.py": [],
+                "test_calculator.py": [
+                  "add"
+                ]
+              },
+              "dependency_dag": {
+                "calculator.py": [],
+                "test_calculator.py": [
+                  "calculator"
+                ]
+              },
+              "mismatches": []
+            }
           },
           {
             "name": "contracts",
@@ -211,7 +282,7 @@
             "command": "disabled",
             "status": "skipped",
             "exit_code": null,
-            "stdout": "Not implemented",
+            "stdout": "No configured property cases for this task.",
             "stderr": "",
             "duration_seconds": 0.0,
             "details": {}
@@ -239,6 +310,7 @@
           "lint: passed",
           "typecheck: skipped",
           "coverage: skipped",
+          "structural: passed",
           "contracts: skipped",
           "crosshair: skipped",
           "hypothesis: skipped",
@@ -246,8 +318,8 @@
           "contract_graph_nodes=1"
         ]
       },
-      "started_at": "2026-04-18T22:52:27.156511Z",
-      "ended_at": "2026-04-18T22:52:27.760912Z"
+      "started_at": "2026-04-18T23:58:33.160508Z",
+      "ended_at": "2026-04-18T23:58:34.112821Z"
     }
   ]
 }

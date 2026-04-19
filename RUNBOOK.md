@@ -12,6 +12,12 @@ uv run --extra dev pytest
 ./scripts/run_treatment.sh
 ```
 
+## Run One Treatment Task With The Gearbox Controller
+
+```bash
+PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/calculator_bug/task.yaml --controller gearbox
+```
+
 ## Run One Baseline Task
 
 ```bash
@@ -62,11 +68,28 @@ PYTHONPATH=src python3 -m cbc.main ci fixtures/oracle_tasks/calculator_bug/task.
 uv run cbc api
 ```
 
+Available headless API routes:
+
+- `GET /health`
+- `GET /runs`
+- `GET /runs/{run_id}`
+- `GET /benchmarks`
+- `GET /benchmarks/{benchmark_id}`
+
 ## Where Output Goes
 
 - transient run artifacts: `artifacts/runs/`
 - transient benchmark reports: `reports/benchmarks/`
 - checked-in examples: `artifacts/examples/`, `reports/examples/`
+
+## Machine-Readable CLI Output
+
+```bash
+PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/calculator_bug/task.yaml --json
+PYTHONPATH=src python3 -m cbc.main compare --json
+PYTHONPATH=src python3 -m cbc.main review-artifact artifacts/examples/calculator_treatment/run_ledger.json --json
+PYTHONPATH=src python3 -m cbc.main ci-artifact artifacts/examples/calculator_treatment/run_ledger.json --json
+```
 
 ## Switching To Live Codex
 

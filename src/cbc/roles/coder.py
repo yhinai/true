@@ -15,9 +15,18 @@ def run_coder(
     explorer: ExplorerArtifact | None,
     workspace: Path,
     attempt: int,
+    candidate_index: int = 0,
+    candidate_role: str = "primary",
     evidence: str | None,
     schema_path: Path | None,
 ) -> tuple[ModelResponse, list[ModelEvent], str]:
-    prompt = build_coder_prompt(task_prompt, plan, evidence, explorer)
-    response, events = adapter.run(prompt=prompt, workspace=workspace, attempt=attempt, schema_path=schema_path)
+    prompt = build_coder_prompt(task_prompt, plan, evidence, explorer, candidate_role)
+    response, events = adapter.run(
+        prompt=prompt,
+        workspace=workspace,
+        attempt=attempt,
+        candidate_index=candidate_index,
+        candidate_role=candidate_role,
+        schema_path=schema_path,
+    )
     return response, events, prompt

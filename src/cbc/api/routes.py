@@ -4,7 +4,7 @@ from pathlib import Path
 
 from fastapi import APIRouter
 
-from cbc.api.store import get_run, list_benchmarks, list_runs
+from cbc.api.store import get_benchmark, get_run, list_benchmarks, list_runs
 from cbc.config import DEFAULT_CONFIG
 
 router = APIRouter()
@@ -30,6 +30,11 @@ def benchmarks() -> dict[str, list[dict[str, object]]]:
     return benchmarks_payload(DEFAULT_CONFIG.paths.reports_dir)
 
 
+@router.get("/benchmarks/{benchmark_id}")
+def benchmark_detail(benchmark_id: str) -> dict[str, object] | None:
+    return benchmark_payload(DEFAULT_CONFIG.paths.reports_dir, benchmark_id)
+
+
 def runs_payload(root: Path, limit: int = 50) -> dict[str, list[dict[str, object]]]:
     return {"runs": list_runs(root, limit=limit)}
 
@@ -40,3 +45,7 @@ def run_payload(root: Path, run_id: str) -> dict[str, object] | None:
 
 def benchmarks_payload(root: Path, limit: int = 50) -> dict[str, list[dict[str, object]]]:
     return {"benchmarks": list_benchmarks(root, limit=limit)}
+
+
+def benchmark_payload(root: Path, benchmark_id: str) -> dict[str, object] | None:
+    return get_benchmark(root, benchmark_id)

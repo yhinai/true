@@ -29,6 +29,10 @@ def test_http_routes_use_payload_helpers(monkeypatch) -> None:
         "cbc.api.routes.benchmarks_payload",
         lambda root, limit=50: {"benchmarks": [{"benchmark_id": "bench-123"}]},
     )
+    monkeypatch.setattr(
+        "cbc.api.routes.benchmark_payload",
+        lambda root, benchmark_id: {"benchmark_id": benchmark_id, "verified_success_rate": 1.0},
+    )
 
     runs_response = client.get("/runs")
     assert runs_response.status_code == 200
@@ -41,3 +45,7 @@ def test_http_routes_use_payload_helpers(monkeypatch) -> None:
     benchmarks_response = client.get("/benchmarks")
     assert benchmarks_response.status_code == 200
     assert benchmarks_response.json()["benchmarks"][0]["benchmark_id"] == "bench-123"
+
+    benchmark_response = client.get("/benchmarks/bench-123")
+    assert benchmark_response.status_code == 200
+    assert benchmark_response.json()["benchmark_id"] == "bench-123"
