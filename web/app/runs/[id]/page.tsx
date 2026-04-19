@@ -81,7 +81,7 @@ export default function RunDetailPage({ params }: { params: Promise<{ id: string
   }, [runId]);
 
   const ledger = sse.data ?? mirror;
-  const attempts = ledger?.attempts ?? [];
+  const attempts = Array.isArray(ledger?.attempts) ? ledger.attempts : [];
   const latest = attempts[attempts.length - 1];
   const fallbackChecks = fallback?.summary?.verification?.checks ?? [];
   const fallbackFiles = fallback?.summary?.diff?.files ?? [];
