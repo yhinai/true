@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -46,12 +46,12 @@ async def test_contree_workspace_prepare_uses_tagged_image(tmp_path: Path):
 
     fake_image = _AwaitableImage()
     fake_client = MagicMock()
-    fake_client.images.use.return_value = fake_image
+    fake_client.images.use = AsyncMock(return_value=fake_image)
 
     ws = ContreeWorkspace(client=fake_client, task_id="t1")
     lease = await ws.prepare_async(tmp_path)
 
-    fake_client.images.use.assert_called_once_with("cbc/workspace/t1:v1")
+    fake_client.images.use.assert_awaited_once_with("cbc/workspace/t1:v1")
     assert isinstance(lease, StagedLease)
     assert lease.backend is ws
     assert ws.mode is SandboxMode.CONTREE

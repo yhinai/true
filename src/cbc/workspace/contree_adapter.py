@@ -30,7 +30,7 @@ class ContreeWorkspace:
         return f"cbc/workspace/{self.task_id}:{self.version}"
 
     async def prepare_async(self, base_dir: Path) -> StagedLease:
-        image = self.client.images.use(self.tag())
+        image = await self.client.images.use(self.tag())
         await image.run(
             shell="true",
             files={"/work": str(base_dir)},
@@ -52,7 +52,7 @@ class ContreeWorkspace:
         cmd: list[str],
         timeout_seconds: float,
     ) -> ContreeExecResult:
-        image = self.client.images.use(self.tag())
+        image = await self.client.images.use(self.tag())
         try:
             result = await image.run(
                 shell=" ".join(cmd),
