@@ -66,10 +66,23 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           TASK: ${{ github.event.inputs.task || 'fixtures/oracle_tasks/calculator_bug/task.yaml' }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set -o pipefail
+          SHORT_SHA="${COMMIT_SHA:0:7}"
+          if [ -n "$PR_NUMBER" ] && [ -n "$PR_TITLE" ]; then
+            export RUN_TITLE="PR#${PR_NUMBER} · ${PR_TITLE} (${SHORT_SHA})"
+          elif [ -n "$PR_TITLE" ]; then
+            export RUN_TITLE="${PR_TITLE} (${SHORT_SHA})"
+          else
+            export RUN_TITLE="Manual dispatch · ${SHORT_SHA}"
+          fi
+          echo "RUN_TITLE=$RUN_TITLE"
           uv run cbc run "$TASK" \
             --mode=treatment \
             --agent=gemini \
             --stream \
-            | uv run python scripts/stream_to_supabase.py
+            | uv run python scripts/stream_to_supabase.py "$TASK"

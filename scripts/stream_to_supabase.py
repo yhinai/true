@@ -147,11 +147,19 @@ def main(argv: list[str]) -> int:
         incoming_run_id = evt.get("run_id")
         if incoming_run_id and run_id is None:
             run_id = incoming_run_id
+            override_title = os.environ.get("RUN_TITLE")
+            pr_number = os.environ.get("PR_NUMBER")
+            pr_url = os.environ.get("PR_URL")
+            commit_sha = os.environ.get("COMMIT_SHA")
+            task_id_display = (
+                f"PR#{pr_number}" if pr_number
+                else (commit_sha[:7] if commit_sha else task_meta.get("task_id"))
+            )
             upsert_run(
                 {
                     "run_id": run_id,
-                    "task_id": task_meta.get("task_id"),
-                    "title": task_meta.get("title"),
+                    "task_id": task_id_display,
+                    "title": override_title or task_meta.get("title"),
                     "mode": "treatment",
                     "verdict": "PENDING",
                     "adapter": "gemini",
@@ -159,6 +167,10 @@ def main(argv: list[str]) -> int:
                     "payload": {
                         "source": "demo-run-on-push",
                         "stream_started_at": started_at,
+                        "pr_number": pr_number,
+                        "pr_url": pr_url,
+                        "commit_sha": commit_sha,
+                        "fixture_task_id": task_meta.get("task_id"),
                     },
                 }
             )
@@ -188,8 +200,11 @@ def main(argv: list[str]) -> int:
                         "source": "demo-run-on-push",
                         "stream_started_at": started_at,
                         "verdict": evt.get("verdict"),
-                        "attempts": evt.get("attempts"),
+                        "attempts_count": evt.get("attempts"),
                         "total_tokens": evt.get("total_tokens"),
+                        "pr_number": os.environ.get("PR_NUMBER"),
+                        "pr_url": os.environ.get("PR_URL"),
+                        "commit_sha": os.environ.get("COMMIT_SHA"),
                     },
                 },
             )
