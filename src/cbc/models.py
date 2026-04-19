@@ -23,6 +23,7 @@ class VerificationVerdict(str, Enum):
     VERIFIED = "VERIFIED"
     FALSIFIED = "FALSIFIED"
     UNPROVEN = "UNPROVEN"
+    TIMED_OUT = "TIMED_OUT"
 
 
 class CheckStatus(str, Enum):
@@ -119,6 +120,7 @@ class TaskSpec(BaseModel):
     replay_file: Path | None = None
     retry_budget: int = 2
     timeout_seconds: int = 120
+    max_wall_seconds_per_attempt: float | None = None
     tags: list[str] = Field(default_factory=list)
     review_checks: list[str] = Field(default_factory=list)
     metadata: dict[str, Any] = Field(default_factory=dict)

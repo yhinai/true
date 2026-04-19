@@ -42,6 +42,11 @@ def run(
         "--sandbox",
         help="Sandbox backend: local (default) or contree",
     ),
+    max_seconds_per_attempt: float | None = typer.Option(
+        None,
+        "--max-seconds-per-attempt",
+        help="Wall-clock budget per attempt in seconds (None = no limit)",
+    ),
 ) -> None:
     try:
         sandbox_mode = SandboxMode(sandbox)
@@ -58,6 +63,8 @@ def run(
         run_kwargs["agent_name"] = agent
     if event_sink is not None:
         run_kwargs["event_sink"] = event_sink
+    if max_seconds_per_attempt is not None:
+        run_kwargs["max_wall_seconds_per_attempt"] = max_seconds_per_attempt
     spinner_console = Console(stderr=True)
     show_spinner = (not json_output) and (not stream) and sys.stderr.isatty()
     status_cm = (

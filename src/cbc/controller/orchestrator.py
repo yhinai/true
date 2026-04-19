@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import time
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Callable
@@ -13,7 +14,7 @@ from cbc.controller.checkpoints import checkpoint_name
 from cbc.controller.gearbox_runner import ParallelCandidateSpec, run_gearbox_parallel
 from cbc.controller.ledger_factory import build_final_ledger
 from cbc.controller.routing import RouteDecision, route_after_verify
-from cbc.controller.run_state import IterationRecord, RunState
+from cbc.controller.run_state import AttemptTimeout, IterationRecord, RunState
 from cbc.controller.scoring import CandidateScoringEngine
 from cbc.model.codex_exec import CodexExecAdapter
 from cbc.model.prompts import summarize_verification_for_retry, write_schema_file
@@ -58,6 +59,11 @@ from cbc.workspace.staging import (
 RunEventSink = Callable[[dict[str, Any]], None]
 
 
+def _check_deadline(started_at: float, budget: float | None) -> None:
+    if budget is not None and (time.monotonic() - started_at) > budget:
+        raise AttemptTimeout(elapsed=time.monotonic() - started_at)
+
+
 def resolve_codex_config(task: TaskSpec, config: AppConfig):
     task_codex = task.codex
     return config.codex.model_copy(
@@ -98,6 +104,7 @@ def run_task(
     agent_name: str | None = None,
     event_sink: RunEventSink | None = None,
     sandbox: SandboxMode = SandboxMode.LOCAL,
+    max_wall_seconds_per_attempt: float | None = None,
 ) -> RunLedger:
     run_id = uuid4().hex[:12]
     artifact_dir = create_artifact_dir(config.paths.artifacts_dir, "runs")
@@ -127,9 +134,15 @@ def run_task(
         active_controller_mode = _resolve_controller_mode(mode, config, controller_mode)
         budget = config.controller.budget
 
+        effective_wall_budget = (
+            max_wall_seconds_per_attempt
+            if max_wall_seconds_per_attempt is not None
+            else task.max_wall_seconds_per_attempt
+        )
         state = RunState(
             task_id=task.task_id,
             max_iterations=max_attempts,
+            max_wall_seconds_per_attempt=effective_wall_budget,
             started_at=started_at,
         )
 
@@ -157,97 +170,145 @@ def run_task(
                 model_calls_used=model_calls_used,
                 max_model_calls_per_run=budget.max_model_calls_per_run,
             )
-            if should_branch:
-                remaining_calls = max(budget.max_model_calls_per_run - model_calls_used, 0)
-                candidate_count = min(max(budget.max_candidates_first_attempt, 1), remaining_calls)
-                candidate_bundle = _run_gearbox_attempt(
-                    task=task,
-                    adapter=adapter,
-                    plan=plan,
-                    explorer=explorer,
-                    base_workspace=workspace,
-                    workspace_lease=workspace_lease,
-                    artifact_dir=artifact_dir,
-                    attempt=attempt,
-                    evidence=evidence,
-                    schema_path=schema_path,
-                    candidate_count=candidate_count,
-                    scoring_engine=scoring_engine,
-                    run_id=run_id,
-                    db_path=config.paths.storage_db,
-                    event_sink=event_sink,
-                    program_text=program_text,
+            attempt_started_at = time.monotonic()
+            timed_out = False
+            verification = None
+            try:
+                if should_branch:
+                    remaining_calls = max(budget.max_model_calls_per_run - model_calls_used, 0)
+                    candidate_count = min(max(budget.max_candidates_first_attempt, 1), remaining_calls)
+                    candidate_bundle = _run_gearbox_attempt(
+                        task=task,
+                        adapter=adapter,
+                        plan=plan,
+                        explorer=explorer,
+                        base_workspace=workspace,
+                        workspace_lease=workspace_lease,
+                        artifact_dir=artifact_dir,
+                        attempt=attempt,
+                        evidence=evidence,
+                        schema_path=schema_path,
+                        candidate_count=candidate_count,
+                        scoring_engine=scoring_engine,
+                        run_id=run_id,
+                        db_path=config.paths.storage_db,
+                        event_sink=event_sink,
+                        program_text=program_text,
+                        wall_budget=state.max_wall_seconds_per_attempt,
+                    )
+                    if not candidate_bundle["candidates"]:
+                        raise RuntimeError("gearbox controller did not produce any candidate runs")
+                    _check_deadline(attempt_started_at, state.max_wall_seconds_per_attempt)
+                    model_calls_used += len(candidate_bundle["candidates"])
+                    candidate_results.extend(candidate_bundle["candidates"])
+                    scheduler_attempts.append(candidate_bundle["scheduler"])
+                    selected = candidate_bundle["selected"]
+                    _cleanup_candidate_leases(candidate_bundle["leases"], selected_candidate_id=selected.candidate_id)
+                    workspace_lease.cleanup()
+                    workspace_lease = candidate_bundle["selected_lease"]
+                    workspace = workspace_lease.path
+                    selected_candidate_id = selected.candidate_id
+                    verification = selected.verification
+                    unsafe_claims += int(verification.unsafe_claim_detected)
+                    attempts.append(
+                        AttemptRecord(
+                            attempt=attempt,
+                            candidate_id=selected.candidate_id,
+                            candidate_role=selected.candidate_role,
+                            prompt=selected.prompt,
+                            evidence=evidence,
+                            model_response=selected.model_response,
+                            verification=verification,
+                            usage=candidate_bundle["selected_usage"],
+                            adapter_failure_reason=candidate_bundle["selected_failure_reason"],
+                            started_at=started_at,
+                            ended_at=datetime.now(UTC),
+                        )
+                    )
+                else:
+                    attempt_record, verification = _run_sequential_attempt(
+                        task=task,
+                        adapter=adapter,
+                        plan=plan,
+                        explorer=explorer,
+                        workspace=workspace,
+                        artifact_dir=artifact_dir,
+                        attempt=attempt,
+                        evidence=evidence,
+                        schema_path=schema_path,
+                        event_sink=event_sink,
+                        program_text=program_text,
+                        wall_budget=state.max_wall_seconds_per_attempt,
+                        attempt_started_at=attempt_started_at,
+                    )
+                    _check_deadline(attempt_started_at, state.max_wall_seconds_per_attempt)
+                    model_calls_used += 1
+                    unsafe_claims += int(verification.unsafe_claim_detected)
+                    attempts.append(attempt_record)
+                    scheduler_attempts.append(
+                        {
+                            "attempt": attempt,
+                            "controller_mode": "sequential",
+                            "selected_candidate_id": None,
+                            "candidate_ids": [],
+                            "model_calls_used": model_calls_used,
+                        }
+                    )
+            except AttemptTimeout as timeout_exc:
+                timed_out = True
+                elapsed = timeout_exc.elapsed
+                verification = VerificationReport(
+                    verdict=VerificationVerdict.TIMED_OUT,
+                    checks=[],
+                    summary=f"Attempt exceeded wall budget after {elapsed:.2f}s",
                 )
-                if not candidate_bundle["candidates"]:
-                    raise RuntimeError("gearbox controller did not produce any candidate runs")
-                model_calls_used += len(candidate_bundle["candidates"])
-                candidate_results.extend(candidate_bundle["candidates"])
-                scheduler_attempts.append(candidate_bundle["scheduler"])
-                selected = candidate_bundle["selected"]
-                _cleanup_candidate_leases(candidate_bundle["leases"], selected_candidate_id=selected.candidate_id)
-                workspace_lease.cleanup()
-                workspace_lease = candidate_bundle["selected_lease"]
-                workspace = workspace_lease.path
-                selected_candidate_id = selected.candidate_id
-                verification = selected.verification
-                unsafe_claims += int(verification.unsafe_claim_detected)
                 attempts.append(
                     AttemptRecord(
                         attempt=attempt,
-                        candidate_id=selected.candidate_id,
-                        candidate_role=selected.candidate_role,
-                        prompt=selected.prompt,
+                        prompt="",
                         evidence=evidence,
-                        model_response=selected.model_response,
+                        model_response=ModelResponse(
+                            summary="attempt timed out",
+                            claimed_success=False,
+                        ),
                         verification=verification,
-                        usage=candidate_bundle["selected_usage"],
-                        adapter_failure_reason=candidate_bundle["selected_failure_reason"],
                         started_at=started_at,
                         ended_at=datetime.now(UTC),
+                        adapter_failure_reason=f"timeout after {elapsed:.2f}s",
                     )
                 )
-            else:
-                attempt_record, verification = _run_sequential_attempt(
-                    task=task,
-                    adapter=adapter,
-                    plan=plan,
-                    explorer=explorer,
-                    workspace=workspace,
-                    artifact_dir=artifact_dir,
-                    attempt=attempt,
-                    evidence=evidence,
-                    schema_path=schema_path,
-                    event_sink=event_sink,
-                    program_text=program_text,
-                )
-                model_calls_used += 1
-                unsafe_claims += int(verification.unsafe_claim_detected)
-                attempts.append(attempt_record)
                 scheduler_attempts.append(
                     {
                         "attempt": attempt,
-                        "controller_mode": "sequential",
+                        "controller_mode": "sequential" if not should_branch else "gearbox",
                         "selected_candidate_id": None,
                         "candidate_ids": [],
                         "model_calls_used": model_calls_used,
+                        "timed_out": True,
                     }
                 )
+
+            elapsed_seconds = time.monotonic() - attempt_started_at
             state.iteration = attempt
             failure_summary = ""
             if verification.verdict != VerificationVerdict.VERIFIED:
-                failed = [
-                    check.name
-                    for check in verification.checks
-                    if check.status != CheckStatus.PASSED
-                ]
-                failure_summary = (
-                    ", ".join(failed) if failed else "no failed checks reported"
-                )
+                if timed_out:
+                    failure_summary = f"timed_out after {elapsed_seconds:.2f}s"
+                else:
+                    failed = [
+                        check.name
+                        for check in verification.checks
+                        if check.status != CheckStatus.PASSED
+                    ]
+                    failure_summary = (
+                        ", ".join(failed) if failed else "no failed checks reported"
+                    )
                 state.append_failure(failure_summary)
             state.record_iteration(
                 IterationRecord(
                     iteration=attempt,
                     verdict=verification.verdict,
+                    elapsed_seconds=elapsed_seconds,
                     files_modified=[Path(p) for p in verification.changed_files],
                     error_summary=failure_summary,
                 )
@@ -467,6 +528,7 @@ def _run_gearbox_attempt(
     db_path: Path,
     event_sink: RunEventSink | None = None,
     program_text: str | None = None,
+    wall_budget: float | None = None,
 ) -> dict[str, Any]:
     if workspace_lease.sandbox is SandboxMode.CONTREE:
         init_lineage_schema(db_path)
@@ -497,6 +559,7 @@ def _run_gearbox_attempt(
                 db_path=db_path,
                 event_sink=event_sink,
                 program_text=program_text,
+                wall_budget=wall_budget,
             )
         )
 
@@ -510,6 +573,7 @@ def _run_gearbox_attempt(
         candidate_lease = create_workspace_lease(base_workspace)
         candidate_leases[candidate_id] = candidate_lease
         candidate_workspace = candidate_lease.path
+        candidate_started_at = time.monotonic()
         _emit_event(
             event_sink,
             "adapter.started",
@@ -530,6 +594,7 @@ def _run_gearbox_attempt(
             schema_path=schema_path,
             program_text=program_text,
         )
+        _check_deadline(candidate_started_at, wall_budget)
         response = adapter_result.response
         usage_by_candidate[candidate_id] = adapter_result.usage
         failure_by_candidate[candidate_id] = adapter_result.failure_reason
@@ -542,6 +607,7 @@ def _run_gearbox_attempt(
             total_tokens=adapter_result.usage.total_tokens,
         )
         changed_files = apply_writes(candidate_workspace, response.writes, plan.allowed_files)
+        _check_deadline(candidate_started_at, wall_budget)
         _emit_event(event_sink, "verification.started", attempt=attempt, candidate_id=candidate_id)
         verification = verify_workspace(
             candidate_workspace,
@@ -617,6 +683,7 @@ async def _run_candidates_parallel(
     db_path: Path,
     event_sink: RunEventSink | None = None,
     program_text: str | None = None,
+    wall_budget: float | None = None,
 ) -> dict[str, Any]:
     """Dispatch N candidates concurrently, one ConTree branch each."""
 
@@ -643,6 +710,7 @@ async def _run_candidates_parallel(
     async def run_coder_async(idx: int) -> dict[str, Any]:
         candidate_id = _candidate_id(idx)
         candidate_role = _candidate_role(idx)
+        candidate_started_at = time.monotonic()
         _emit_event(
             event_sink,
             "adapter.started",
@@ -665,6 +733,7 @@ async def _run_candidates_parallel(
             schema_path=schema_path,
             program_text=program_text,
         )
+        _check_deadline(candidate_started_at, wall_budget)
         _emit_event(
             event_sink,
             "adapter.completed" if adapter_result.failure_reason is None else "adapter.failed",
@@ -680,12 +749,14 @@ async def _run_candidates_parallel(
             "adapter_result": adapter_result,
             "prompt": prompt,
             "candidate_workspace": candidate_workspace,
+            "candidate_started_at": candidate_started_at,
         }
 
     async def verify_async(ctx: dict[str, Any]) -> dict[str, Any]:
         candidate_id = ctx["candidate_id"]
         adapter_result = ctx["adapter_result"]
         candidate_workspace = ctx["candidate_workspace"]
+        candidate_started_at = ctx.get("candidate_started_at", time.monotonic())
         response = adapter_result.response
         changed_files = await asyncio.to_thread(
             apply_writes,
@@ -693,6 +764,7 @@ async def _run_candidates_parallel(
             response.writes,
             plan.allowed_files,
         )
+        _check_deadline(candidate_started_at, wall_budget)
         _emit_event(event_sink, "verification.started", attempt=attempt, candidate_id=candidate_id)
         verification = await asyncio.to_thread(
             verify_workspace,
@@ -896,7 +968,11 @@ def _run_sequential_attempt(
     schema_path: Path,
     event_sink: RunEventSink | None = None,
     program_text: str | None = None,
+    wall_budget: float | None = None,
+    attempt_started_at: float | None = None,
 ) -> tuple[AttemptRecord, VerificationReport]:
+    if attempt_started_at is None:
+        attempt_started_at = time.monotonic()
     _emit_event(event_sink, "adapter.started", attempt=attempt, candidate_role="primary")
     adapter_result, prompt = run_coder(
         adapter,
@@ -911,6 +987,7 @@ def _run_sequential_attempt(
         schema_path=schema_path,
         program_text=program_text,
     )
+    _check_deadline(attempt_started_at, wall_budget)
     _emit_event(
         event_sink,
         "adapter.completed" if adapter_result.failure_reason is None else "adapter.failed",
@@ -920,6 +997,7 @@ def _run_sequential_attempt(
         total_tokens=adapter_result.usage.total_tokens,
     )
     changed_files = apply_writes(workspace, adapter_result.response.writes, plan.allowed_files)
+    _check_deadline(attempt_started_at, wall_budget)
     _emit_event(event_sink, "verification.started", attempt=attempt)
     verification = verify_workspace(
         workspace,

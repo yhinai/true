@@ -35,3 +35,13 @@ def test_route_retry_on_unproven_under_budget():
 def test_route_abort_on_unproven_when_budget_exhausted():
     state = _state_with_verdict(VerificationVerdict.UNPROVEN, iteration=3, max_iterations=3)
     assert route_after_verify(state) is RouteDecision.ABORT
+
+
+def test_route_retry_on_timed_out_under_budget():
+    state = _state_with_verdict(VerificationVerdict.TIMED_OUT, iteration=1, max_iterations=3)
+    assert route_after_verify(state) is RouteDecision.RETRY
+
+
+def test_route_abort_on_timed_out_when_budget_exhausted():
+    state = _state_with_verdict(VerificationVerdict.TIMED_OUT, iteration=3, max_iterations=3)
+    assert route_after_verify(state) is RouteDecision.ABORT
