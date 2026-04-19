@@ -239,9 +239,10 @@ def _normalize_string(value: str, *, source_root: Path, repo_root: Path, example
 
 
 def _normalize_temp_paths(value: str) -> str:
-    value = re.sub(r"/var/folders/[^ ]+/cbc-workspace-[^ /]+/workspace", "<staged_workspace>", value)
-    value = re.sub(r"/tmp/[^ ]+", "<temp_path>", value)
-    value = re.sub(r"/private/var/folders/[^ ]+/cbc-workspace-[^ /]+/workspace", "<staged_workspace>", value)
+    value = re.sub(r"/private/var/folders/[^\s`]+/cbc-workspace-[^\s`/]+/workspace", "<staged_workspace>", value)
+    value = re.sub(r"/var/folders/[^\s`]+/cbc-workspace-[^\s`/]+/workspace", "<staged_workspace>", value)
+    value = re.sub(r"/tmp/cbc-workspace-[^\s`/]+/workspace", "<staged_workspace>", value)
+    value = re.sub(r"/tmp/[^\s`]+", "<temp_path>", value)
     return value
 
 
@@ -249,4 +250,5 @@ def _normalize_timing_strings(value: str) -> str:
     value = re.sub(r"(?<=\bpassed in )\d+\.\d+s\b", "0.00s", value)
     value = re.sub(r"(?<=\bfailed in )\d+\.\d+s\b", "0.00s", value)
     value = re.sub(r"(?<=\bin )\d+\.\d+s\b", "0.00s", value)
+    value = re.sub(r"(?m)^ \+  where .*\n?", "", value)
     return value

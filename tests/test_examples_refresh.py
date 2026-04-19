@@ -83,3 +83,37 @@ def test_normalize_timing_strings_scrubs_elapsed_fragments() -> None:
     assert "1 failed in 0.00s" in normalized
     assert "1 passed in 0.00s" in normalized
     assert "elapsed in 0.00s" in normalized
+
+
+def test_normalize_timing_strings_removes_unprefixed_where_lines() -> None:
+    content = (
+        "FAILED test_calculator.py::test_add - assert -1 == 5\n"
+        " +  where -1 = add(2, 3)\n"
+        "1 failed in 0.02s\n"
+    )
+
+    normalized = _normalize_timing_strings(content)
+
+    assert " +  where -1 = add(2, 3)\n" not in normalized
+    assert "FAILED test_calculator.py::test_add - assert -1 == 5\n" in normalized
+    assert "1 failed in 0.00s\n" in normalized
+
+
+def test_normalize_temp_paths_preserves_markdown_boundaries() -> None:
+    content = (
+        "Summary: staged workspace /tmp/cbc-workspace-abc123/workspace. All edits remain staged.\n\n"
+        "## Proof Points\n"
+        "- workspace_isolation=/tmp/cbc-workspace-abc123/workspace\n"
+        "- total_tokens=0\n"
+    )
+
+    normalized = _normalize_text_content(
+        content,
+        source_root=REPO_ROOT / "artifacts" / "runs" / "07f4ff5258ba",
+        repo_root=REPO_ROOT,
+        example_id="example-calculator-treatment",
+        example_dir=Path("artifacts/examples/calculator_treatment"),
+    )
+
+    assert "Summary: staged workspace <staged_workspace>. All edits remain staged." in normalized
+    assert "- workspace_isolation=<staged_workspace>\n- total_tokens=0\n" in normalized
