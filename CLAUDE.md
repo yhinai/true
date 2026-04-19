@@ -200,3 +200,18 @@ feature surface at collection time. When you add:
 - a new `benchmark-configs/*.yaml` → `test_benchmark_configs.py` auto-validates it
 
 No test-file edits needed. CI coverage expands automatically with the feature surface.
+
+### LLM-powered conflict resolution (optional)
+
+When the safe-class auto-resolver labels a PR `conflict-needs-review`, a 15-minute
+cron job at `.github/workflows/llm-conflict-resolver.yml` tries to resolve it via
+OpenAI (gpt-4o-mini). Steps:
+
+1. For each conflicted file, send the common ancestor + both sides to OpenAI
+2. Write the proposed merge
+3. **Run the full fast test suite as a gate**
+4. If tests pass -> push + label `resolver-succeeded`
+5. If tests fail -> label `resolver-failed` (human review)
+
+Gated on `OPENAI_API_KEY` repo secret being set. If absent, the job skips cleanly.
+Never commit or log the key.
