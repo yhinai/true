@@ -1,0 +1,75 @@
+name: demo-run-on-push
+
+# Fires on every PR targeting main (including the auto-created pr/auto-*
+# branches the pre-push hook uses). Runs one CBC task with the real Gemini
+# adapter and mirrors events + final ledger into Supabase so the public
+# dashboard lights up live as the PR is opened.
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      task:
+        description: "Fixture task YAML"
+        default: "fixtures/oracle_tasks/calculator_bug/task.yaml"
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: demo-run-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  demo-run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Skip if secrets missing
+        id: gate
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          missing=""
+          [ -z "$GEMINI_API_KEY" ] && missing="$missing GEMINI_API_KEY"
+          [ -z "$SUPABASE_URL" ] && missing="$missing SUPABASE_URL"
+          if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ] && [ -z "$NEXT_PUBLIC_SUPABASE_ANON_KEY" ]; then
+            missing="$missing SUPABASE_SERVICE_ROLE_KEY|NEXT_PUBLIC_SUPABASE_ANON_KEY"
+          fi
+          if [ -n "$missing" ]; then
+            echo "::warning::demo-run-on-push skipping. Missing secrets:$missing"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install with gemini extra
+        if: steps.gate.outputs.skip != 'true'
+        run: uv sync --extra gemini
+
+      - name: Run CBC + mirror events to Supabase
+        if: steps.gate.outputs.skip != 'true'
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          TASK: ${{ github.event.inputs.task || 'fixtures/oracle_tasks/calculator_bug/task.yaml' }}
+        run: |
+          set -o pipefail
+          uv run cbc run "$TASK" \
+            --mode=treatment \
+            --agent=gemini \
+            --stream \
+            | uv run python scripts/stream_to_supabase.py
