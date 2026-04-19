@@ -44,6 +44,7 @@ The checked-in live lane also standardizes on `model_reasoning_effort="medium"` 
 ./scripts/run_poc_compare.sh --sample-size 2 --seed 42 --repetitions 2
 ```
 This samples from a checked-in live task bank, runs a direct raw Codex arm plus CBC baseline and treatment, and writes a JSON/markdown comparison under `reports/poc/`.
+The report now includes per-arm 95% confidence intervals plus paired scoreboards for `cbc_baseline vs raw_codex`, `cbc_treatment vs raw_codex`, and `cbc_treatment vs cbc_baseline`.
 
 ## Run One Live Codex Task
 
@@ -87,6 +88,7 @@ Available headless API routes:
 ```bash
 PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/calculator_bug/task.yaml --json
 PYTHONPATH=src python3 -m cbc.main compare --json
+PYTHONPATH=src python3 -m cbc.main poc --json
 PYTHONPATH=src python3 -m cbc.main review-artifact artifacts/examples/calculator_treatment/run_ledger.json --json
 PYTHONPATH=src python3 -m cbc.main ci-artifact artifacts/examples/calculator_treatment/run_ledger.json --json
 ```

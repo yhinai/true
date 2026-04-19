@@ -14,7 +14,7 @@ from cbc.benchmark.poc_compare import RawPromptStyle, run_poc_comparison
 from cbc.controller.artifact_flow import render_proof_card
 from cbc.controller.orchestrator import review_workspace, run_task
 from cbc.intake.normalize import load_task
-from cbc.models import PocMetrics, ProofCard
+from cbc.models import PocMetrics, PocPairwiseSummary, ProofCard
 from cbc.review.ci import build_ci_report
 from cbc.review.merge_gate import compute_merge_gate
 from cbc.review.report import compose_review_report_from_path
@@ -86,6 +86,7 @@ def poc(
     sample_size: int = typer.Option(3, min=1),
     repetitions: int = typer.Option(1, min=1),
     raw_prompt_style: RawPromptStyle = typer.Option(RawPromptStyle.SCAFFOLDED),
+    json_output: bool = typer.Option(False, "--json"),
 ) -> None:
     comparison = run_poc_comparison(
         config_path,
@@ -94,10 +95,16 @@ def poc(
         repetitions=repetitions,
         raw_prompt_style=raw_prompt_style,
     )
+    if json_output:
+        console.print_json(json.dumps(comparison.model_dump(mode="json")))
+        return
     table = Table(title="POC Comparison")
     table.add_column("Arm")
+    table.add_column("Runs")
     table.add_column("Verified Success")
+    table.add_column("95% CI")
     table.add_column("Unsafe Claim")
+    table.add_column("95% CI")
     table.add_column("Avg Retries")
     table.add_column("Avg Seconds")
     table.add_column("Avg Changed Files")
@@ -108,6 +115,18 @@ def poc(
     ):
         _add_poc_row(table, arm, metrics)
     console.print(table)
+    pairwise_table = Table(title="POC Pairwise Scoreboard")
+    pairwise_table.add_column("Comparison")
+    pairwise_table.add_column("Pairs")
+    pairwise_table.add_column("Success Delta")
+    pairwise_table.add_column("95% CI")
+    pairwise_table.add_column("Success W-L-T")
+    pairwise_table.add_column("Unsafe Reduction")
+    pairwise_table.add_column("95% CI")
+    pairwise_table.add_column("Safer W-L-T")
+    for summary in comparison.pairwise_summaries:
+        _add_pairwise_row(pairwise_table, summary)
+    console.print(pairwise_table)
     console.print(f"Sampled tasks: {', '.join(path.parent.name for path in comparison.sampled_tasks)}")
     console.print(f"Reports: {comparison.report_dir}")
 
@@ -187,11 +206,35 @@ def api(host: str = "127.0.0.1", port: int = 8000) -> None:
 def _add_poc_row(table: Table, arm: str, metrics: PocMetrics) -> None:
     table.add_row(
         arm,
+        str(metrics.total_runs),
         f"{metrics.verified_success_rate:.2f}",
+        _format_interval(metrics.verified_success_ci.low, metrics.verified_success_ci.high),
         f"{metrics.unsafe_claim_rate:.2f}",
+        _format_interval(metrics.unsafe_claim_ci.low, metrics.unsafe_claim_ci.high),
         f"{metrics.average_retries:.2f}",
         f"{metrics.average_elapsed_seconds:.2f}",
         f"{metrics.average_changed_files:.2f}",
+    )
+
+
+def _add_pairwise_row(table: Table, summary: PocPairwiseSummary) -> None:
+    table.add_row(
+        f"{summary.left_arm.value} vs {summary.right_arm.value}",
+        str(summary.total_pairs),
+        f"{summary.verified_success_rate_delta:.2f}",
+        _format_interval(summary.verified_success_rate_ci.low, summary.verified_success_rate_ci.high),
+        _format_outcomes(
+            summary.verified_success_outcomes.wins,
+            summary.verified_success_outcomes.losses,
+            summary.verified_success_outcomes.ties,
+        ),
+        f"{summary.unsafe_claim_rate_reduction:.2f}",
+        _format_interval(summary.unsafe_claim_rate_reduction_ci.low, summary.unsafe_claim_rate_reduction_ci.high),
+        _format_outcomes(
+            summary.safer_outcomes.wins,
+            summary.safer_outcomes.losses,
+            summary.safer_outcomes.ties,
+        ),
     )
 
 
@@ -209,6 +252,14 @@ def benchmark_artifact(benchmark_id: str, json_output: bool = typer.Option(False
 
 def _read_json_artifact(path: Path) -> dict[str, object]:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _format_interval(low: float, high: float) -> str:
+    return f"{low:.2f}-{high:.2f}"
+
+
+def _format_outcomes(wins: int, losses: int, ties: int) -> str:
+    return f"{wins}-{losses}-{ties}"
 
 
 if __name__ == "__main__":

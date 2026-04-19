@@ -276,12 +276,43 @@ class PocRunResult(BaseModel):
     summary: str
 
 
+class ConfidenceInterval(BaseModel):
+    low: float
+    high: float
+
+
 class PocMetrics(BaseModel):
+    total_runs: int
+    verified_successes: int
+    unsafe_claim_runs: int
     verified_success_rate: float
+    verified_success_ci: ConfidenceInterval
     unsafe_claim_rate: float
+    unsafe_claim_ci: ConfidenceInterval
     average_retries: float
     average_elapsed_seconds: float
     average_changed_files: float
+
+
+class PocWinLossTie(BaseModel):
+    wins: int
+    losses: int
+    ties: int
+    win_rate: float
+    loss_rate: float
+    tie_rate: float
+
+
+class PocPairwiseSummary(BaseModel):
+    left_arm: PocArm
+    right_arm: PocArm
+    total_pairs: int
+    verified_success_rate_delta: float
+    verified_success_rate_ci: ConfidenceInterval
+    verified_success_outcomes: PocWinLossTie
+    unsafe_claim_rate_reduction: float
+    unsafe_claim_rate_reduction_ci: ConfidenceInterval
+    safer_outcomes: PocWinLossTie
 
 
 class PocComparison(BaseModel):
@@ -296,6 +327,7 @@ class PocComparison(BaseModel):
     raw_codex_metrics: PocMetrics
     cbc_baseline_metrics: PocMetrics
     cbc_treatment_metrics: PocMetrics
+    pairwise_summaries: list[PocPairwiseSummary]
     created_at: datetime = Field(default_factory=utc_now)
     report_dir: Path
 

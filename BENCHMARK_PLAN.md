@@ -42,3 +42,4 @@ python3 scripts/run_compare.py
 ```
 
 The comparison contract stays headless: CLI commands, API-readable artifacts, and checked-in reports use the same underlying run artifacts and verifier outputs.
+The POC path now also emits paired arm-vs-arm scoreboard numbers with win/loss/tie counts, rate deltas, and 95% confidence intervals.

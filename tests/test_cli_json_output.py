@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from types import SimpleNamespace
 
+from rich.console import Console
 from typer.testing import CliRunner
 
 from cbc.main import app
@@ -74,6 +75,75 @@ def test_compare_command_emits_json_payload(monkeypatch, tmp_path: Path) -> None
     payload = json.loads(result.stdout)
     assert payload["benchmark_id"] == "bench-123"
     assert payload["treatment_metrics"]["verified_success_rate"] == 1.0
+
+
+def test_poc_command_emits_json_payload(monkeypatch, tmp_path: Path) -> None:
+    payload = {
+        "poc_id": "poc-123",
+        "sample_size": 2,
+        "pairwise_summaries": [
+            {
+                "left_arm": "cbc_treatment",
+                "right_arm": "raw_codex",
+                "verified_success_rate_delta": 0.5,
+            }
+        ],
+    }
+    monkeypatch.setattr(
+        "cbc.main.run_poc_comparison",
+        lambda *args, **kwargs: SimpleNamespace(model_dump=lambda mode="json": payload),
+    )
+
+    result = runner.invoke(app, ["poc", "--json"])
+
+    assert result.exit_code == 0
+    poc_payload = json.loads(result.stdout)
+    assert poc_payload["poc_id"] == "poc-123"
+    assert poc_payload["pairwise_summaries"][0]["verified_success_rate_delta"] == 0.5
+
+
+def test_poc_command_prints_pairwise_scoreboard(monkeypatch, tmp_path: Path) -> None:
+    metric = SimpleNamespace(
+        total_runs=2,
+        verified_success_rate=0.5,
+        verified_success_ci=SimpleNamespace(low=0.1, high=0.9),
+        unsafe_claim_rate=0.0,
+        unsafe_claim_ci=SimpleNamespace(low=0.0, high=0.5),
+        average_retries=0.5,
+        average_elapsed_seconds=1.2,
+        average_changed_files=1.0,
+    )
+    pairwise = SimpleNamespace(
+        left_arm=SimpleNamespace(value="cbc_treatment"),
+        right_arm=SimpleNamespace(value="raw_codex"),
+        total_pairs=2,
+        verified_success_rate_delta=0.5,
+        verified_success_rate_ci=SimpleNamespace(low=0.0, high=1.0),
+        verified_success_outcomes=SimpleNamespace(wins=1, losses=0, ties=1),
+        unsafe_claim_rate_reduction=0.5,
+        unsafe_claim_rate_reduction_ci=SimpleNamespace(low=0.0, high=1.0),
+        safer_outcomes=SimpleNamespace(wins=1, losses=0, ties=1),
+    )
+    comparison = SimpleNamespace(
+        raw_codex_metrics=metric,
+        cbc_baseline_metrics=metric,
+        cbc_treatment_metrics=metric,
+        pairwise_summaries=[pairwise],
+        sampled_tasks=[tmp_path / "fixtures" / "demo_task" / "task.yaml"],
+        report_dir=tmp_path / "reports" / "poc-123",
+    )
+    monkeypatch.setattr("cbc.main.console", Console(width=200, force_terminal=False, color_system=None))
+    monkeypatch.setattr("cbc.main.run_poc_comparison", lambda *args, **kwargs: comparison)
+
+    result = runner.invoke(app, ["poc"])
+
+    assert result.exit_code == 0
+    assert "POC Comparison" in result.stdout
+    assert "POC Pairwise Scoreboard" in result.stdout
+    assert "cbc_treatment vs raw_codex" in result.stdout
+    assert "Unsafe Reduction" in result.stdout
+    assert "0.5" in result.stdout
+    assert "Sampled tasks: demo_task" in result.stdout
 
 
 def test_review_and_ci_artifact_commands_emit_json(tmp_path: Path) -> None:

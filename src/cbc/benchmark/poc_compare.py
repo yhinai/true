@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import subprocess
 import time
 from enum import Enum
@@ -15,10 +16,13 @@ from cbc.intake.normalize import load_task
 from cbc.models import (
     CheckResult,
     CheckStatus,
+    ConfidenceInterval,
     PocArm,
     PocComparison,
     PocMetrics,
+    PocPairwiseSummary,
     PocRunResult,
+    PocWinLossTie,
     TaskSpec,
     VerificationReport,
     VerificationVerdict,
@@ -32,6 +36,13 @@ from cbc.workspace.staging import stage_workspace
 class RawPromptStyle(str, Enum):
     MINIMAL = "minimal"
     SCAFFOLDED = "scaffolded"
+
+
+PAIRWISE_ARM_ORDER: list[tuple[PocArm, PocArm]] = [
+    (PocArm.CBC_BASELINE, PocArm.RAW_CODEX),
+    (PocArm.CBC_TREATMENT, PocArm.RAW_CODEX),
+    (PocArm.CBC_TREATMENT, PocArm.CBC_BASELINE),
+]
 
 
 def sample_task_paths(task_paths: list[Path], *, sample_size: int, seed: int) -> list[Path]:
@@ -167,20 +178,109 @@ def run_cbc_arm(
 def compute_poc_metrics(results: list[PocRunResult]) -> PocMetrics:
     if not results:
         return PocMetrics(
+            total_runs=0,
+            verified_successes=0,
+            unsafe_claim_runs=0,
             verified_success_rate=0.0,
+            verified_success_ci=ConfidenceInterval(low=0.0, high=0.0),
             unsafe_claim_rate=0.0,
+            unsafe_claim_ci=ConfidenceInterval(low=0.0, high=0.0),
             average_retries=0.0,
             average_elapsed_seconds=0.0,
             average_changed_files=0.0,
         )
 
     total = len(results)
+    verified_successes = sum(1 for result in results if result.verified_success)
+    unsafe_claim_runs = sum(1 for result in results if result.unsafe_claims > 0)
     return PocMetrics(
-        verified_success_rate=sum(1 for result in results if result.verified_success) / total,
-        unsafe_claim_rate=sum(1 for result in results if result.unsafe_claims > 0) / total,
+        total_runs=total,
+        verified_successes=verified_successes,
+        unsafe_claim_runs=unsafe_claim_runs,
+        verified_success_rate=verified_successes / total,
+        verified_success_ci=_proportion_confidence_interval(verified_successes, total),
+        unsafe_claim_rate=unsafe_claim_runs / total,
+        unsafe_claim_ci=_proportion_confidence_interval(unsafe_claim_runs, total),
         average_retries=sum(result.retries for result in results) / total,
         average_elapsed_seconds=sum(result.elapsed_seconds for result in results) / total,
         average_changed_files=sum(result.changed_files for result in results) / total,
+    )
+
+
+def build_pairwise_summary(
+    results: list[PocRunResult],
+    *,
+    left_arm: PocArm,
+    right_arm: PocArm,
+) -> PocPairwiseSummary:
+    left_by_key = {
+        (result.task_id, result.repetition): result for result in results if result.arm == left_arm
+    }
+    right_by_key = {
+        (result.task_id, result.repetition): result for result in results if result.arm == right_arm
+    }
+    if left_by_key.keys() != right_by_key.keys():
+        missing_left = sorted(right_by_key.keys() - left_by_key.keys())
+        missing_right = sorted(left_by_key.keys() - right_by_key.keys())
+        raise ValueError(
+            "Paired POC comparison requires balanced task/repetition pairs; "
+            f"missing in {left_arm.value}: {missing_left}, missing in {right_arm.value}: {missing_right}"
+        )
+    shared_keys = sorted(left_by_key.keys() & right_by_key.keys())
+    if not shared_keys:
+        return PocPairwiseSummary(
+            left_arm=left_arm,
+            right_arm=right_arm,
+            total_pairs=0,
+            verified_success_rate_delta=0.0,
+            verified_success_rate_ci=ConfidenceInterval(low=0.0, high=0.0),
+            verified_success_outcomes=PocWinLossTie(
+                wins=0,
+                losses=0,
+                ties=0,
+                win_rate=0.0,
+                loss_rate=0.0,
+                tie_rate=0.0,
+            ),
+            unsafe_claim_rate_reduction=0.0,
+            unsafe_claim_rate_reduction_ci=ConfidenceInterval(low=0.0, high=0.0),
+            safer_outcomes=PocWinLossTie(
+                wins=0,
+                losses=0,
+                ties=0,
+                win_rate=0.0,
+                loss_rate=0.0,
+                tie_rate=0.0,
+            ),
+        )
+
+    success_differences: list[float] = []
+    unsafe_reductions: list[float] = []
+    success_outcomes: list[int] = []
+    safety_outcomes: list[int] = []
+    for key in shared_keys:
+        left = left_by_key[key]
+        right = right_by_key[key]
+        left_success = int(left.verified_success)
+        right_success = int(right.verified_success)
+        left_unsafe = int(left.unsafe_claims > 0)
+        right_unsafe = int(right.unsafe_claims > 0)
+
+        success_differences.append(float(left_success - right_success))
+        unsafe_reductions.append(float(right_unsafe - left_unsafe))
+        success_outcomes.append(_cmp(left_success, right_success))
+        safety_outcomes.append(_cmp(right_unsafe, left_unsafe))
+
+    return PocPairwiseSummary(
+        left_arm=left_arm,
+        right_arm=right_arm,
+        total_pairs=len(shared_keys),
+        verified_success_rate_delta=sum(success_differences) / len(success_differences),
+        verified_success_rate_ci=_mean_confidence_interval(success_differences, minimum=-1.0, maximum=1.0),
+        verified_success_outcomes=_summarize_outcomes(success_outcomes),
+        unsafe_claim_rate_reduction=sum(unsafe_reductions) / len(unsafe_reductions),
+        unsafe_claim_rate_reduction_ci=_mean_confidence_interval(unsafe_reductions, minimum=-1.0, maximum=1.0),
+        safer_outcomes=_summarize_outcomes(safety_outcomes),
     )
 
 
@@ -230,6 +330,10 @@ def run_poc_comparison(
         raw_codex_metrics=compute_poc_metrics([result for result in results if result.arm == PocArm.RAW_CODEX]),
         cbc_baseline_metrics=compute_poc_metrics([result for result in results if result.arm == PocArm.CBC_BASELINE]),
         cbc_treatment_metrics=compute_poc_metrics([result for result in results if result.arm == PocArm.CBC_TREATMENT]),
+        pairwise_summaries=[
+            build_pairwise_summary(results, left_arm=left_arm, right_arm=right_arm)
+            for left_arm, right_arm in PAIRWISE_ARM_ORDER
+        ],
         report_dir=report_dir,
     )
     save_poc_report(comparison)
@@ -250,12 +354,28 @@ def render_poc_markdown(comparison: PocComparison) -> str:
     ]
     metric_table = "\n".join(
         [
-            "| Arm | Verified Success | Unsafe Claim | Avg Retries | Avg Seconds | Avg Changed Files |",
-            "| --- | --- | --- | --- | --- | --- |",
+            "| Arm | Runs | Verified Success | 95% CI | Unsafe Claim | 95% CI | Avg Retries | Avg Seconds | Avg Changed Files |",
+            "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
             *[
-                f"| `{arm}` | `{metrics.verified_success_rate:.2f}` | `{metrics.unsafe_claim_rate:.2f}` | "
-                f"`{metrics.average_retries:.2f}` | `{metrics.average_elapsed_seconds:.2f}` | `{metrics.average_changed_files:.2f}` |"
+                f"| `{arm}` | `{metrics.total_runs}` | `{metrics.verified_success_rate:.2f}` | "
+                f"`{_format_interval(metrics.verified_success_ci)}` | `{metrics.unsafe_claim_rate:.2f}` | "
+                f"`{_format_interval(metrics.unsafe_claim_ci)}` | `{metrics.average_retries:.2f}` | "
+                f"`{metrics.average_elapsed_seconds:.2f}` | `{metrics.average_changed_files:.2f}` |"
                 for arm, metrics in metric_rows
+            ],
+        ]
+    )
+    pairwise_table = "\n".join(
+        [
+            "| Comparison | Pairs | Success Delta | 95% CI | Success W-L-T | Unsafe Reduction | 95% CI | Safer W-L-T |",
+            "| --- | --- | --- | --- | --- | --- | --- | --- |",
+            *[
+                f"| `{summary.left_arm.value} vs {summary.right_arm.value}` | `{summary.total_pairs}` | "
+                f"`{summary.verified_success_rate_delta:.2f}` | `{_format_interval(summary.verified_success_rate_ci)}` | "
+                f"`{_format_outcomes(summary.verified_success_outcomes)}` | "
+                f"`{summary.unsafe_claim_rate_reduction:.2f}` | `{_format_interval(summary.unsafe_claim_rate_reduction_ci)}` | "
+                f"`{_format_outcomes(summary.safer_outcomes)}` |"
+                for summary in comparison.pairwise_summaries
             ],
         ]
     )
@@ -281,6 +401,8 @@ def render_poc_markdown(comparison: PocComparison) -> str:
         f"{sampled}\n\n"
         "## Arm Metrics\n"
         f"{metric_table}\n\n"
+        "## Pairwise Scoreboard\n"
+        f"{pairwise_table}\n\n"
         "## Run Matrix\n"
         f"{runs}\n"
     )
@@ -353,3 +475,74 @@ def _apply_scope_guard(
             "verification_ledger": [*verification.verification_ledger, f"scope_mismatches={','.join(scope_mismatches)}"],
         }
     )
+
+
+def _proportion_confidence_interval(successes: int, total: int, *, z: float = 1.959963984540054) -> ConfidenceInterval:
+    if total <= 0:
+        return ConfidenceInterval(low=0.0, high=0.0)
+
+    proportion = successes / total
+    denominator = 1.0 + (z * z) / total
+    center = (proportion + (z * z) / (2.0 * total)) / denominator
+    margin = (
+        z
+        * math.sqrt((proportion * (1.0 - proportion) + (z * z) / (4.0 * total)) / total)
+        / denominator
+    )
+    return ConfidenceInterval(low=max(0.0, center - margin), high=min(1.0, center + margin))
+
+
+def _mean_confidence_interval(
+    values: list[float],
+    *,
+    minimum: float,
+    maximum: float,
+    z: float = 1.959963984540054,
+) -> ConfidenceInterval:
+    if not values:
+        return ConfidenceInterval(low=0.0, high=0.0)
+
+    mean = sum(values) / len(values)
+    if len(values) == 1:
+        return ConfidenceInterval(low=mean, high=mean)
+
+    variance = sum((value - mean) ** 2 for value in values) / (len(values) - 1)
+    margin = z * math.sqrt(variance / len(values))
+    return ConfidenceInterval(
+        low=max(minimum, mean - margin),
+        high=min(maximum, mean + margin),
+    )
+
+
+def _summarize_outcomes(outcomes: list[int]) -> PocWinLossTie:
+    if not outcomes:
+        return PocWinLossTie(wins=0, losses=0, ties=0, win_rate=0.0, loss_rate=0.0, tie_rate=0.0)
+
+    total = len(outcomes)
+    wins = sum(1 for outcome in outcomes if outcome > 0)
+    losses = sum(1 for outcome in outcomes if outcome < 0)
+    ties = total - wins - losses
+    return PocWinLossTie(
+        wins=wins,
+        losses=losses,
+        ties=ties,
+        win_rate=wins / total,
+        loss_rate=losses / total,
+        tie_rate=ties / total,
+    )
+
+
+def _cmp(left: int, right: int) -> int:
+    if left > right:
+        return 1
+    if left < right:
+        return -1
+    return 0
+
+
+def _format_interval(interval: ConfidenceInterval) -> str:
+    return f"{interval.low:.2f}-{interval.high:.2f}"
+
+
+def _format_outcomes(outcomes: PocWinLossTie) -> str:
+    return f"{outcomes.wins}-{outcomes.losses}-{outcomes.ties}"

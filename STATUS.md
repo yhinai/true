@@ -13,6 +13,7 @@
 - Python property checks can now emit counterexample artifacts and generated regression tests during the main retry loop.
 - A bounded read-only explorer role now identifies likely targets and nearby tests before the coder runs, and that brief is persisted as a run artifact.
 - A seeded POC harness now compares direct raw Codex against CBC baseline and treatment on a checked-in live task bank.
+- The seeded POC harness now emits pairwise win/loss/tie summaries, rate deltas, and 95% confidence intervals so raw Codex and CBC can be compared numerically.
 - A treatment-only gearbox mode now evaluates isolated primary and alternate coder candidates, selects one deterministically, and persists scheduler plus risk artifacts.
 - The headless surface now includes JSON CLI outputs and benchmark detail lookup via the API/store path.
 
@@ -29,6 +30,7 @@
 - property-regression demo path: `PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/slugify_property_regression/task.yaml --mode treatment`
 - gearbox demo path: `PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/calculator_bug/task.yaml --controller gearbox`
 - json CLI path: `PYTHONPATH=src python3 -m cbc.main compare --json`
+- POC json path: `PYTHONPATH=src python3 -m cbc.main poc --json`
 
 ## Remaining Depth
 

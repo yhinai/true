@@ -90,6 +90,7 @@ Automated raw-vs-CBC POC:
 ```bash
 ./scripts/run_poc_compare.sh --sample-size 2 --seed 42 --repetitions 2
 ```
+This emits an arm-level scoreboard plus paired comparison summaries with win/loss/tie counts, rate deltas, and 95% confidence intervals under `reports/poc/`.
 
 Review/CI validation against an existing workspace diff:
 
@@ -109,6 +110,7 @@ Machine-readable CLI outputs:
 ```bash
 PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/calculator_bug/task.yaml --json
 PYTHONPATH=src python3 -m cbc.main compare --json
+PYTHONPATH=src python3 -m cbc.main poc --json
 PYTHONPATH=src python3 -m cbc.main review-artifact artifacts/examples/calculator_treatment/run_ledger.json --json
 PYTHONPATH=src python3 -m cbc.main ci-artifact artifacts/examples/calculator_treatment/run_ledger.json --json
 ```
