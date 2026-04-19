@@ -48,6 +48,7 @@ class ContreeWorkspace:
     task_id: str
     version: str = "v1"
     mode: SandboxMode = field(default=SandboxMode.CONTREE, init=False)
+    _prepared_sessions: dict[int, Any] = field(default_factory=dict, init=False, repr=False)
 
     def tag(self) -> str:
         return f"cbc/workspace/{self.task_id}:{self.version}"
@@ -55,12 +56,28 @@ class ContreeWorkspace:
     async def prepare_async(self, base_dir: Path) -> StagedLease:
         image = await self.client.images.use(self.tag())
         files = _walk_workspace_files(base_dir)
-        await image.run(
+        prepared = await image.run(
             shell="true",
             files=files,
             disposable=False,
         )
-        return StagedLease(root=Path("/work"), backend=self)
+        lease = StagedLease(root=Path("/work"), backend=self)
+        self._prepared_sessions[id(lease)] = prepared
+        return lease
+
+    async def branch_async(self, lease: StagedLease) -> StagedLease:
+        prepared = self._prepared_sessions.get(id(lease))
+        if prepared is None:
+            raise RuntimeError(
+                "ContreeWorkspace.branch_async requires a lease returned by prepare_async"
+            )
+        branch_session = await prepared.run(
+            shell="true",
+            disposable=False,
+        )
+        new_lease = StagedLease(root=lease.root, backend=self)
+        self._prepared_sessions[id(new_lease)] = branch_session
+        return new_lease
 
     def prepare(self, base_dir: Path) -> StagedLease:
         raise RuntimeError(

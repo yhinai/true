@@ -610,13 +610,24 @@ async def _run_candidates_parallel(
     """Dispatch N candidates concurrently, one ConTree branch each."""
 
     base_workspace = workspace_lease.root
-    candidate_workspace = workspace_lease.path
+    is_contree = workspace_lease.sandbox is SandboxMode.CONTREE
+    contree_ws = (
+        workspace_lease._staged.backend
+        if is_contree and workspace_lease._staged is not None
+        else None
+    )
 
     def _candidate_id(index: int) -> str:
         return f"candidate_{chr(ord('a') + index)}"
 
     def _candidate_role(index: int) -> str:
         return "primary" if index == 0 else "alternate"
+
+    async def _candidate_workspace_for(idx: int) -> Path:
+        if contree_ws is not None and workspace_lease._staged is not None:
+            branch_lease = await contree_ws.branch_async(workspace_lease._staged)
+            return branch_lease.root
+        return workspace_lease.path
 
     async def run_coder_async(idx: int) -> dict[str, Any]:
         candidate_id = _candidate_id(idx)
@@ -628,6 +639,7 @@ async def _run_candidates_parallel(
             candidate_id=candidate_id,
             candidate_role=candidate_role,
         )
+        candidate_workspace = await _candidate_workspace_for(idx)
         adapter_result, prompt = await asyncio.to_thread(
             run_coder,
             adapter,
@@ -655,11 +667,13 @@ async def _run_candidates_parallel(
             "candidate_role": candidate_role,
             "adapter_result": adapter_result,
             "prompt": prompt,
+            "candidate_workspace": candidate_workspace,
         }
 
     async def verify_async(ctx: dict[str, Any]) -> dict[str, Any]:
         candidate_id = ctx["candidate_id"]
         adapter_result = ctx["adapter_result"]
+        candidate_workspace = ctx["candidate_workspace"]
         response = adapter_result.response
         changed_files = await asyncio.to_thread(
             apply_writes,
@@ -744,7 +758,7 @@ async def _run_candidates_parallel(
                 prompt=ctx["prompt"],
                 model_response=adapter_result.response,
                 verification=verification,
-                workspace_dir=candidate_workspace,
+                workspace_dir=ctx["candidate_workspace"],
                 diff_summary=ctx["diff_summary"],
                 risk_artifact=ctx["risk_artifact"],
                 score=scoring_engine.score(verification, ctx["diff_summary"]),

@@ -112,3 +112,41 @@ def test_contree_workspace_tag_format():
 
     ws = ContreeWorkspace(client=MagicMock(), task_id="my-task-123")
     assert ws.tag() == "cbc/workspace/my-task-123:v1"
+
+
+@pytest.mark.asyncio
+async def test_branch_creates_child_lease(tmp_path: Path):
+    from cbc.workspace.backends import StagedLease
+    from cbc.workspace.contree_adapter import ContreeWorkspace
+
+    fake_client = MagicMock()
+    fake_base_image = MagicMock()
+    fake_prepared_session = MagicMock()
+    fake_prepared_session.image_id = "base-img"
+    fake_prepared_session.uuid = "base-img"
+    fake_base_image.run = AsyncMock(return_value=fake_prepared_session)
+    fake_client.images.use = AsyncMock(return_value=fake_base_image)
+
+    fake_branch_session = MagicMock()
+    fake_branch_session.image_id = "branch-img"
+    fake_branch_session.uuid = "branch-img"
+    fake_prepared_session.run = AsyncMock(return_value=fake_branch_session)
+
+    ws = ContreeWorkspace(client=fake_client, task_id="t1")
+    parent_lease = await ws.prepare_async(tmp_path)
+    child_lease = await ws.branch_async(parent_lease)
+
+    assert isinstance(child_lease, StagedLease)
+    assert child_lease.root == parent_lease.root
+    fake_prepared_session.run.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_branch_without_prepare_raises(tmp_path: Path):
+    from cbc.workspace.backends import StagedLease
+    from cbc.workspace.contree_adapter import ContreeWorkspace
+
+    ws = ContreeWorkspace(client=MagicMock(), task_id="t1")
+    stale = StagedLease(root=Path("/work"), backend=ws)
+    with pytest.raises(RuntimeError, match="prepare"):
+        await ws.branch_async(stale)
