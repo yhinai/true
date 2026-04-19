@@ -1,0 +1,80 @@
+name: Rescue stuck PRs
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  rescue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate App token
+        id: app-token
+        continue-on-error: true
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.CBC_BOT_APP_ID }}
+          private-key: ${{ secrets.CBC_BOT_APP_PRIVATE_KEY }}
+
+      - name: Rescue PRs stuck in BLOCKED with green required checks
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          # Which check contexts does branch protection require?
+          required=$(gh api "repos/${REPO}/branches/main/protection/required_status_checks" \
+                       --jq '.contexts[]' 2>/dev/null | sort -u)
+          if [ -z "$required" ]; then
+            echo "No required checks configured; nothing to rescue."
+            exit 0
+          fi
+          echo "Required contexts:"
+          echo "$required" | sed 's/^/  /'
+
+          now=$(date -u +%s)
+
+          # List open PRs from this repo in BLOCKED merge state, older than 10 min.
+          gh pr list --repo "$REPO" --state open --base main \
+              --json number,headRefOid,mergeStateStatus,updatedAt,headRepositoryOwner \
+              --jq '.[] | select(.mergeStateStatus == "BLOCKED") |
+                    select(.headRepositoryOwner.login == "'"${REPO%%/*}"'") |
+                    "\(.number)|\(.headRefOid)|\(.updatedAt)"' \
+          | while IFS='|' read -r num sha updated; do
+              updated_ts=$(date -u -d "$updated" +%s 2>/dev/null || \
+                           date -j -f "%Y-%m-%dT%H:%M:%SZ" "$updated" +%s 2>/dev/null || echo 0)
+              age=$((now - updated_ts))
+              if [ "$age" -lt 600 ]; then
+                echo "PR #$num too fresh (age=${age}s); skipping."
+                continue
+              fi
+
+              echo "Inspecting PR #$num (sha=${sha:0:7}, age=${age}s)..."
+
+              # Read all check runs on the head SHA directly
+              runs=$(gh api "repos/${REPO}/commits/${sha}/check-runs" \
+                      --jq '.check_runs[] | "\(.name)=\(.conclusion)"')
+
+              all_green=true
+              for ctx in $required; do
+                # Find this context's conclusion
+                conc=$(echo "$runs" | grep -E "^${ctx}=" | head -1 | cut -d= -f2-)
+                if [ "$conc" != "success" ]; then
+                  echo "  required '${ctx}' is '${conc:-missing}' — NOT rescuing."
+                  all_green=false
+                  break
+                fi
+              done
+
+              if $all_green; then
+                echo "  all required checks green on SHA; admin-merging PR #$num"
+                gh pr merge --repo "$REPO" "$num" --squash --admin \
+                  || echo "  admin-merge failed for #$num"
+              fi
+            done

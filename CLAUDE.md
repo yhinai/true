@@ -177,6 +177,17 @@ Same end result; used from CI jobs or automation that doesn't invoke git hooks.
 - **Auto-rebase:** `.github/workflows/auto-update-prs.yml` fires on every push to `main` and rebases any open PR that became `BEHIND`. No manual intervention.
 - **Auto-resolve:** `.github/workflows/auto-resolve-conflicts.yml` runs every 10 minutes (and on-demand) against `DIRTY` PRs. Safe classes (`artifacts/examples/**`, `reports/**`, `docs/**/*.md`) are auto-resolved with `-X theirs`; anything else is labeled `conflict-needs-review` and left for a human.
 
+### Stuck-PR rescuer
+
+`.github/workflows/rescue-stuck-prs.yml` runs every 10 minutes. When a PR
+has been BLOCKED for >10 minutes, it reads check-runs directly on the
+head SHA (not the lagging PR rollup). If all branch-protection required
+contexts are SUCCESS, it admin-merges via `gh pr merge --squash --admin`.
+Never acts on fork PRs or when a required check is actually failing.
+
+Effect: eliminates the "PR sat there despite CI passing" hang we
+observed when GitHub's rollup lagged the check-runs API.
+
 ### Daily regression detection
 
 `.github/workflows/daily-benchmark.yml` fires at 06:00 UTC every day and on-demand:
