@@ -17,7 +17,7 @@ jobs:
       - name: Generate App token
         id: app-token
         continue-on-error: true
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.CBC_BOT_APP_ID }}
           private-key: ${{ secrets.CBC_BOT_APP_PRIVATE_KEY }}
