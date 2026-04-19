@@ -510,5 +510,6 @@
   "adapter_failure_reasons": [],
   "final_summary": "All deterministic checks passed. Source workspace <repo>/fixtures/oracle_tasks/slugify_property_regression/workspace was copied into staged workspace <staged_workspace>. All edits are confined to the staged copy. Checkpoints: attempt-1@workspace, attempt-2@workspace.",
   "started_at": "2026-04-18T00:00:00Z",
-  "ended_at": "2026-04-18T00:00:01Z"
+  "ended_at": "2026-04-18T00:00:01Z",
+  "program_text": null
 }
