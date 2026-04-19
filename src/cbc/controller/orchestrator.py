@@ -242,21 +242,18 @@ def run_task(
 
         if state.completed_at is None:
             state.completed_at = datetime.now(UTC)
-        _, proof_card, final_verification, diff_summary, scheduler_trace, final_risk_artifact = _build_final_outputs(
+        proof_card, final_verification, diff_summary, scheduler_trace, final_risk_artifact = _build_final_outputs(
             run_id=run_id,
             task=task,
             mode=mode,
             adapter_name=adapter.name,
             artifact_dir=artifact_dir,
             workspace=workspace,
-            plan=plan,
             explorer=explorer,
             attempts=attempts,
             candidate_results=candidate_results,
             unsafe_claims=unsafe_claims,
             model_calls_used=model_calls_used,
-            started_at=started_at,
-            ended_at=state.completed_at,
             active_controller_mode=active_controller_mode,
             selected_candidate_id=selected_candidate_id,
             scheduler_attempts=scheduler_attempts,
@@ -686,29 +683,23 @@ def _build_final_outputs(
     adapter_name: str,
     artifact_dir: Path,
     workspace: Path,
-    plan,
     explorer: ExplorerArtifact,
     attempts: list[AttemptRecord],
     candidate_results: list[CandidateResult],
     unsafe_claims: int,
     model_calls_used: int,
-    started_at: datetime,
-    ended_at: datetime,
     active_controller_mode: str,
     selected_candidate_id: str | None,
     scheduler_attempts: list[dict[str, Any]],
     budget,
-) -> tuple[RunLedger, ProofCard, VerificationReport, dict[str, Any], dict[str, Any], dict[str, Any]]:
+) -> tuple[ProofCard, VerificationReport, dict[str, Any], dict[str, Any], dict[str, Any]]:
     final_verification = attempts[-1].verification
     all_changed_files = _collect_changed_files(attempts)
     diff_summary = summarize_workspace_diff(task.workspace, workspace, changed_files=all_changed_files)
     safety_note = describe_workspace_safety(task.workspace, workspace)
     checkpoints = [checkpoint_name(attempt_record.attempt, workspace) for attempt_record in attempts]
     final_summary = f"{final_verification.summary} {safety_note} Checkpoints: {', '.join(checkpoints)}."
-    prompt_tokens = sum(attempt.usage.prompt_tokens for attempt in attempts)
-    completion_tokens = sum(attempt.usage.completion_tokens for attempt in attempts)
     total_tokens = sum(attempt.usage.total_tokens for attempt in attempts)
-    costs = [attempt.usage.estimated_cost_usd for attempt in attempts if attempt.usage.estimated_cost_usd is not None]
     final_risk_artifact = build_risk_artifact(
         diff_summary=diff_summary,
         verification=final_verification,
@@ -725,54 +716,28 @@ def _build_final_outputs(
         "selected_candidate_id": selected_candidate_id,
         "attempts": scheduler_attempts,
     }
-
-    ledger = RunLedger(
-        run_id=run_id,
-        task_id=task.task_id,
-        title=task.title,
-        mode=mode,
-        controller_mode=active_controller_mode,
-        selected_candidate_id=selected_candidate_id,
-        verdict=final_verification.verdict,
-        adapter=adapter_name,
-        artifact_dir=artifact_dir,
-        workspace_dir=workspace,
-        plan=plan,
-        attempts=attempts,
-        candidate_results=candidate_results,
-        unsafe_claims=unsafe_claims,
-        model_calls_used=model_calls_used,
-        prompt_tokens=prompt_tokens,
-        completion_tokens=completion_tokens,
-        total_tokens=total_tokens,
-        estimated_cost_usd=sum(costs) if costs else None,
-        adapter_failure_reasons=[reason for reason in (attempt.adapter_failure_reason for attempt in attempts) if reason],
-        final_summary=final_summary,
-        started_at=started_at,
-        ended_at=ended_at,
-    )
     proof_card = ProofCard(
         run_id=run_id,
         task_id=task.task_id,
         mode=mode,
-        verdict=ledger.verdict,
+        verdict=final_verification.verdict,
         unsafe_claims=unsafe_claims,
         attempts=len(attempts),
         summary=final_summary,
         proof_points=[
-            f"deterministic_verdict={ledger.verdict.value}",
+            f"deterministic_verdict={final_verification.verdict.value}",
             f"unsafe_claims={unsafe_claims}",
             f"adapter={adapter_name}",
             f"controller_mode={active_controller_mode}",
             f"workspace_isolation={workspace}",
-            f"total_tokens={ledger.total_tokens}",
+            f"total_tokens={total_tokens}",
             *_explorer_proof_points(explorer),
             *_candidate_proof_points(candidate_results, selected_candidate_id),
             *_property_proof_points(attempts),
         ],
         artifact_dir=artifact_dir,
     )
-    return ledger, proof_card, final_verification, diff_summary, scheduler_trace, final_risk_artifact
+    return proof_card, final_verification, diff_summary, scheduler_trace, final_risk_artifact
 
 
 def _cleanup_candidate_leases(leases: dict[str, WorkspaceLease], *, selected_candidate_id: str) -> None:
