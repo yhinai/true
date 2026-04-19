@@ -9,7 +9,9 @@ from cbc.config import AppConfig, DEFAULT_CONFIG
 from cbc.controller.artifact_flow import persist_run_artifacts
 from cbc.controller.budgets import normalize_max_attempts
 from cbc.controller.checkpoints import checkpoint_name
-from cbc.controller.retries import should_retry
+from cbc.controller.ledger_factory import build_final_ledger
+from cbc.controller.routing import RouteDecision, route_after_verify
+from cbc.controller.run_state import IterationRecord, RunState
 from cbc.controller.scoring import CandidateScoringEngine
 from cbc.model.codex_exec import CodexExecAdapter
 from cbc.model.prompts import summarize_verification_for_retry, write_schema_file
@@ -17,6 +19,7 @@ from cbc.model.replay import ReplayModelAdapter
 from cbc.models import (
     AttemptRecord,
     CandidateResult,
+    CheckStatus,
     ExplorerArtifact,
     ModelResponse,
     ProofCard,
@@ -99,6 +102,12 @@ def run_task(
         max_attempts = normalize_max_attempts(task.retry_budget, config.retry.max_attempts, mode)
         active_controller_mode = _resolve_controller_mode(mode, config, controller_mode)
         budget = config.controller.budget
+
+        state = RunState(
+            task_id=task.task_id,
+            max_iterations=max_attempts,
+            started_at=started_at,
+        )
 
         attempts: list[AttemptRecord] = []
         candidate_results: list[CandidateResult] = []
@@ -194,7 +203,32 @@ def run_task(
                         "model_calls_used": model_calls_used,
                     }
                 )
-            if verification.verdict == VerificationVerdict.VERIFIED or not should_retry(attempt, max_attempts, verification):
+            state.iteration = attempt
+            failure_summary = ""
+            if verification.verdict != VerificationVerdict.VERIFIED:
+                failed = [
+                    check.name
+                    for check in verification.checks
+                    if check.status != CheckStatus.PASSED
+                ]
+                failure_summary = (
+                    ", ".join(failed) if failed else "no failed checks reported"
+                )
+                state.append_failure(failure_summary)
+            state.record_iteration(
+                IterationRecord(
+                    iteration=attempt,
+                    verdict=verification.verdict,
+                    files_modified=[Path(p) for p in verification.changed_files],
+                    error_summary=failure_summary,
+                )
+            )
+            decision = route_after_verify(state)
+            if decision is RouteDecision.COMPLETE:
+                state.completed_at = datetime.now(UTC)
+                break
+            if decision is RouteDecision.ABORT:
+                state.completed_at = datetime.now(UTC)
                 break
             evidence = summarize_verification_for_retry(verification)
             _emit_event(
@@ -206,7 +240,9 @@ def run_task(
                 reason=verification.summary,
             )
 
-        ledger, proof_card, final_verification, diff_summary, scheduler_trace, final_risk_artifact = _build_final_outputs(
+        if state.completed_at is None:
+            state.completed_at = datetime.now(UTC)
+        _, proof_card, final_verification, diff_summary, scheduler_trace, final_risk_artifact = _build_final_outputs(
             run_id=run_id,
             task=task,
             mode=mode,
@@ -220,11 +256,30 @@ def run_task(
             unsafe_claims=unsafe_claims,
             model_calls_used=model_calls_used,
             started_at=started_at,
-            ended_at=datetime.now(UTC),
+            ended_at=state.completed_at,
             active_controller_mode=active_controller_mode,
             selected_candidate_id=selected_candidate_id,
             scheduler_attempts=scheduler_attempts,
             budget=budget,
+        )
+        ledger = build_final_ledger(
+            state=state,
+            attempts=attempts,
+            final_verification=final_verification,
+            proof_card=proof_card,
+            run_id=run_id,
+            title=task.title,
+            mode=mode,
+            controller_mode=active_controller_mode,
+            selected_candidate_id=selected_candidate_id,
+            adapter=adapter.name,
+            artifact_dir=artifact_dir,
+            workspace_dir=workspace,
+            plan=plan,
+            candidate_results=candidate_results,
+            unsafe_claims=unsafe_claims,
+            model_calls_used=model_calls_used,
+            final_summary=proof_card.summary,
         )
         persist_run_artifacts(
             artifact_dir,
