@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { use, useEffect, useMemo, useState } from "react";
 import { fetchRunReview, streamUrl, type RunReview } from "@/lib/api";
+import { fetchLedgerFromSupabase } from "@/lib/supabase";
 import { useSSE } from "@/lib/useSSE";
 
 type Check = {
@@ -56,6 +57,7 @@ export default function RunDetailPage({ params }: { params: Promise<{ id: string
   const url = useMemo(() => streamUrl(runId), [runId]);
   const sse = useSSE<Ledger>(url);
   const [fallback, setFallback] = useState<RunReview | null>(null);
+  const [mirror, setMirror] = useState<Ledger | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -66,12 +68,19 @@ export default function RunDetailPage({ params }: { params: Promise<{ id: string
       .catch(() => {
         if (!cancelled) setFallback(null);
       });
+    fetchLedgerFromSupabase(runId)
+      .then((payload) => {
+        if (!cancelled && payload) setMirror(payload as unknown as Ledger);
+      })
+      .catch(() => {
+        if (!cancelled) setMirror(null);
+      });
     return () => {
       cancelled = true;
     };
   }, [runId]);
 
-  const ledger = sse.data;
+  const ledger = sse.data ?? mirror;
   const attempts = ledger?.attempts ?? [];
   const latest = attempts[attempts.length - 1];
   const fallbackChecks = fallback?.summary?.verification?.checks ?? [];
@@ -84,7 +93,10 @@ export default function RunDetailPage({ params }: { params: Promise<{ id: string
   ).toUpperCase();
   const terminal = sse.event === "done";
   const errored = sse.event === "error";
-  const streamState = errored
+  const fromMirror = !sse.data && !!mirror;
+  const streamState = fromMirror
+    ? "MIRROR"
+    : errored
     ? "ERROR"
     : terminal
     ? "COMPLETE"
@@ -106,7 +118,15 @@ export default function RunDetailPage({ params }: { params: Promise<{ id: string
         <div className="run-badges">
           <span className={`verdict ${verdict}`}>{verdict}</span>
           <span className="run-stream-badge">
-            <span className={`dot ${sse.connected && !terminal ? "live" : "amber"}`} />
+            <span
+              className={`dot ${
+                sse.connected && !terminal
+                  ? "live"
+                  : fromMirror
+                  ? "mirror"
+                  : "amber"
+              }`}
+            />
             {streamState}
           </span>
         </div>
