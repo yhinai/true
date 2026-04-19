@@ -15,7 +15,7 @@ from cbc.controller.gearbox_runner import ParallelCandidateSpec, run_gearbox_par
 from cbc.controller.ledger_factory import build_final_ledger
 from cbc.controller.routing import RouteDecision, route_after_verify
 from cbc.controller.run_state import AttemptTimeout, IterationRecord, RunState
-from cbc.controller.scoring import CandidateScoringEngine
+from cbc.controller.scoring import CandidateScoringEngine, CheckWeights
 from cbc.model.codex_exec import CodexExecAdapter
 from cbc.model.prompts import summarize_verification_for_retry, write_schema_file
 from cbc.model.replay import ReplayModelAdapter
@@ -105,6 +105,7 @@ def run_task(
     event_sink: RunEventSink | None = None,
     sandbox: SandboxMode = SandboxMode.LOCAL,
     max_wall_seconds_per_attempt: float | None = None,
+    scoring_weights: CheckWeights | None = None,
 ) -> RunLedger:
     run_id = uuid4().hex[:12]
     artifact_dir = create_artifact_dir(config.paths.artifacts_dir, "runs")
@@ -123,7 +124,7 @@ def run_task(
         )
     else:
         workspace_lease = create_workspace_lease(task.workspace, sandbox=sandbox)
-    scoring_engine = CandidateScoringEngine()
+    scoring_engine = CandidateScoringEngine(check_weights=scoring_weights)
 
     try:
         workspace = workspace_lease.path

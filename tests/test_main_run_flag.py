@@ -90,3 +90,26 @@ def test_run_json_mode_suppresses_spinner(tmp_path: Path, monkeypatch):
     # No Rich escape codes for spinner frames
     assert "\x1b[?25l" not in result.output  # cursor-hide
     assert "⠋" not in result.output and "⠙" not in result.output  # spinner glyphs
+
+
+def test_run_accepts_scoring_weights_flag(tmp_path: Path, monkeypatch) -> None:
+    captured: dict[str, object] = {}
+
+    def fake_run_task(task, **kwargs):
+        captured.update(kwargs)
+        return _stub_ledger(tmp_path)
+
+    monkeypatch.setattr("cbc.main.load_task", lambda path: object())
+    monkeypatch.setattr("cbc.main.run_task", fake_run_task)
+
+    weights_yaml = tmp_path / "w.yaml"
+    weights_yaml.write_text("verified_bonus: 999\n")
+    task_file = tmp_path / "task.yaml"
+    task_file.write_text("task_id: t1\n")
+
+    result = runner.invoke(
+        app,
+        ["run", str(task_file), "--scoring-weights", str(weights_yaml), "--json"],
+    )
+    assert "scoring_weights" in captured, f"kwarg missing; output: {result.output}"
+    assert captured["scoring_weights"].verified_bonus == 999

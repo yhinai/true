@@ -161,3 +161,31 @@ def test_constructor_accepts_check_weights() -> None:
     )
     # With both weights zeroed out, score should be 0 minus any penalties (none here).
     assert engine.score_candidate(candidate) == pytest.approx(0.0)
+
+
+def test_check_weights_from_yaml(tmp_path):
+    from cbc.controller.scoring import CheckWeights
+
+    yaml_path = tmp_path / "weights.yaml"
+    yaml_path.write_text(
+        "verified_bonus: 500\n"
+        "passed_check_weight: 25\n"
+        "unsafe_claim_penalty: 100\n"
+        "changed_file_penalty: 5\n"
+        "diff_line_penalty: 0.5\n"
+    )
+    w = CheckWeights.from_yaml(yaml_path)
+    assert w.verified_bonus == 500
+    assert w.diff_line_penalty == 0.5
+
+
+def test_check_weights_from_yaml_partial_fills_defaults(tmp_path):
+    from cbc.controller.scoring import CheckWeights
+
+    yaml_path = tmp_path / "partial.yaml"
+    yaml_path.write_text("verified_bonus: 42\n")
+    w = CheckWeights.from_yaml(yaml_path)
+    defaults = CheckWeights()
+    assert w.verified_bonus == 42
+    assert w.passed_check_weight == defaults.passed_check_weight
+    assert w.unsafe_claim_penalty == defaults.unsafe_claim_penalty
