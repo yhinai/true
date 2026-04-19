@@ -40,6 +40,10 @@ def test_calculator_bug_runs_under_contree():
             "could not connect",
             "contree backend",
             "contree_url",
+            "contree_base_url",
+            "contreetransporterror",
+            "missing an 'http://' or 'https://' protocol",
+            "unsupportedprotocol",
             "no valid authentication",
             "missing token",
         )
