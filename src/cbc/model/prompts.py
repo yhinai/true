@@ -43,17 +43,32 @@ def build_coder_prompt(
     evidence: str | None = None,
     explorer: ExplorerArtifact | None = None,
     candidate_role: str = "primary",
+    program_text: str | None = None,
 ) -> str:
-    lines = [
-        "You are the Coder role inside a verification-first harness.",
-        "Return JSON that matches the provided schema exactly.",
-        "Only write files inside the allowed scope.",
-        "",
-        f"Task:\n{task_prompt}",
-        "",
-        f"Allowed files: {', '.join(plan.allowed_files) if plan.allowed_files else '(none specified)'}",
-        f"Required checks: {', '.join(plan.required_checks) if plan.required_checks else '(task oracle only)'}",
-    ]
+    lines: list[str] = []
+    if program_text:
+        lines.extend(
+            [
+                "## Standing Instructions",
+                "",
+                program_text,
+                "",
+                "---",
+                "",
+            ]
+        )
+    lines.extend(
+        [
+            "You are the Coder role inside a verification-first harness.",
+            "Return JSON that matches the provided schema exactly.",
+            "Only write files inside the allowed scope.",
+            "",
+            f"Task:\n{task_prompt}",
+            "",
+            f"Allowed files: {', '.join(plan.allowed_files) if plan.allowed_files else '(none specified)'}",
+            f"Required checks: {', '.join(plan.required_checks) if plan.required_checks else '(task oracle only)'}",
+        ]
+    )
     if plan.doubt_points:
         lines.append(f"Doubt points: {', '.join(plan.doubt_points)}")
     if candidate_role == "alternate":

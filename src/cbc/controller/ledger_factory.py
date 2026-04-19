@@ -36,6 +36,7 @@ def build_final_ledger(
     unsafe_claims: int,
     model_calls_used: int,
     final_summary: str,
+    program_text: str | None = None,
 ) -> RunLedger:
     prompt_tokens = sum(attempt.usage.prompt_tokens for attempt in attempts)
     completion_tokens = sum(attempt.usage.completion_tokens for attempt in attempts)
@@ -76,4 +77,5 @@ def build_final_ledger(
         final_summary=final_summary,
         started_at=state.started_at,
         ended_at=ended_at,
+        program_text=program_text,
     )

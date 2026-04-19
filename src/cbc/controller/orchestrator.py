@@ -18,6 +18,7 @@ from cbc.controller.scoring import CandidateScoringEngine
 from cbc.model.codex_exec import CodexExecAdapter
 from cbc.model.prompts import summarize_verification_for_retry, write_schema_file
 from cbc.model.replay import ReplayModelAdapter
+from cbc.prompts.program_loader import load_program
 from cbc.models import (
     AttemptRecord,
     CandidateResult,
@@ -103,6 +104,9 @@ def run_task(
     schema_path = artifact_dir / "response_schema.json"
     write_schema_file(schema_path)
 
+    program_text_raw = load_program(task_dir=Path(task.workspace).parent, repo_root=Path.cwd())
+    program_text: str | None = program_text_raw if program_text_raw else None
+
     started_at = datetime.now(UTC)
     if sandbox is SandboxMode.CONTREE:
         workspace_lease = asyncio.run(
@@ -172,6 +176,7 @@ def run_task(
                     run_id=run_id,
                     db_path=config.paths.storage_db,
                     event_sink=event_sink,
+                    program_text=program_text,
                 )
                 if not candidate_bundle["candidates"]:
                     raise RuntimeError("gearbox controller did not produce any candidate runs")
@@ -213,6 +218,7 @@ def run_task(
                     evidence=evidence,
                     schema_path=schema_path,
                     event_sink=event_sink,
+                    program_text=program_text,
                 )
                 model_calls_used += 1
                 unsafe_claims += int(verification.unsafe_claim_detected)
@@ -300,6 +306,7 @@ def run_task(
             unsafe_claims=unsafe_claims,
             model_calls_used=model_calls_used,
             final_summary=proof_card.summary,
+            program_text=program_text,
         )
         persist_run_artifacts(
             artifact_dir,
@@ -459,6 +466,7 @@ def _run_gearbox_attempt(
     run_id: str,
     db_path: Path,
     event_sink: RunEventSink | None = None,
+    program_text: str | None = None,
 ) -> dict[str, Any]:
     if workspace_lease.sandbox is SandboxMode.CONTREE:
         init_lineage_schema(db_path)
@@ -488,6 +496,7 @@ def _run_gearbox_attempt(
                 run_id=run_id,
                 db_path=db_path,
                 event_sink=event_sink,
+                program_text=program_text,
             )
         )
 
@@ -519,6 +528,7 @@ def _run_gearbox_attempt(
             candidate_role=candidate_role,
             evidence=evidence,
             schema_path=schema_path,
+            program_text=program_text,
         )
         response = adapter_result.response
         usage_by_candidate[candidate_id] = adapter_result.usage
@@ -606,6 +616,7 @@ async def _run_candidates_parallel(
     run_id: str,
     db_path: Path,
     event_sink: RunEventSink | None = None,
+    program_text: str | None = None,
 ) -> dict[str, Any]:
     """Dispatch N candidates concurrently, one ConTree branch each."""
 
@@ -652,6 +663,7 @@ async def _run_candidates_parallel(
             candidate_role=candidate_role,
             evidence=evidence,
             schema_path=schema_path,
+            program_text=program_text,
         )
         _emit_event(
             event_sink,
@@ -883,6 +895,7 @@ def _run_sequential_attempt(
     evidence: str | None,
     schema_path: Path,
     event_sink: RunEventSink | None = None,
+    program_text: str | None = None,
 ) -> tuple[AttemptRecord, VerificationReport]:
     _emit_event(event_sink, "adapter.started", attempt=attempt, candidate_role="primary")
     adapter_result, prompt = run_coder(
@@ -896,6 +909,7 @@ def _run_sequential_attempt(
         candidate_role="primary",
         evidence=evidence,
         schema_path=schema_path,
+        program_text=program_text,
     )
     _emit_event(
         event_sink,

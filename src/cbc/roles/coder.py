@@ -19,8 +19,16 @@ def run_coder(
     candidate_role: str = "primary",
     evidence: str | None,
     schema_path: Path | None,
+    program_text: str | None = None,
 ) -> tuple[AdapterRunResult, str]:
-    prompt = build_coder_prompt(task_prompt, plan, evidence, explorer, candidate_role)
+    prompt = build_coder_prompt(
+        task_prompt,
+        plan,
+        evidence,
+        explorer,
+        candidate_role,
+        program_text=program_text,
+    )
     result = adapter.run(
         prompt=prompt,
         workspace=workspace,

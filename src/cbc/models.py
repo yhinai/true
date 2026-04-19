@@ -250,6 +250,7 @@ class RunLedger(BaseModel):
     final_summary: str
     started_at: datetime = Field(default_factory=utc_now)
     ended_at: datetime = Field(default_factory=utc_now)
+    program_text: str | None = None
 
     @property
     def elapsed_seconds(self) -> float:
