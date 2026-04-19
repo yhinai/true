@@ -1,5 +1,5 @@
 {
-  "run_id": "81409528ee07",
+  "run_id": "example-calculator-treatment",
   "task_id": "calculator_bug",
   "title": "Fix addition in calculator.py",
   "mode": "treatment",
@@ -7,8 +7,8 @@
   "selected_candidate_id": "candidate_a",
   "verdict": "VERIFIED",
   "adapter": "replay",
-  "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/07f4ff5258ba",
-  "workspace_dir": "/var/folders/56/k6d868zx2c755lc49bbjkt740000gn/T/cbc-workspace-mruyqtrg/workspace",
+  "artifact_dir": "artifacts/examples/calculator_treatment",
+  "workspace_dir": "<staged_workspace>",
   "plan": {
     "summary": "Plan for calculator_bug: edit only the allowed files and satisfy the deterministic oracle.",
     "allowed_files": [
@@ -52,7 +52,7 @@
             "exit_code": 1,
             "stdout": "F                                                                        [100%]\n=================================== FAILURES ===================================\n___________________________________ test_add ___________________________________\n\n    def test_add() -> None:\n>       assert add(2, 3) == 5\nE       assert -1 == 5\nE        +  where -1 = add(2, 3)\n\ntest_calculator.py:5: AssertionError\n=========================== short test summary info ============================\nFAILED test_calculator.py::test_add - assert -1 == 5\n1 failed in 0.01s\n",
             "stderr": "",
-            "duration_seconds": 0.2735297500039451,
+            "duration_seconds": 0.1989570000441745,
             "details": {}
           },
           {
@@ -62,7 +62,7 @@
             "exit_code": 0,
             "stdout": "Listing '.'...\nListing './.pytest_cache'...\nListing './.pytest_cache/v'...\nListing './.pytest_cache/v/cache'...\nCompiling './calculator.py'...\nCompiling './test_calculator.py'...\n",
             "stderr": "",
-            "duration_seconds": 0.03940204199170694,
+            "duration_seconds": 0.046199167030863464,
             "details": {}
           },
           {
@@ -240,8 +240,8 @@
           }
         }
       },
-      "started_at": "2026-04-19T00:28:47.768895Z",
-      "ended_at": "2026-04-19T00:28:48.339658Z"
+      "started_at": "2026-04-18T00:00:00Z",
+      "ended_at": "2026-04-18T00:00:01Z"
     },
     {
       "attempt": 2,
@@ -269,9 +269,9 @@
             "command": "python3 -m pytest -q",
             "status": "passed",
             "exit_code": 0,
-            "stdout": ".                                                                        [100%]\n1 passed in 0.01s\n",
+            "stdout": ".                                                                        [100%]\n1 passed in 0.00s\n",
             "stderr": "",
-            "duration_seconds": 0.2558851659996435,
+            "duration_seconds": 0.20764891698490828,
             "details": {}
           },
           {
@@ -281,7 +281,7 @@
             "exit_code": 0,
             "stdout": "Listing '.'...\nListing './.pytest_cache'...\nListing './.pytest_cache/v'...\nListing './.pytest_cache/v/cache'...\nCompiling './calculator.py'...\nCompiling './test_calculator.py'...\n",
             "stderr": "",
-            "duration_seconds": 0.044868083961773664,
+            "duration_seconds": 0.04709041700698435,
             "details": {}
           },
           {
@@ -457,8 +457,8 @@
           }
         }
       },
-      "started_at": "2026-04-19T00:28:47.768895Z",
-      "ended_at": "2026-04-19T00:28:48.645359Z"
+      "started_at": "2026-04-18T00:00:00Z",
+      "ended_at": "2026-04-18T00:00:01Z"
     }
   ],
   "candidate_results": [
@@ -491,7 +491,7 @@
             "exit_code": 1,
             "stdout": "F                                                                        [100%]\n=================================== FAILURES ===================================\n___________________________________ test_add ___________________________________\n\n    def test_add() -> None:\n>       assert add(2, 3) == 5\nE       assert -1 == 5\nE        +  where -1 = add(2, 3)\n\ntest_calculator.py:5: AssertionError\n=========================== short test summary info ============================\nFAILED test_calculator.py::test_add - assert -1 == 5\n1 failed in 0.01s\n",
             "stderr": "",
-            "duration_seconds": 0.2735297500039451,
+            "duration_seconds": 0.1989570000441745,
             "details": {}
           },
           {
@@ -501,7 +501,7 @@
             "exit_code": 0,
             "stdout": "Listing '.'...\nListing './.pytest_cache'...\nListing './.pytest_cache/v'...\nListing './.pytest_cache/v/cache'...\nCompiling './calculator.py'...\nCompiling './test_calculator.py'...\n",
             "stderr": "",
-            "duration_seconds": 0.03940204199170694,
+            "duration_seconds": 0.046199167030863464,
             "details": {}
           },
           {
@@ -679,7 +679,7 @@
           }
         }
       },
-      "workspace_dir": "/var/folders/56/k6d868zx2c755lc49bbjkt740000gn/T/cbc-workspace-mruyqtrg/workspace",
+      "workspace_dir": "<staged_workspace>",
       "diff_summary": {
         "total_files": 0,
         "files": []
@@ -732,9 +732,9 @@
             "command": "python3 -m pytest -q",
             "status": "failed",
             "exit_code": 1,
-            "stdout": "F                                                                        [100%]\n=================================== FAILURES ===================================\n___________________________________ test_add ___________________________________\n\n    def test_add() -> None:\n>       assert add(2, 3) == 5\nE       assert -1 == 5\nE        +  where -1 = add(2, 3)\n\ntest_calculator.py:5: AssertionError\n=========================== short test summary info ============================\nFAILED test_calculator.py::test_add - assert -1 == 5\n1 failed in 0.01s\n",
+            "stdout": "F                                                                        [100%]\n=================================== FAILURES ===================================\n___________________________________ test_add ___________________________________\n\n    def test_add() -> None:\n>       assert add(2, 3) == 5\nE       assert -1 == 5\nE        +  where -1 = add(2, 3)\n\ntest_calculator.py:5: AssertionError\n=========================== short test summary info ============================\nFAILED test_calculator.py::test_add - assert -1 == 5\n1 failed in 0.02s\n",
             "stderr": "",
-            "duration_seconds": 0.18363749998388812,
+            "duration_seconds": 0.24100550002185628,
             "details": {}
           },
           {
@@ -744,7 +744,7 @@
             "exit_code": 0,
             "stdout": "Listing '.'...\nListing './.pytest_cache'...\nListing './.pytest_cache/v'...\nListing './.pytest_cache/v/cache'...\nCompiling './calculator.py'...\nCompiling './test_calculator.py'...\n",
             "stderr": "",
-            "duration_seconds": 0.0523496670066379,
+            "duration_seconds": 0.04312112502520904,
             "details": {}
           },
           {
@@ -855,7 +855,7 @@
         ],
         "summary": "Deterministic verification failed or stayed unproven.",
         "unsafe_claim_detected": true,
-        "counterexample": "F                                                                        [100%]\n=================================== FAILURES ===================================\n___________________________________ test_add ___________________________________\n\n    def test_add() -> None:\n>       assert add(2, 3) == 5\nE       assert -1 == 5\nE        +  where -1 = add(2, 3)\n\ntest_calculator.py:5: AssertionError\n=========================== short test summary info ============================\nFAILED test_calculator.py::test_add - assert -1 == 5\n1 failed in 0.01s",
+        "counterexample": "F                                                                        [100%]\n=================================== FAILURES ===================================\n___________________________________ test_add ___________________________________\n\n    def test_add() -> None:\n>       assert add(2, 3) == 5\nE       assert -1 == 5\nE        +  where -1 = add(2, 3)\n\ntest_calculator.py:5: AssertionError\n=========================== short test summary info ============================\nFAILED test_calculator.py::test_add - assert -1 == 5\n1 failed in 0.02s",
         "changed_files": [
           "calculator.py"
         ],
@@ -922,7 +922,7 @@
           }
         }
       },
-      "workspace_dir": "/var/folders/56/k6d868zx2c755lc49bbjkt740000gn/T/cbc-workspace-bjsi_3za/workspace",
+      "workspace_dir": "<staged_workspace>",
       "diff_summary": {
         "total_files": 0,
         "files": []
@@ -951,7 +951,7 @@
   ],
   "unsafe_claims": 1,
   "model_calls_used": 3,
-  "final_summary": "All deterministic checks passed. Source workspace /Users/alhinai/Desktop/TRUE/fixtures/oracle_tasks/calculator_bug/workspace was copied into staged workspace /var/folders/56/k6d868zx2c755lc49bbjkt740000gn/T/cbc-workspace-mruyqtrg/workspace. All edits are confined to the staged copy. Checkpoints: attempt-1@workspace, attempt-2@workspace.",
-  "started_at": "2026-04-19T00:28:47.768895Z",
-  "ended_at": "2026-04-19T00:28:48.645595Z"
+  "final_summary": "All deterministic checks passed. Source workspace <repo>/fixtures/oracle_tasks/calculator_bug/workspace was copied into staged workspace <staged_workspace>. All edits are confined to the staged copy. Checkpoints: attempt-1@workspace, attempt-2@workspace.",
+  "started_at": "2026-04-18T00:00:00Z",
+  "ended_at": "2026-04-18T00:00:01Z"
 }

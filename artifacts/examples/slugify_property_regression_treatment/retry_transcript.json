@@ -1,5 +1,5 @@
 {
-  "run_id": "14902e92a6bc",
+  "run_id": "example-slugify-property-regression-treatment",
   "attempts": [
     {
       "attempt": 1,
@@ -29,9 +29,9 @@
             "command": "python3 -m pytest -q",
             "status": "passed",
             "exit_code": 0,
-            "stdout": ".                                                                        [100%]\n1 passed in 0.01s\n",
+            "stdout": ".                                                                        [100%]\n1 passed in 0.00s\n",
             "stderr": "",
-            "duration_seconds": 0.2711805409635417,
+            "duration_seconds": 0.22369583300314844,
             "details": {}
           },
           {
@@ -41,7 +41,7 @@
             "exit_code": 0,
             "stdout": "Listing '.'...\nListing './.pytest_cache'...\nListing './.pytest_cache/v'...\nListing './.pytest_cache/v/cache'...\nCompiling './property_checks.py'...\nCompiling './slugify.py'...\nCompiling './test_slugify.py'...\n",
             "stderr": "",
-            "duration_seconds": 0.04226670798379928,
+            "duration_seconds": 0.052706916991155595,
             "details": {}
           },
           {
@@ -145,8 +145,8 @@
                 "input": "Hello  World",
                 "message": "slugify must collapse repeated separators"
               },
-              "counterexample_artifact": "/Users/alhinai/Desktop/TRUE/artifacts/runs/a21959f231c9/counterexamples/slugify_counterexample.json",
-              "regression_test_artifact": "/Users/alhinai/Desktop/TRUE/artifacts/runs/a21959f231c9/generated_tests/test_slugify_property_regression.py"
+              "counterexample_artifact": "artifacts/examples/slugify_property_regression_treatment/counterexamples/slugify_counterexample.json",
+              "regression_test_artifact": "artifacts/examples/slugify_property_regression_treatment/generated_tests/test_slugify_property_regression.py"
             }
           },
           {
@@ -234,8 +234,8 @@
           }
         }
       },
-      "started_at": "2026-04-19T00:28:47.768985Z",
-      "ended_at": "2026-04-19T00:28:48.112276Z"
+      "started_at": "2026-04-18T00:00:00Z",
+      "ended_at": "2026-04-18T00:00:01Z"
     },
     {
       "attempt": 2,
@@ -267,7 +267,7 @@
             "exit_code": 0,
             "stdout": ".                                                                        [100%]\n1 passed in 0.00s\n",
             "stderr": "",
-            "duration_seconds": 0.166742833040189,
+            "duration_seconds": 0.20378974999766797,
             "details": {}
           },
           {
@@ -277,7 +277,7 @@
             "exit_code": 0,
             "stdout": "Listing '.'...\nListing './.pytest_cache'...\nListing './.pytest_cache/v'...\nListing './.pytest_cache/v/cache'...\nCompiling './property_checks.py'...\nCompiling './slugify.py'...\nCompiling './test_slugify.py'...\n",
             "stderr": "",
-            "duration_seconds": 0.05709295900305733,
+            "duration_seconds": 0.04984879097901285,
             "details": {}
           },
           {
@@ -460,8 +460,8 @@
           }
         }
       },
-      "started_at": "2026-04-19T00:28:47.768985Z",
-      "ended_at": "2026-04-19T00:28:48.358514Z"
+      "started_at": "2026-04-18T00:00:00Z",
+      "ended_at": "2026-04-18T00:00:01Z"
     }
   ]
 }

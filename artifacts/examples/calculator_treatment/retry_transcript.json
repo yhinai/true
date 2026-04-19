@@ -1,5 +1,5 @@
 {
-  "run_id": "81409528ee07",
+  "run_id": "example-calculator-treatment",
   "attempts": [
     {
       "attempt": 1,
@@ -31,7 +31,7 @@
             "exit_code": 1,
             "stdout": "F                                                                        [100%]\n=================================== FAILURES ===================================\n___________________________________ test_add ___________________________________\n\n    def test_add() -> None:\n>       assert add(2, 3) == 5\nE       assert -1 == 5\nE        +  where -1 = add(2, 3)\n\ntest_calculator.py:5: AssertionError\n=========================== short test summary info ============================\nFAILED test_calculator.py::test_add - assert -1 == 5\n1 failed in 0.01s\n",
             "stderr": "",
-            "duration_seconds": 0.2735297500039451,
+            "duration_seconds": 0.1989570000441745,
             "details": {}
           },
           {
@@ -41,7 +41,7 @@
             "exit_code": 0,
             "stdout": "Listing '.'...\nListing './.pytest_cache'...\nListing './.pytest_cache/v'...\nListing './.pytest_cache/v/cache'...\nCompiling './calculator.py'...\nCompiling './test_calculator.py'...\n",
             "stderr": "",
-            "duration_seconds": 0.03940204199170694,
+            "duration_seconds": 0.046199167030863464,
             "details": {}
           },
           {
@@ -219,8 +219,8 @@
           }
         }
       },
-      "started_at": "2026-04-19T00:28:47.768895Z",
-      "ended_at": "2026-04-19T00:28:48.339658Z"
+      "started_at": "2026-04-18T00:00:00Z",
+      "ended_at": "2026-04-18T00:00:01Z"
     },
     {
       "attempt": 2,
@@ -248,9 +248,9 @@
             "command": "python3 -m pytest -q",
             "status": "passed",
             "exit_code": 0,
-            "stdout": ".                                                                        [100%]\n1 passed in 0.01s\n",
+            "stdout": ".                                                                        [100%]\n1 passed in 0.00s\n",
             "stderr": "",
-            "duration_seconds": 0.2558851659996435,
+            "duration_seconds": 0.20764891698490828,
             "details": {}
           },
           {
@@ -260,7 +260,7 @@
             "exit_code": 0,
             "stdout": "Listing '.'...\nListing './.pytest_cache'...\nListing './.pytest_cache/v'...\nListing './.pytest_cache/v/cache'...\nCompiling './calculator.py'...\nCompiling './test_calculator.py'...\n",
             "stderr": "",
-            "duration_seconds": 0.044868083961773664,
+            "duration_seconds": 0.04709041700698435,
             "details": {}
           },
           {
@@ -436,8 +436,8 @@
           }
         }
       },
-      "started_at": "2026-04-19T00:28:47.768895Z",
-      "ended_at": "2026-04-19T00:28:48.645359Z"
+      "started_at": "2026-04-18T00:00:00Z",
+      "ended_at": "2026-04-18T00:00:01Z"
     }
   ]
 }

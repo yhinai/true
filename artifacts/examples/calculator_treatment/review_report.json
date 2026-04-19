@@ -3,7 +3,7 @@
     "kind": "cbc.review_report",
     "version": "2026-04-18.v1"
   },
-  "run_id": "81409528ee07",
+  "run_id": "example-calculator-treatment",
   "task_id": "calculator_bug",
   "summary": {
     "diff": {

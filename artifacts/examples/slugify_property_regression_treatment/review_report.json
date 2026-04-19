@@ -3,7 +3,7 @@
     "kind": "cbc.review_report",
     "version": "2026-04-18.v1"
   },
-  "run_id": "14902e92a6bc",
+  "run_id": "example-slugify-property-regression-treatment",
   "task_id": "slugify_property_regression",
   "summary": {
     "diff": {

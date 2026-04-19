@@ -31,6 +31,7 @@ Current implementation:
 - a seeded POC harness compares direct raw Codex against CBC baseline and treatment on a checked-in live task bank
 - headless-only product surface: CLI, FastAPI API, and checked-in artifacts/reports
 - the headless JSON contract is now frozen at `2026-04-18.v1` across run artifacts, review reports, CI reports, and benchmark comparison payloads
+- checked-in example artifacts and reports can now be deterministically regenerated with `python3 scripts/refresh_examples.py`
 - replay-backed fixtures for a reproducible smoke benchmark
 - Codex adapter wired through `codex exec --json --output-schema`
 - deterministic verification via pytest, shell oracles, bounded structural checks, and property-case checks that can emit counterexample artifacts plus generated regression tests
@@ -68,6 +69,7 @@ uv run --extra dev pytest
 PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/calculator_bug/task.yaml --controller gearbox
 python3 scripts/run_compare.py
 python3 scripts/run_controller_compare.py
+python3 scripts/refresh_examples.py
 ./scripts/run_live_codex.sh
 ./scripts/run_live_compare.sh
 ./scripts/run_poc_compare.sh --sample-size 1 --seed 42

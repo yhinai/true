@@ -90,6 +90,13 @@ Available headless API routes:
 - transient benchmark reports: `reports/benchmarks/`
 - checked-in examples: `artifacts/examples/`, `reports/examples/`
 
+## Refresh Checked-In Examples
+
+```bash
+python3 scripts/refresh_examples.py
+```
+This reruns the replay-backed demo tasks and benchmark reports, normalizes transient ids and local absolute paths, and rewrites the checked-in example bundles under `artifacts/examples/` and `reports/examples/`.
+
 ## Machine-Readable CLI Output
 
 ```bash

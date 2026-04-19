@@ -21,6 +21,7 @@
 - CrossHair and mutation lanes are now task-configurable command runners instead of hard-coded stubs, while remaining optional and non-blocking.
 - Property checks can now expand checked-in examples with bounded generated edge-case corpora before emitting counterexamples and regression artifacts.
 - The Phase 9 proof gate is now answered on a checked-in controller subset: sequential remains the default treatment controller because gearbox adds model calls without improving verified success on that subset.
+- Checked-in demo artifacts can now be regenerated through a deterministic refresh path instead of manual copy steps.
 
 ## Evidence
 
@@ -38,6 +39,7 @@
 - json CLI path: `PYTHONPATH=src python3 -m cbc.main compare --json`
 - controller json path: `PYTHONPATH=src python3 -m cbc.main controller-compare --json`
 - POC json path: `PYTHONPATH=src python3 -m cbc.main poc --json`
+- example refresh path: `python3 scripts/refresh_examples.py`
 
 ## Remaining Depth
 
@@ -49,4 +51,4 @@
 - live task specs can also pin task-specific Codex runtime knobs in checked-in config
 - the checked-in live lane is now standardized on `gpt-5.4`, `workspace-write`, `dangerously_bypass_approvals: false`, and `model_reasoning_effort="medium"`
 - the checked-in live lane intentionally leaves `profile` unset so it does not rely on a local user profile name
-- the next gap is refreshing and keeping the checked-in headless examples aligned with the frozen public contract as those payloads evolve
+- the plan phases are now implemented end to end; the remaining work is post-plan maintenance, benchmark growth, and deeper optional verification rather than missing pipeline phases

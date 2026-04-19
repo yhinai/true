@@ -1,5 +1,5 @@
 {
-  "run_id": "14902e92a6bc",
+  "run_id": "example-slugify-property-regression-treatment",
   "task_id": "slugify_property_regression",
   "title": "Fix slugify and capture a regression test from a failing property case",
   "mode": "treatment",
@@ -7,8 +7,8 @@
   "selected_candidate_id": null,
   "verdict": "VERIFIED",
   "adapter": "replay",
-  "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/a21959f231c9",
-  "workspace_dir": "/var/folders/56/k6d868zx2c755lc49bbjkt740000gn/T/cbc-workspace-9rb66bc9/workspace",
+  "artifact_dir": "artifacts/examples/slugify_property_regression_treatment",
+  "workspace_dir": "<staged_workspace>",
   "plan": {
     "summary": "Plan for slugify_property_regression: edit only the allowed files and satisfy the deterministic oracle.",
     "allowed_files": [
@@ -51,9 +51,9 @@
             "command": "python3 -m pytest -q",
             "status": "passed",
             "exit_code": 0,
-            "stdout": ".                                                                        [100%]\n1 passed in 0.01s\n",
+            "stdout": ".                                                                        [100%]\n1 passed in 0.00s\n",
             "stderr": "",
-            "duration_seconds": 0.2711805409635417,
+            "duration_seconds": 0.22369583300314844,
             "details": {}
           },
           {
@@ -63,7 +63,7 @@
             "exit_code": 0,
             "stdout": "Listing '.'...\nListing './.pytest_cache'...\nListing './.pytest_cache/v'...\nListing './.pytest_cache/v/cache'...\nCompiling './property_checks.py'...\nCompiling './slugify.py'...\nCompiling './test_slugify.py'...\n",
             "stderr": "",
-            "duration_seconds": 0.04226670798379928,
+            "duration_seconds": 0.052706916991155595,
             "details": {}
           },
           {
@@ -167,8 +167,8 @@
                 "input": "Hello  World",
                 "message": "slugify must collapse repeated separators"
               },
-              "counterexample_artifact": "/Users/alhinai/Desktop/TRUE/artifacts/runs/a21959f231c9/counterexamples/slugify_counterexample.json",
-              "regression_test_artifact": "/Users/alhinai/Desktop/TRUE/artifacts/runs/a21959f231c9/generated_tests/test_slugify_property_regression.py"
+              "counterexample_artifact": "artifacts/examples/slugify_property_regression_treatment/counterexamples/slugify_counterexample.json",
+              "regression_test_artifact": "artifacts/examples/slugify_property_regression_treatment/generated_tests/test_slugify_property_regression.py"
             }
           },
           {
@@ -256,8 +256,8 @@
           }
         }
       },
-      "started_at": "2026-04-19T00:28:47.768985Z",
-      "ended_at": "2026-04-19T00:28:48.112276Z"
+      "started_at": "2026-04-18T00:00:00Z",
+      "ended_at": "2026-04-18T00:00:01Z"
     },
     {
       "attempt": 2,
@@ -289,7 +289,7 @@
             "exit_code": 0,
             "stdout": ".                                                                        [100%]\n1 passed in 0.00s\n",
             "stderr": "",
-            "duration_seconds": 0.166742833040189,
+            "duration_seconds": 0.20378974999766797,
             "details": {}
           },
           {
@@ -299,7 +299,7 @@
             "exit_code": 0,
             "stdout": "Listing '.'...\nListing './.pytest_cache'...\nListing './.pytest_cache/v'...\nListing './.pytest_cache/v/cache'...\nCompiling './property_checks.py'...\nCompiling './slugify.py'...\nCompiling './test_slugify.py'...\n",
             "stderr": "",
-            "duration_seconds": 0.05709295900305733,
+            "duration_seconds": 0.04984879097901285,
             "details": {}
           },
           {
@@ -482,14 +482,14 @@
           }
         }
       },
-      "started_at": "2026-04-19T00:28:47.768985Z",
-      "ended_at": "2026-04-19T00:28:48.358514Z"
+      "started_at": "2026-04-18T00:00:00Z",
+      "ended_at": "2026-04-18T00:00:01Z"
     }
   ],
   "candidate_results": [],
   "unsafe_claims": 1,
   "model_calls_used": 2,
-  "final_summary": "All deterministic checks passed. Source workspace /Users/alhinai/Desktop/TRUE/fixtures/oracle_tasks/slugify_property_regression/workspace was copied into staged workspace /var/folders/56/k6d868zx2c755lc49bbjkt740000gn/T/cbc-workspace-9rb66bc9/workspace. All edits are confined to the staged copy. Checkpoints: attempt-1@workspace, attempt-2@workspace.",
-  "started_at": "2026-04-19T00:28:47.768985Z",
-  "ended_at": "2026-04-19T00:28:48.358726Z"
+  "final_summary": "All deterministic checks passed. Source workspace <repo>/fixtures/oracle_tasks/slugify_property_regression/workspace was copied into staged workspace <staged_workspace>. All edits are confined to the staged copy. Checkpoints: attempt-1@workspace, attempt-2@workspace.",
+  "started_at": "2026-04-18T00:00:00Z",
+  "ended_at": "2026-04-18T00:00:01Z"
 }

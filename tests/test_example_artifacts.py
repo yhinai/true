@@ -22,6 +22,7 @@ def test_checked_in_run_example_matches_frozen_contract() -> None:
     assert "budget_spent" in payload["controller"]
     assert "supporting_checks" in payload
     assert "policy" in payload["verification"]
+    assert "/Users/alhinai/Desktop/TRUE" not in json.dumps(payload)
 
 
 def test_checked_in_benchmark_examples_match_frozen_contract() -> None:
@@ -37,3 +38,16 @@ def test_checked_in_benchmark_examples_match_frozen_contract() -> None:
         "version": "2026-04-18.v1",
     }
     assert controller["decision"]["recommended_controller"] == "sequential"
+
+
+def test_checked_in_examples_do_not_contain_local_absolute_paths() -> None:
+    example_paths = [
+        REPO_ROOT / "artifacts/examples/calculator_treatment/run_artifact.json",
+        REPO_ROOT / "artifacts/examples/slugify_property_regression_treatment/run_artifact.json",
+        REPO_ROOT / "reports/examples/curated_benchmark/comparison.json",
+        REPO_ROOT / "reports/examples/controller_benchmark/comparison.json",
+    ]
+    for path in example_paths:
+        payload = path.read_text(encoding="utf-8")
+        assert "/Users/alhinai/Desktop/TRUE" not in payload
+        assert "/var/folders/" not in payload

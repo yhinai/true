@@ -31,6 +31,7 @@ Codex is the proposal engine, not the source of trust. Trust comes from determin
 - Review shell: `src/cbc/review`
 - Headless-only contract: no IDE or editor-integration surface
 - Frozen headless payload version: `2026-04-18.v1`
+- Example refresh helper: `scripts/refresh_examples.py`
 
 ## Artifact Contract
 
@@ -52,6 +53,8 @@ Each benchmark comparison saves:
 - `scoreboard.png` when matplotlib is installed, otherwise a text note
 - controller proof comparisons also save `comparison.json` and `comparison.md`, with a persisted decision about whether gearbox should remain opt-in or become default
 
+Checked-in examples are refreshed through a deterministic replay-backed export path that normalizes transient ids, timestamps, and local absolute paths before writing under `artifacts/examples/` and `reports/examples/`.
+
 ## Phase Coverage
 
 - Phase 0: repo skeleton, README, adapter entry points
@@ -63,3 +66,4 @@ Each benchmark comparison saves:
 - Phase 9: bounded gearbox mode with sequential fallback, plus a checked-in proof benchmark that currently keeps sequential as the default controller
 - Phase 10: headless CLI/API/artifact completion with a frozen payload contract and refreshed example artifacts
 - live Codex execution is wired through a checked-in `adapter: codex` task spec
+- The roadmap phases are implemented; further work is post-plan hardening and benchmark growth rather than missing core pipeline phases
