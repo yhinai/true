@@ -128,7 +128,54 @@ def _mark_error(conn, row_id: int, message: str) -> None:
     conn.commit()
 
 
+def _reap_stuck(conn, *, stuck_minutes: int = 60, dry_run: bool = False) -> int:
+    """Requeue ``running`` rows whose workflow likely crashed mid-flight.
+
+    A remediation cycle tops out around 60 min of GHA wall time. Anything
+    still ``running`` past that window is almost certainly a dead row; flip
+    it back to ``queued`` so the next drain picks it up. Idempotent.
+    """
+    with conn.cursor() as cur:
+        if dry_run:
+            cur.execute(
+                """
+                select id, run_id
+                from cbc_remediations
+                where status = 'running'
+                  and started_at is not null
+                  and started_at < now() - make_interval(mins => %s)
+                """,
+                (stuck_minutes,),
+            )
+            stuck = cur.fetchall()
+            for row_id, run_id in stuck:
+                print(f"would reap id={row_id} run_id={run_id}")
+            return len(stuck)
+        cur.execute(
+            """
+            update cbc_remediations
+            set status = 'queued',
+                started_at = null,
+                error = coalesce(error || '; ', '') ||
+                        'reaped after ' || %s || 'min stuck in running'
+            where status = 'running'
+              and started_at is not null
+              and started_at < now() - make_interval(mins => %s)
+            returning id, run_id
+            """,
+            (stuck_minutes, stuck_minutes),
+        )
+        reaped = cur.fetchall()
+    conn.commit()
+    for row_id, run_id in reaped:
+        print(f"reaped stuck row id={row_id} run_id={run_id}")
+    return len(reaped)
+
+
 def _drain_once(conn, *, dry_run: bool, repo: str, workflow: str, ref: str, token: str) -> int:
+    # Reap first so anything crashed mid-flight flows back into the queue
+    # we're about to drain.
+    _reap_stuck(conn, dry_run=dry_run)
     rows = _fetch_queued(conn)
     if dry_run:
         print(f"would dispatch {len(rows)}")
