@@ -8,9 +8,14 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.head_ref || github.ref }}
+          fetch-depth: 0
 
       - name: Setup uv
         uses: astral-sh/setup-uv@v8.1.0
@@ -32,5 +37,20 @@ jobs:
       - name: Refresh checked-in examples
         run: uv run --extra dev python3 scripts/refresh_examples.py >/tmp/cbc-refresh.json
 
-      - name: Check contract snapshots are clean
+      - name: Auto-commit refreshed snapshots on PR branches
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          if ! git diff --quiet -- artifacts/examples reports/examples; then
+            git config user.name  "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add artifacts/examples reports/examples
+            git commit -m "chore: refresh example snapshots"
+            git push origin HEAD:${{ github.head_ref }}
+            echo "Pushed refreshed snapshots; CI will re-run on the new commit."
+          else
+            echo "Snapshots are clean."
+          fi
+
+      - name: Fail on unclean snapshots (main & forks)
+        if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
         run: git diff --exit-code -- artifacts/examples reports/examples
