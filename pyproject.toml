@@ -44,3 +44,6 @@ where = ["src"]
 testpaths = ["tests"]
 pythonpath = ["src"]
 asyncio_mode = "strict"
+markers = [
+    "slow: opt-in integration tests (not run by default)",
+]
