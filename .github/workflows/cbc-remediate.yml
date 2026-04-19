@@ -121,8 +121,18 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p /tmp/cbc
+          # Resolve workspace: fixture tasks keep their tree under
+          # <task_dir>/workspace; fall back to repo root when a task
+          # declares workspace: . (whole-repo remediation).
+          TASK_DIR=$(dirname "$TASK_PATH")
+          if [ -d "$GITHUB_WORKSPACE/$TASK_DIR/workspace" ]; then
+            WS="$GITHUB_WORKSPACE/$TASK_DIR/workspace"
+          else
+            WS="$GITHUB_WORKSPACE"
+          fi
+          echo "workspace-in-place: $WS"
           uv run cbc run "$TASK_PATH" \
-            --workspace-in-place "$GITHUB_WORKSPACE" \
+            --workspace-in-place "$WS" \
             --agent=codex --allow-dangerous-codex \
             --controller=gearbox \
             --mode=treatment \
