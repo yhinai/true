@@ -6,6 +6,94 @@ on:
   pull_request:
 
 jobs:
+  scoped-test:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v8.1.0
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.11" }
+      - name: Install
+        run: uv sync --extra dev
+      - name: Detect changed paths
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            controller:
+              - 'src/cbc/controller/**'
+              - 'src/cbc/models.py'
+            workspace:
+              - 'src/cbc/workspace/**'
+            model_adapters:
+              - 'src/cbc/model/**'
+            verify:
+              - 'src/cbc/verify/**'
+            prompts:
+              - 'src/cbc/prompts/**'
+            storage:
+              - 'src/cbc/storage/**'
+            api:
+              - 'src/cbc/api/**'
+            main:
+              - 'src/cbc/main.py'
+            scripts:
+              - 'scripts/**'
+            workflows:
+              - '.github/workflows/**'
+
+      - name: Run controller tests
+        if: steps.changes.outputs.controller == 'true'
+        run: uv run --extra dev pytest tests/controller/ -q -m 'not slow'
+
+      - name: Run workspace tests
+        if: steps.changes.outputs.workspace == 'true'
+        run: uv run --extra dev pytest tests/workspace/ -q -m 'not slow'
+
+      - name: Run model adapter tests
+        if: steps.changes.outputs.model_adapters == 'true'
+        run: uv run --extra dev pytest tests/ -q -m 'not slow' -k 'model or codex or adapter'
+
+      - name: Run verify tests
+        if: steps.changes.outputs.verify == 'true'
+        run: uv run --extra dev pytest tests/ -q -m 'not slow' -k 'verify or verification'
+
+      - name: Run prompts tests
+        if: steps.changes.outputs.prompts == 'true'
+        run: uv run --extra dev pytest tests/prompts/ -q -m 'not slow'
+
+      - name: Run storage tests
+        if: steps.changes.outputs.storage == 'true'
+        run: uv run --extra dev pytest tests/storage/ -q -m 'not slow'
+
+      - name: Run API tests
+        if: steps.changes.outputs.api == 'true'
+        run: uv run --extra dev pytest tests/ -q -m 'not slow' -k 'api'
+
+      - name: Run main CLI tests
+        if: steps.changes.outputs.main == 'true'
+        run: uv run --extra dev pytest tests/test_main_run_flag.py tests/test_cli_json_output.py -q -m 'not slow'
+
+      - name: Run dynamic auto tests (always)
+        run: uv run --extra dev pytest tests/auto/ -q -m 'not slow'
+
+  validate-workflows:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with: { python-version: "3.11" }
+      - name: Install PyYAML
+        run: pip install pyyaml
+      - name: Validate all workflow YAMLs parse
+        run: |
+          for f in .github/workflows/*.yml; do
+            echo "-> $f"
+            python -c "import yaml, sys; yaml.safe_load(open('$f')); print('  OK')"
+          done
+
   test:
     runs-on: ubuntu-latest
     permissions:

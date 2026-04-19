@@ -189,14 +189,6 @@ Same end result; used from CI jobs or automation that doesn't invoke git hooks.
 
 Fully hands-off. No human action unless a regression fires.
 
-### LLM PR reviewer (advisory)
-
-`.github/workflows/llm-pr-reviewer.yml` runs on every PR event against the same-repo
-branches. It sends the git diff (excluding `artifacts/`, `reports/`, `*.json`, `uv.lock`)
-to `gpt-4o-mini` with a strict high-signal prompt, then posts a single review comment
-with a verdict + findings. It is **non-blocking** — auto-merge still depends on `test`
-check. Gated on `OPENAI_API_KEY` secret; skips cleanly if unset.
-
 ### Dynamic test surface
 
 `tests/auto/` contains parametrized tests that auto-discover the current
@@ -223,3 +215,37 @@ OpenAI (gpt-4o-mini). Steps:
 
 Gated on `OPENAI_API_KEY` repo secret being set. If absent, the job skips cleanly.
 Never commit or log the key.
+### Daily regression detection
+
+`.github/workflows/daily-benchmark.yml` fires at 06:00 UTC every day and on-demand:
+
+1. Runs `run_compare.sh` + `run_controller_compare.sh`
+2. Compares JSON results vs checked-in baselines in `reports/examples/*/comparison.json`
+3. If `delta_verified_success_rate` dropped > 5pp or any task flipped VERIFIED → non-VERIFIED,
+   opens a GitHub issue with label `regression,automated`
+4. Otherwise exits clean
+
+Fully hands-off. No human action unless a regression fires.
+
+### LLM PR reviewer (advisory)
+
+`.github/workflows/llm-pr-reviewer.yml` runs on every PR event against the same-repo
+branches. It sends the git diff (excluding `artifacts/`, `reports/`, `*.json`, `uv.lock`)
+to `gpt-4o-mini` with a strict high-signal prompt, then posts a single review comment
+with a verdict + findings. It is **non-blocking** — auto-merge still depends on `test`
+check. Gated on `OPENAI_API_KEY` secret; skips cleanly if unset.
+
+### Scoped CI (dynamic per-change)
+`.github/workflows/ci.yml` has a `scoped-test` job that uses `dorny/paths-filter` to
+detect which module groups changed on a PR and runs only the relevant test subtrees
+first. The full `test` job still runs — scoped is additive, not replacement. Gives
+faster feedback on small changes without weakening the coverage gate.
+On pushes to `main`, scoped is skipped; main always runs the full suite.
+### Test scaffold generator
+
+```bash
+python3 scripts/gen_test_scaffold.py src/cbc/foo/new_module.py
+# → writes tests/foo/test_new_module.py with a minimal import assertion
+```
+
+Idempotent; skips if the test file already exists. Useful when an agent adds a new module.
