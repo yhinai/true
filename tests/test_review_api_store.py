@@ -11,8 +11,8 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from cbc.api.routes import benchmark_payload, benchmarks_payload, run_payload, runs_payload
-from cbc.api.store import get_benchmark, get_run, list_benchmarks, list_runs
+from cbc.api.routes import benchmark_payload, benchmarks_payload, run_payload, runs_payload  # noqa: E402
+from cbc.api.store import get_benchmark, get_run, list_benchmarks, list_runs  # noqa: E402
 
 
 class ApiStoreTests(unittest.TestCase):

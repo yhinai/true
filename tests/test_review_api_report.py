@@ -9,7 +9,7 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from cbc.review.report import compose_review_report
+from cbc.review.report import compose_review_report  # noqa: E402
 
 
 class ReviewReportTests(unittest.TestCase):

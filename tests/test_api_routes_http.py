@@ -10,7 +10,7 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from cbc.api.app import create_app
+from cbc.api.app import create_app  # noqa: E402
 
 
 def test_http_routes_use_payload_helpers(monkeypatch) -> None:

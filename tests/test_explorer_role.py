@@ -8,8 +8,8 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from cbc.intake.normalize import load_task
-from cbc.roles.explorer import build_explorer_artifact
+from cbc.intake.normalize import load_task  # noqa: E402
+from cbc.roles.explorer import build_explorer_artifact  # noqa: E402
 
 
 def test_explorer_identifies_targets_tests_and_related_files() -> None:

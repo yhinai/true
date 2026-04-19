@@ -10,12 +10,12 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from cbc.models import CheckResult, CheckStatus, HypothesisCheckSpec, OracleSpec, TaskSpec
-from cbc.graph.mismatch import detect_bounded_signature_mismatches
-from cbc.verify.contract_ir import build_contract_graph
-from cbc.verify.contracts import inspect_contracts
-from cbc.verify.core import verify_workspace
-from cbc.verify.hypothesis_runner import expand_property_cases, render_regression_test, run_property_cases
+from cbc.models import CheckResult, CheckStatus, HypothesisCheckSpec, OracleSpec, TaskSpec  # noqa: E402
+from cbc.graph.mismatch import detect_bounded_signature_mismatches  # noqa: E402
+from cbc.verify.contract_ir import build_contract_graph  # noqa: E402
+from cbc.verify.contracts import inspect_contracts  # noqa: E402
+from cbc.verify.core import verify_workspace  # noqa: E402
+from cbc.verify.hypothesis_runner import expand_property_cases, render_regression_test, run_property_cases  # noqa: E402
 
 
 def test_bounded_signature_reasoning_catches_mismatch() -> None:

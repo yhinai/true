@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
-from cbc.models import ReviewReport, RunLedger
+from cbc.models import RunLedger
 
 
 def build_risk_summary(ledger: RunLedger) -> list[str]:
