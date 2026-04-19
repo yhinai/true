@@ -177,6 +177,32 @@ Same end result; used from CI jobs or automation that doesn't invoke git hooks.
 - **Auto-rebase:** `.github/workflows/auto-update-prs.yml` fires on every push to `main` and rebases any open PR that became `BEHIND`. No manual intervention.
 - **Auto-resolve:** `.github/workflows/auto-resolve-conflicts.yml` runs every 10 minutes (and on-demand) against `DIRTY` PRs. Safe classes (`artifacts/examples/**`, `reports/**`, `docs/**/*.md`) are auto-resolved with `-X theirs`; anything else is labeled `conflict-needs-review` and left for a human.
 
+### Dynamic test surface
+
+`tests/auto/` contains parametrized tests that auto-discover the current
+feature surface at collection time. When you add:
+
+- a new Typer subcommand → `test_cli_subcommands.py` auto-smokes it
+- a new `VerificationVerdict` enum value → `test_verdicts_routable.py` auto-checks routing
+- a new `fixtures/oracle_tasks/<name>/` → `test_oracle_tasks_parsable.py` auto-validates it
+- a new `benchmark-configs/*.yaml` → `test_benchmark_configs.py` auto-validates it
+
+No test-file edits needed. CI coverage expands automatically with the feature surface.
+
+### LLM-powered conflict resolution (optional)
+
+When the safe-class auto-resolver labels a PR `conflict-needs-review`, a 15-minute
+cron job at `.github/workflows/llm-conflict-resolver.yml` tries to resolve it via
+OpenAI (gpt-4o-mini). Steps:
+
+1. For each conflicted file, send the common ancestor + both sides to OpenAI
+2. Write the proposed merge
+3. **Run the full fast test suite as a gate**
+4. If tests pass -> push + label `resolver-succeeded`
+5. If tests fail -> label `resolver-failed` (human review)
+
+Gated on `OPENAI_API_KEY` repo secret being set. If absent, the job skips cleanly.
+Never commit or log the key.
 ### Daily regression detection
 
 `.github/workflows/daily-benchmark.yml` fires at 06:00 UTC every day and on-demand:
@@ -197,27 +223,12 @@ to `gpt-4o-mini` with a strict high-signal prompt, then posts a single review co
 with a verdict + findings. It is **non-blocking** — auto-merge still depends on `test`
 check. Gated on `OPENAI_API_KEY` secret; skips cleanly if unset.
 
-### Dynamic test surface
-
-`tests/auto/` contains parametrized tests that auto-discover the current
-feature surface at collection time. When you add:
-
-- a new Typer subcommand → `test_cli_subcommands.py` auto-smokes it
-- a new `VerificationVerdict` enum value → `test_verdicts_routable.py` auto-checks routing
-- a new `fixtures/oracle_tasks/<name>/` → `test_oracle_tasks_parsable.py` auto-validates it
-- a new `benchmark-configs/*.yaml` → `test_benchmark_configs.py` auto-validates it
-
-No test-file edits needed. CI coverage expands automatically with the feature surface.
-
 ### Scoped CI (dynamic per-change)
-
 `.github/workflows/ci.yml` has a `scoped-test` job that uses `dorny/paths-filter` to
 detect which module groups changed on a PR and runs only the relevant test subtrees
 first. The full `test` job still runs — scoped is additive, not replacement. Gives
 faster feedback on small changes without weakening the coverage gate.
-
 On pushes to `main`, scoped is skipped; main always runs the full suite.
-
 ### Test scaffold generator
 
 ```bash
