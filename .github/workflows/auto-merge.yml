@@ -17,10 +17,14 @@ jobs:
       - name: Enable auto-merge on PR
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          OWNER: ${{ github.repository_owner }}
         run: |
-          # List open PRs from this repo (same-repo only; skip forks for safety)
-          PRS=$(gh pr list --state open --base main --json number,headRepositoryOwner,author \
-                  --jq '.[] | select(.headRepositoryOwner.login == "${{ github.repository_owner }}") | .number')
+          # List open PRs from this repo (same-repo only; skip forks for safety).
+          # Pass --repo explicitly so we don't need a local checkout.
+          PRS=$(gh pr list --repo "$REPO" --state open --base main \
+                  --json number,headRepositoryOwner \
+                  --jq ".[] | select(.headRepositoryOwner.login == \"$OWNER\") | .number")
           for PR in $PRS; do
-            gh pr merge --auto --squash "$PR" || true
+            gh pr merge --repo "$REPO" --auto --squash "$PR" || true
           done
