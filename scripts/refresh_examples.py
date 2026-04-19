@@ -11,7 +11,7 @@ SRC_ROOT = REPO_ROOT / "src"
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
-from cbc.examples_refresh import refresh_examples
+from cbc.examples_refresh import refresh_examples  # noqa: E402
 
 
 def main() -> int:
