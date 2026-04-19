@@ -126,7 +126,7 @@ ConTree mode (`--sandbox=contree`) requires the `contree` extra (`uv sync --extr
 
 ## PR-gated Workflow
 
-Direct pushes to `main` are discouraged. All changes should go through a feature branch + PR with CI-gated auto-merge — no human review required (yet).
+You keep typing `git push origin main` as normal. Under the hood, a local pre-push hook reroutes the push through a feature branch + PR with CI-gated auto-merge — no extra steps.
 
 ### One-time install (per clone)
 
@@ -134,16 +134,21 @@ Direct pushes to `main` are discouraged. All changes should go through a feature
 ln -sf ../../scripts/git-hooks/pre-push .git/hooks/pre-push
 ```
 
-This installs the local `pre-push` hook that refuses direct pushes to `origin/main`.
+After install, `git push origin main` will:
 
-### Shipping a change
+1. Create `pr/auto-YYYYmmdd-HHMMSS` at the commit you intended to push
+2. Push that branch to origin
+3. Open a PR against `main`
+4. Arm auto-merge (`gh pr merge --auto --squash`)
+5. Print a summary
+6. Hard-stop the direct push (so your local `main` doesn't race ahead)
 
-```bash
-# Commit locally (pre-commit hook still runs), then:
-scripts/push-via-pr.sh [optional-slug]
-```
+The commits land on `main` automatically once CI passes. You do nothing.
 
-The helper creates a timestamped `pr/<slug>` branch, pushes it, opens a PR, and calls `gh pr merge --auto --squash`. The PR merges itself once CI is green.
+### Requirements
+
+- `gh` CLI authenticated (`gh auth login`)
+- The repository has branch protection configured so that a failing CI blocks the merge. Auto-merge without required checks merges immediately.
 
 ### Emergency override
 
@@ -153,6 +158,16 @@ ALLOW_DIRECT_MAIN_PUSH=1 git push origin main
 
 Only use this when the PR-gated path is itself broken (e.g. GitHub outage, CI infrastructure failure). Not for "I'm in a hurry."
 
-### Server-side auto-merge
+### Explicit helper (optional)
 
-`.github/workflows/auto-merge.yml` re-arms `--auto --squash` on every open same-repo PR whenever a PR event fires or a check suite completes successfully. Combined with the client-side `gh pr merge --auto` from `push-via-pr.sh`, this ensures auto-merge stays enabled even if the first call happened before required checks were registered.
+If you want to script the reroute without relying on the hook:
+
+```bash
+scripts/push-via-pr.sh [optional-slug]
+```
+
+Same end result; used from CI jobs or automation that doesn't invoke git hooks.
+
+### Server-side belt-and-suspenders
+
+`.github/workflows/auto-merge.yml` re-arms `--auto --squash` on every open same-repo PR whenever a PR event fires or a check suite completes successfully. This ensures auto-merge stays enabled even if the client-side `gh pr merge --auto` call happened before required checks were registered.

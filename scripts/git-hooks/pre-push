@@ -1,18 +1,82 @@
 #!/usr/bin/env bash
-# scripts/git-hooks/pre-push — refuse direct push to main; suggest push-via-pr.sh instead.
-# Install:   ln -sf ../../scripts/git-hooks/pre-push .git/hooks/pre-push
-protected_branch="main"
-remote="$1"
+# scripts/git-hooks/pre-push
+#
+# Intercepts `git push origin main` and reroutes via a feature branch + PR
+# with auto-merge enabled. The user's direct push fails (exit 1), but their
+# commits land on main via CI-gated auto-merge within minutes.
+#
+# Emergency escape hatch: ALLOW_DIRECT_MAIN_PUSH=1 git push origin main
+#
+# Install (once per clone): ln -sf ../../scripts/git-hooks/pre-push .git/hooks/pre-push
+#
+set -euo pipefail
 
+protected_branch="main"
+remote="${1:-origin}"
+
+# Emergency override
+if [[ "${ALLOW_DIRECT_MAIN_PUSH:-0}" == "1" ]]; then
+    exit 0
+fi
+
+# Parse stdin for the refs being pushed
+direct_main_sha=""
 while read -r local_ref local_sha remote_ref remote_sha; do
     if [[ "$remote_ref" == "refs/heads/$protected_branch" ]]; then
-        if [[ "${ALLOW_DIRECT_MAIN_PUSH:-0}" == "1" ]]; then
-            exit 0
-        fi
-        echo "Refusing direct push to $protected_branch." >&2
-        echo "Run: scripts/push-via-pr.sh [branch-slug]" >&2
-        echo "Or override: ALLOW_DIRECT_MAIN_PUSH=1 git push origin main" >&2
-        exit 1
+        direct_main_sha="$local_sha"
     fi
 done
-exit 0
+
+# Not pushing to main - let it through
+if [[ -z "$direct_main_sha" ]]; then
+    exit 0
+fi
+
+# Pushing a deletion? Let it through
+if [[ "$direct_main_sha" == "0000000000000000000000000000000000000000" ]]; then
+    exit 0
+fi
+
+# gh CLI required for reroute
+if ! command -v gh >/dev/null 2>&1; then
+    echo "pre-push: gh CLI not found; cannot reroute to PR." >&2
+    echo "Install gh or set ALLOW_DIRECT_MAIN_PUSH=1 to bypass." >&2
+    exit 1
+fi
+
+BRANCH="pr/auto-$(date +%Y%m%d-%H%M%S)"
+
+echo "" >&2
+echo "────────────────────────────────────────────────────────────" >&2
+echo "  Direct push to $protected_branch intercepted." >&2
+echo "  Rerouting through PR: $BRANCH" >&2
+echo "────────────────────────────────────────────────────────────" >&2
+
+# Create the branch at the commit the user intended to push
+git branch "$BRANCH" "$direct_main_sha"
+
+# Push the new branch; bypass our own hook to avoid recursion
+ALLOW_DIRECT_MAIN_PUSH=1 git push -u "$remote" "$BRANCH" >&2
+
+# Build PR title (last commit subject) and body (all commits ahead of main)
+title=$(git log -1 --pretty=format:'%s' "$direct_main_sha")
+body=$(git log "$remote/$protected_branch..$direct_main_sha" --pretty=format:'- %s' --reverse)
+if [[ -z "$body" ]]; then
+    body="(empty - rebase-on-remote push)"
+fi
+
+# Open the PR
+gh pr create --base "$protected_branch" --head "$BRANCH" --title "$title" --body "$body" >&2
+
+# Arm auto-merge (squash). Server-side auto-merge.yml re-arms if this fails.
+gh pr merge --auto --squash "$BRANCH" >&2 || true
+
+echo "" >&2
+echo "✓ PR opened and auto-merge armed." >&2
+echo "  Your commits will land on $protected_branch once CI passes." >&2
+echo "  This direct push is now blocked (intentional) so you're not ahead" >&2
+echo "  of the protected branch locally." >&2
+echo "" >&2
+
+# Hard-stop the direct push so local main doesn't race ahead of origin/main
+exit 1
