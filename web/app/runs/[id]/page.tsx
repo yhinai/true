@@ -138,7 +138,6 @@ export default function RunDetailPage({ params }: { params: Promise<{ id: string
             <Meta label="Task" value={fallback?.task_id} />
             <Meta label="Mode" value={fallback?.summary?.merge_gate?.verdict ? "review snapshot" : "—"} />
             <Meta label="Controller" value="—" />
-            <Meta label="Adapter" value="—" />
             <Meta label="Attempts" value="—" />
             <Meta label="Unsafe claims" value={String(fallback?.summary?.verification?.unsafe_claims ?? "—")} />
             <Meta label="Model calls" value="—" />
@@ -208,7 +207,6 @@ export default function RunDetailPage({ params }: { params: Promise<{ id: string
             <Meta label="Task" value={ledger.task_id} />
             <Meta label="Mode" value={ledger.mode} />
             <Meta label="Controller" value={ledger.controller_mode} />
-            <Meta label="Adapter" value={ledger.adapter} />
             <Meta label="Attempts" value={String(attempts.length)} />
             <Meta label="Unsafe claims" value={String(ledger.unsafe_claims ?? 0)} />
             <Meta label="Model calls" value={String(ledger.model_calls_used ?? 0)} />
