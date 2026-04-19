@@ -64,3 +64,5 @@
 - the replay benchmark bank now includes additional text, JSON, and shell fixtures beyond the smoke subset, but benchmark growth is still an open area for future expansion
 
 <!-- verify App token flow -->
+
+<!-- demo push 2026-04-19T21:06:00Z -->
