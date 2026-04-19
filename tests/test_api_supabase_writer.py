@@ -42,17 +42,26 @@ def test_mirror_run_ledger_noop_without_creds(monkeypatch) -> None:
 def test_mirror_run_ledger_calls_post_when_configured(monkeypatch) -> None:
     monkeypatch.setenv("SUPABASE_URL", "https://example.supabase.co")
     monkeypatch.setenv("SUPABASE_SERVICE_ROLE_KEY", "k")
-    called = {}
+    calls: list[dict[str, object]] = []
 
     def fake_post(url, key, path, body, *, upsert):
-        called.update(url=url, key=key, path=path, body=body, upsert=upsert)
+        calls.append({"path": path, "body": body, "upsert": upsert})
 
     monkeypatch.setattr(sw, "_post", fake_post)
     ok = sw.mirror_run_ledger({"run_id": "abc", "verdict": "VERIFIED"})
     assert ok is True
-    assert called["path"] == "cbc_runs"
-    assert called["upsert"] is True
-    assert called["body"][0]["run_id"] == "abc"
+    # First call writes the run itself
+    assert calls[0]["path"] == "cbc_runs"
+    assert calls[0]["upsert"] is True
+    assert calls[0]["body"][0]["run_id"] == "abc"
+    # Follow-up fans events into cbc_run_events (best-effort; never-upsert)
+    event_calls = [c for c in calls if c["path"] == "cbc_run_events"]
+    assert len(event_calls) == 1
+    assert event_calls[0]["upsert"] is False
+    # At minimum we emit run_started + run_verdict
+    kinds = [row["kind"] for row in event_calls[0]["body"]]
+    assert "run_started" in kinds
+    assert "run_verdict" in kinds
 
 
 def test_mirror_run_ledger_path_reads_file(tmp_path: Path, monkeypatch) -> None:
