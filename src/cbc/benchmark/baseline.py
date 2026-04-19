@@ -66,7 +66,7 @@ def run_baseline_suite(
                         f"# Proof Card: {task.task_id}",
                         "",
                         f"- Verdict: `{'PASS' if result.verified else 'FAIL'}`",
-                        f"- Mode: `baseline`",
+                        "- Mode: `baseline`",
                         f"- Attempts: `{result.attempt_count}`",
                         f"- Unsafe claim: `{result.unsafe_claim}`",
                         "",

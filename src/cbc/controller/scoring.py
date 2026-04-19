@@ -1,7 +1,10 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
+from pathlib import Path
 from typing import Any
+
+import yaml
 
 from cbc.models import CandidateResult, CandidateScore, VerificationReport, VerificationVerdict
 
@@ -51,6 +54,14 @@ class CheckWeights:
     changed_file_penalty: float = 1e3
     # Tier 5: smaller diff wins when tiers 1-4 are tied.
     diff_line_penalty: float = 1.0
+
+    @classmethod
+    def from_yaml(cls, path: Path) -> "CheckWeights":
+        """Load weights from a YAML file, filling unspecified fields with defaults."""
+        raw = yaml.safe_load(Path(path).read_text()) or {}
+        known = {f.name for f in fields(cls)}
+        filtered = {k: float(v) for k, v in raw.items() if k in known}
+        return cls(**filtered)
 
 
 class CandidateScoringEngine:

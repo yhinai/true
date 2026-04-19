@@ -67,7 +67,7 @@ def run_treatment_suite(
                         f"# Proof Card: {task.task_id}",
                         "",
                         f"- Verdict: `{'PASS' if result.verified else 'FAIL'}`",
-                        f"- Mode: `treatment`",
+                        "- Mode: `treatment`",
                         f"- Attempts: `{result.attempt_count}`",
                         f"- Unsafe claim: `{result.unsafe_claim}`",
                         "",

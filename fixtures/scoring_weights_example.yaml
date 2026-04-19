@@ -1,0 +1,8 @@
+# Sample CandidateScoringEngine weights override.
+# Any omitted field falls back to the default in CheckWeights.
+# Pass with: cbc run <task> --scoring-weights fixtures/scoring_weights_example.yaml
+verified_bonus: 1e12
+passed_check_weight: 1e9
+unsafe_claim_penalty: 1e7
+changed_file_penalty: 1e3
+diff_line_penalty: 1.0
