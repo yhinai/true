@@ -30,7 +30,7 @@ jobs:
         run: ./scripts/run_compare.sh --json >/tmp/cbc-compare.json
 
       - name: Refresh checked-in examples
-        run: python3 scripts/refresh_examples.py >/tmp/cbc-refresh.json
+        run: uv run --extra dev python3 scripts/refresh_examples.py >/tmp/cbc-refresh.json
 
       - name: Check contract snapshots are clean
         run: git diff --exit-code -- artifacts/examples reports/examples
