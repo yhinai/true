@@ -47,11 +47,22 @@ class CodexConfig(BaseModel):
     completion_token_cost_per_1k: float | None = None
 
 
+class GeminiConfig(BaseModel):
+    default_model: str = "gemini-3.1-pro-preview"
+    api_key_env: str = "GEMINI_API_KEY"
+    timeout_seconds: int = 300
+    temperature: float = 0.0
+    max_output_tokens: int | None = None
+    prompt_token_cost_per_1k: float | None = None
+    completion_token_cost_per_1k: float | None = None
+
+
 class AppConfig(BaseModel):
     paths: PathsConfig = Field(default_factory=PathsConfig)
     retry: RetryConfig = Field(default_factory=RetryConfig)
     controller: ControllerConfig = Field(default_factory=ControllerConfig)
     codex: CodexConfig = Field(default_factory=CodexConfig)
+    gemini: GeminiConfig = Field(default_factory=GeminiConfig)
 
 
 DEFAULT_CONFIG = AppConfig()
