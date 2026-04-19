@@ -59,6 +59,17 @@ jobs:
       - name: Install project with gemini extra
         run: uv sync --extra gemini --extra dev
 
+      - name: Setup Node (for gemini CLI)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Gemini CLI
+        run: |
+          set -e
+          npm install -g @google/gemini-cli
+          gemini --version || echo "::warning::gemini CLI not reporting version"
+
       - name: Configure git identity
         run: |
           git config user.name  "github-actions[bot]"
@@ -94,37 +105,66 @@ jobs:
             -d "$(jq -nc --arg now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" '{status:"running", started_at:$now}')" \
             || echo "::warning::Supabase status=running patch failed (non-fatal)"
 
-      - name: Run CBC remediation
+      - name: Run autonomous Gemini CLI (YOLO) + verify
         id: cbc
         continue-on-error: true
         run: |
           set -o pipefail
           mkdir -p /tmp/cbc
-          # Resolve workspace: fixture tasks keep their tree under
-          # <task_dir>/workspace; fall back to repo root when a task
-          # declares workspace: . (whole-repo remediation).
           TASK_DIR=$(dirname "$TASK_PATH")
           if [ -d "$GITHUB_WORKSPACE/$TASK_DIR/workspace" ]; then
             WS="$GITHUB_WORKSPACE/$TASK_DIR/workspace"
           else
             WS="$GITHUB_WORKSPACE"
           fi
-          echo "workspace-in-place: $WS"
-          # Note: retry_budget is a task YAML field, not a CLI flag.
-          # The workflow's RETRY_BUDGET input is reported in the Supabase
-          # status row for display, but cbc picks up the value from the
-          # task spec directly.
+          echo "workspace: $WS"
+
+          # Pull the task prompt + allowed files from the YAML.
+          PROMPT=$(uv run python - <<EOF
+          import yaml, sys, json
+          spec = yaml.safe_load(open("$TASK_PATH"))
+          allowed = spec.get("allowed_files") or []
+          req = spec.get("required_checks") or []
+          prompt_text = spec.get("prompt") or spec.get("title") or ""
+          print(f"""{prompt_text}
+
+          Allowed files to edit: {', '.join(allowed) if allowed else '(any)'}
+          Required checks that must pass afterwards: {', '.join(req)}
+
+          Edit the code in the current working directory directly. When done,
+          do not ask for confirmation. Do not print the plan — make the edits.""")
+          EOF
+          )
+
+          echo "--- invoking gemini CLI in YOLO / non-interactive mode ---"
+          # -y / --yolo: accept every tool call without confirmation
+          # -p / --prompt: one-shot non-interactive (no TTY required)
+          # --all-files: give the agent full workspace context
+          # Model override: the frontier Pro preview for autonomous edits.
+          cd "$WS"
+          gemini \
+            -y \
+            --all-files \
+            --model "gemini-3.1-pro-preview" \
+            -p "$PROMPT" \
+            2>/tmp/cbc/gemini.log \
+            | tee /tmp/cbc/gemini.out || echo "::warning::gemini CLI returned non-zero"
+          cd "$GITHUB_WORKSPACE"
+
+          echo "--- what did YOLO change? ---"
+          git -C "$WS" diff --stat 2>/dev/null || true
+          git diff --stat 2>/dev/null || true
+
+          echo "--- CBC verifier over the YOLO-modified workspace ---"
+          # CBC 'review' mode runs oracles on the workspace without generating;
+          # this is the verification-first gate on top of YOLO.
           uv run cbc run "$TASK_PATH" \
             --workspace-in-place "$WS" \
-            --agent=gemini \
-            --controller=gearbox \
-            --mode=treatment \
+            --mode=review \
             --json \
             >/tmp/cbc/result.json \
-            2>/tmp/cbc/stderr.log
+            2>>/tmp/cbc/stderr.log
           echo "cbc_exit=$?" >> "$GITHUB_OUTPUT"
-          echo "--- stderr tail ---"
-          tail -n 200 /tmp/cbc/stderr.log || true
           echo "--- result.json ---"
           cat /tmp/cbc/result.json || true
 
