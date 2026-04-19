@@ -82,16 +82,22 @@ class GeminiAdapter(ModelAdapter):
                 failure_reason=failure_reason,
             )
 
-        try:
-            from google.genai import types  # type: ignore[import-not-found]
+        gen_config_kwargs: dict[str, Any] = {
+            "response_mime_type": "application/json",
+            "temperature": self.config.temperature,
+        }
+        if self.config.max_output_tokens is not None:
+            gen_config_kwargs["max_output_tokens"] = self.config.max_output_tokens
 
-            gen_config_kwargs: dict[str, Any] = {
-                "response_mime_type": "application/json",
-                "temperature": self.config.temperature,
-            }
-            if self.config.max_output_tokens is not None:
-                gen_config_kwargs["max_output_tokens"] = self.config.max_output_tokens
-            gen_config = types.GenerateContentConfig(**gen_config_kwargs)
+        try:
+            try:
+                from google.genai import types  # type: ignore[import-not-found]
+
+                gen_config: Any = types.GenerateContentConfig(**gen_config_kwargs)
+            except ImportError:
+                # Tests inject a stub client; the SDK isn't required to build
+                # the config object for a fake transport.
+                gen_config = gen_config_kwargs
 
             response = client.models.generate_content(
                 model=self.config.default_model,

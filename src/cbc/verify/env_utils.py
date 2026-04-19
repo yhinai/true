@@ -12,6 +12,8 @@ SENSITIVE_PREFIXES: tuple[str, ...] = (
     "SUPABASE_",
     "VERCEL_",
     "OPENAI_",
+    "GEMINI_",
+    "GOOGLE_",
     "ANTHROPIC_",
     "GITHUB_TOKEN",
     "POSTGRES_",
