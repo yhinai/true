@@ -28,6 +28,29 @@ export type CbcRunRow = {
   inserted_at: string;
 };
 
+export async function fetchLedgerFromSupabase(
+  runId: string
+): Promise<Record<string, unknown> | null> {
+  const sb = getSupabase();
+  if (!sb) return null;
+  const { data, error } = await sb
+    .from("cbc_runs")
+    .select("run_id, task_id, title, verdict, started_at, ended_at, payload")
+    .eq("run_id", runId)
+    .maybeSingle();
+  if (error || !data) return null;
+  const payload = (data.payload as Record<string, unknown> | null) || {};
+  return {
+    ...payload,
+    run_id: payload.run_id ?? data.run_id,
+    task_id: payload.task_id ?? data.task_id ?? undefined,
+    title: payload.title ?? data.title ?? undefined,
+    verdict: payload.verdict ?? data.verdict ?? undefined,
+    started_at: payload.started_at ?? data.started_at ?? undefined,
+    ended_at: payload.ended_at ?? data.ended_at ?? undefined,
+  };
+}
+
 export type CbcRemediationRow = {
   id: number;
   run_id: string;

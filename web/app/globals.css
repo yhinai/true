@@ -1283,6 +1283,12 @@ table.runs td a:hover { text-decoration: underline; }
   animation: pulse 1.4s ease-in-out infinite;
 }
 
+.dot.mirror {
+  background: transparent;
+  border: 1.5px solid var(--amber);
+  box-shadow: 0 0 6px rgba(255, 157, 42, 0.35);
+}
+
 @keyframes pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.45; transform: scale(0.85); }
