@@ -19,6 +19,7 @@ from cbc.controller.routing import RouteDecision, route_after_verify
 from cbc.controller.run_state import AttemptTimeout, IterationRecord, RunState
 from cbc.controller.scoring import CandidateScoringEngine, CheckWeights
 from cbc.model.codex_exec import CodexExecAdapter
+from cbc.model.gemini_exec import GeminiAdapter
 from cbc.model.prompts import summarize_verification_for_retry, write_schema_file
 from cbc.model.replay import ReplayModelAdapter
 from cbc.prompts.program_loader import load_program
@@ -123,6 +124,8 @@ def load_adapter(
             allow_dangerous=allow_dangerous_codex,
             task_id=task.task_id,
         )
+    if selected_adapter == "gemini":
+        return GeminiAdapter(config.gemini, task_id=task.task_id)
     assert task.replay_file is not None
     return ReplayModelAdapter(task.replay_file)
 

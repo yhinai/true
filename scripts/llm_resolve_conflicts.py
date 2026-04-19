@@ -1,8 +1,8 @@
 """LLM-powered merge-conflict auto-resolver.
 
 Run by .github/workflows/llm-conflict-resolver.yml on a schedule.
-Requires OPENAI_API_KEY, GH_TOKEN, REPO env vars.
-Never logs or commits the OpenAI key.
+Requires GEMINI_API_KEY, GH_TOKEN, REPO env vars.
+Never logs or commits the Gemini key.
 """
 
 from __future__ import annotations
@@ -13,6 +13,8 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+
+GEMINI_MODEL = "gemini-3.1-flash-lite-preview"
 
 
 def sh(cmd: list[str], *, cwd: str | None = None, check: bool = True) -> subprocess.CompletedProcess:
@@ -31,7 +33,10 @@ def list_candidate_prs(repo: str) -> list[dict]:
 
 
 def resolve_one_conflict(ancestor: str, ours: str, theirs: str, path: str, client) -> str:
-    prompt = (
+    from google.genai import types  # type: ignore[import-not-found]
+
+    system_instruction = "You merge code conflicts deterministically."
+    user_prompt = (
         "You are a code-merge assistant. Produce the fully resolved file content that preserves the intent of both branches.\n\n"
         f"File path: {path}\n\n"
         f"=== COMMON ANCESTOR ===\n{ancestor}\n\n"
@@ -39,15 +44,15 @@ def resolve_one_conflict(ancestor: str, ours: str, theirs: str, path: str, clien
         f"=== ORIGIN/MAIN (incoming) ===\n{theirs}\n\n"
         "Output ONLY the final merged file contents. No prose, no code fences, no commentary."
     )
-    resp = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": "You merge code conflicts deterministically."},
-            {"role": "user", "content": prompt},
-        ],
-        temperature=0.0,
+    resp = client.models.generate_content(
+        model=GEMINI_MODEL,
+        contents=user_prompt,
+        config=types.GenerateContentConfig(
+            system_instruction=system_instruction,
+            temperature=0.0,
+        ),
     )
-    return resp.choices[0].message.content
+    return resp.text or ""
 
 
 def process_pr(pr: dict, repo: str, client) -> None:
@@ -117,7 +122,12 @@ def process_pr(pr: dict, repo: str, client) -> None:
 
 
 def main() -> int:
-    from openai import OpenAI
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        print("No GEMINI_API_KEY; skipping.")
+        return 0
+
+    from google import genai  # type: ignore[import-not-found]
 
     repo = os.environ["REPO"]
     prs = list_candidate_prs(repo)
@@ -125,7 +135,7 @@ def main() -> int:
         print("No conflicting PRs needing LLM resolution.")
         return 0
 
-    client = OpenAI()  # picks up OPENAI_API_KEY env var
+    client = genai.Client(api_key=api_key)
     for pr in prs:
         try:
             process_pr(pr, repo, client)

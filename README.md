@@ -309,7 +309,7 @@ flowchart LR
 | Remediation runner | `.github/workflows/cbc-remediate.yml` |
 | Mirror helper | `scripts/remediate_mirror.py` |
 
-Required secrets: `OPENAI_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ANON_KEY`, `POSTGRES_URL_NON_POOLING`. Branch protection keeps the `test` check required — failures still block merge.
+Required secrets: `GEMINI_API_KEY` (primary LLM backend — Flash Lite for conflict resolution, Pro for PR review; `OPENAI_API_KEY` is only needed if `live-codex-nightly.yml` is kept enabled for the `@openai/codex` CLI), `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ANON_KEY`, `POSTGRES_URL_NON_POOLING`. Branch protection keeps the `test` check required — failures still block merge.
 
 ---
 

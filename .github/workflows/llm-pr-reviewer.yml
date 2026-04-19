@@ -19,10 +19,10 @@ jobs:
       - name: Check secret present
         id: gate
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          if [ -z "$OPENAI_API_KEY" ]; then
-            echo "No OpenAI key; skipping review."
+          if [ -z "$GEMINI_API_KEY" ]; then
+            echo "No Gemini key; skipping review."
             echo "skip=true" >> "$GITHUB_OUTPUT"
           else
             echo "skip=false" >> "$GITHUB_OUTPUT"
@@ -38,9 +38,9 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install OpenAI SDK
+      - name: Install Gemini SDK
         if: steps.gate.outputs.skip == 'false'
-        run: pip install openai
+        run: pip install google-genai
 
       - name: Generate App token
         id: app-token
@@ -54,7 +54,7 @@ jobs:
       - name: Run reviewer
         if: steps.gate.outputs.skip == 'false'
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GH_TOKEN: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}

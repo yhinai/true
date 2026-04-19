@@ -40,7 +40,7 @@ cbc run <task.yaml>
   --mode baseline|treatment|review       (default: treatment)
   --controller sequential|gearbox         (default: sequential)
   --sandbox local|contree                 (default: local)
-  --agent codex|replay                    (optional)
+  --agent codex|replay|gemini             (optional)
   --json                                  (JSON output)
   --stream                                (stream events)
 ```
@@ -64,7 +64,19 @@ uv run --extra contree cbc run fixtures/oracle_tasks/calculator_bug/task.yaml \
 
 # Benchmark sequential vs parallel
 uv run python scripts/bench_gearbox_parallel.py > reports/gearbox_speedup.json
+
+# Run with the Gemini adapter (requires GEMINI_API_KEY in env)
+uv sync --extra gemini
+GEMINI_API_KEY=... uv run cbc run fixtures/oracle_tasks/calculator_bug/task.yaml \
+  --mode=treatment --agent=gemini --json
 ```
+
+### Gemini adapter
+
+`--agent=gemini` routes Coder calls through Google Gemini 3.x (Pro preview by
+default). Install the extra with `uv sync --extra gemini` and set
+`GEMINI_API_KEY`. The same key drives the LLM PR reviewer and conflict
+resolver workflows (configure as a `GEMINI_API_KEY` GitHub secret).
 
 ## Git & Commit Rules
 

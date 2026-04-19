@@ -30,6 +30,7 @@ charts = [
   "matplotlib>=3.9",
 ]
 contree = ["contree-sdk>=0.3.0"]
+gemini = ["google-genai>=0.3.0"]
 
 [project.scripts]
 cbc = "cbc.main:app"

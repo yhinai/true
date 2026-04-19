@@ -1,7 +1,7 @@
-"""LLM PR reviewer — posts an advisory OpenAI review on each PR event.
+"""LLM PR reviewer — posts an advisory Gemini review on each PR event.
 
 Non-blocking by design: does NOT set a check status; just posts a comment.
-Reads OPENAI_API_KEY, GH_TOKEN, PR_NUMBER, PR_BASE_SHA, PR_HEAD_SHA, REPO from env.
+Reads GEMINI_API_KEY, GH_TOKEN, PR_NUMBER, PR_BASE_SHA, PR_HEAD_SHA, REPO from env.
 Never logs the key.
 """
 
@@ -12,7 +12,8 @@ import subprocess
 import sys
 
 
-MAX_DIFF_CHARS = 60_000  # ~30k tokens for gpt-4o-mini
+MAX_DIFF_CHARS = 60_000  # ~30k tokens for gemini pro
+GEMINI_MODEL = "gemini-3.1-pro-preview"
 
 
 def sh(cmd: list[str]) -> str:
@@ -30,10 +31,11 @@ def get_diff(base_sha: str, head_sha: str) -> str:
     return sh(["git", "diff", f"{base_sha}...{head_sha}", "--", "."] + exclude)
 
 
-def review(diff: str) -> str:
-    from openai import OpenAI
+def review(diff: str, api_key: str) -> str:
+    from google import genai  # type: ignore[import-not-found]
+    from google.genai import types  # type: ignore[import-not-found]
 
-    client = OpenAI()
+    client = genai.Client(api_key=api_key)
     truncated = len(diff) > MAX_DIFF_CHARS
     if truncated:
         diff = diff[:MAX_DIFF_CHARS] + "\n\n[...truncated due to size...]"
@@ -53,16 +55,16 @@ def review(diff: str) -> str:
         f"```diff\n{diff}\n```"
     )
 
-    resp = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": system},
-            {"role": "user", "content": user},
-        ],
-        temperature=0.0,
-        max_tokens=800,
+    resp = client.models.generate_content(
+        model=GEMINI_MODEL,
+        contents=user,
+        config=types.GenerateContentConfig(
+            system_instruction=system,
+            temperature=0.0,
+            max_output_tokens=800,
+        ),
     )
-    return resp.choices[0].message.content or "(no review returned)"
+    return resp.text or "(no review returned)"
 
 
 def post_comment(repo: str, pr: str, body: str) -> None:
@@ -75,6 +77,11 @@ def post_comment(repo: str, pr: str, body: str) -> None:
 
 
 def main() -> int:
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        print("No GEMINI_API_KEY; skipping review.")
+        return 0
+
     base = os.environ["PR_BASE_SHA"]
     head = os.environ["PR_HEAD_SHA"]
     repo = os.environ["REPO"]
@@ -86,12 +93,12 @@ def main() -> int:
         return 0
 
     try:
-        body = review(diff)
+        body = review(diff, api_key)
     except Exception as e:
-        print(f"OpenAI call failed: {e}")
+        print(f"Gemini call failed: {e}")
         return 0  # non-blocking
 
-    body = f"## 🤖 Automated review\n\n{body}\n\n---\n*Advisory only — CI tests remain authoritative.*"
+    body = f"## Automated review\n\n{body}\n\n---\n*Advisory only — CI tests remain authoritative.*"
     try:
         post_comment(repo, pr, body)
     except subprocess.CalledProcessError as e:

@@ -116,7 +116,7 @@ class TaskSpec(BaseModel):
     required_checks: list[str] = Field(default_factory=list)
     doubt_points: list[str] = Field(default_factory=list)
     oracles: list[OracleSpec]
-    adapter: Literal["codex", "replay"] = "replay"
+    adapter: Literal["codex", "replay", "gemini"] = "replay"
     replay_file: Path | None = None
     retry_budget: int = 2
     timeout_seconds: int = 120
