@@ -330,6 +330,7 @@ def run_poc_comparison(
     raw_prompt_style: RawPromptStyle = RawPromptStyle.SCAFFOLDED,
     simulated: bool = False,
     config: AppConfig = DEFAULT_CONFIG,
+    progress: object | None = None,
 ) -> PocComparison:
     benchmark_config = load_benchmark_config(config_path)
     effective_config = apply_benchmark_config(config, benchmark_config)
@@ -339,11 +340,25 @@ def run_poc_comparison(
     artifact_root = effective_config.paths.artifacts_dir / "poc" / report_dir.name
     artifact_root.mkdir(parents=True, exist_ok=True)
 
+    total_tasks = len(sampled_task_paths) * repetitions
+    progress_task_id = None
+    if progress is not None:
+        progress_task_id = progress.add_task(
+            f"Running {config_path.stem}", total=total_tasks
+        )
+
     results: list[PocRunResult] = []
+    step = 0
     for repetition in range(1, repetitions + 1):
         for task_path in sampled_task_paths:
             resolved_task_path = _resolve_poc_task_path(task_path, simulated=simulated)
             task = load_task(resolved_task_path)
+            step += 1
+            if progress is not None and progress_task_id is not None:
+                progress.update(
+                    progress_task_id,
+                    description=f"{step}/{total_tasks} {task.task_id} rep{repetition}",
+                )
             if simulated:
                 results.append(
                     run_simulated_raw_arm(
@@ -366,6 +381,8 @@ def run_poc_comparison(
                 )
             results.append(run_cbc_arm(task=task, task_path=resolved_task_path, mode="baseline", repetition=repetition, config=effective_config))
             results.append(run_cbc_arm(task=task, task_path=resolved_task_path, mode="treatment", repetition=repetition, config=effective_config))
+            if progress is not None and progress_task_id is not None:
+                progress.advance(progress_task_id)
 
     comparison = PocComparison(
         poc_id=uuid4().hex[:12],

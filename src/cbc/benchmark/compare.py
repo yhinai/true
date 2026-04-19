@@ -14,13 +14,38 @@ from cbc.storage.artifacts import create_artifact_dir
 from cbc.storage.benchmark_results import save_benchmark
 
 
-def run_comparison(*, task_paths: list[Path], config_path: Path, config: AppConfig = DEFAULT_CONFIG) -> BenchmarkComparison:
+def run_comparison(
+    *,
+    task_paths: list[Path],
+    config_path: Path,
+    config: AppConfig = DEFAULT_CONFIG,
+    progress: object | None = None,
+) -> BenchmarkComparison:
     baseline_results = []
     treatment_results = []
-    for task_path in task_paths:
+    total_steps = len(task_paths) * 2
+    progress_task_id = None
+    if progress is not None:
+        progress_task_id = progress.add_task(
+            f"Running {config_path.stem}", total=total_steps
+        )
+    for index, task_path in enumerate(task_paths, start=1):
         task = load_task(task_path)
+        if progress is not None and progress_task_id is not None:
+            progress.update(
+                progress_task_id,
+                description=f"{index}/{len(task_paths)} baseline {task.task_id}",
+            )
         baseline_results.append(run_baseline(task, config))
+        if progress is not None and progress_task_id is not None:
+            progress.advance(progress_task_id)
+            progress.update(
+                progress_task_id,
+                description=f"{index}/{len(task_paths)} treatment {task.task_id}",
+            )
         treatment_results.append(run_treatment(task, config))
+        if progress is not None and progress_task_id is not None:
+            progress.advance(progress_task_id)
 
     baseline_metrics = compute_metrics(baseline_results)
     treatment_metrics = compute_metrics(treatment_results)
