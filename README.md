@@ -478,13 +478,3 @@ python3 -m compileall src tests scripts
 ## Docs
 
 [Demo](docs/DEMO.md) · [Spec](docs/SPEC.md) · [Runbook](docs/RUNBOOK.md) · [Benchmark Plan](docs/BENCHMARK_PLAN.md) · [Status](docs/STATUS.md) · [Roadmap](plan.md) · [AGENTS.md](AGENTS.md) · [CLAUDE.md](CLAUDE.md) · [specs/](docs/superpowers/specs/) · [plans/](docs/superpowers/plans/)
-
----
-
-<div align="center">
-
-MIT · [LICENSE](LICENSE)
-
-Patterns from [ralphwiggum](https://github.com/opencolin/ralphwiggum), [contree-skill](https://github.com/opencolin/contree-skill), [opencode-cloud](https://github.com/opencolin/opencode-cloud).
-
-</div>
