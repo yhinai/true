@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import subprocess
+import time
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -28,6 +30,7 @@ class CodexExecAdapter(ModelAdapter):
         candidate_index: int = 0,
         candidate_role: str = "primary",
         schema_path: Path | None = None,
+        on_stdout_line: Callable[[str], None] | None = None,
     ) -> AdapterRunResult:
         command = [
             self.config.executable,
@@ -54,26 +57,16 @@ class CodexExecAdapter(ModelAdapter):
             command.extend(["--output-schema", str(schema_path)])
         command.append("-")
 
-        stdout = ""
-        stderr = ""
-        return_code = 1
+        stdout, stderr, return_code, timed_out = _run_streaming(
+            command,
+            cwd=workspace,
+            stdin_text=prompt,
+            timeout_seconds=self.config.timeout_seconds,
+            on_line=on_stdout_line,
+        )
+
         timeout_reason: str | None = None
-        try:
-            completed = subprocess.run(
-                command,
-                cwd=workspace,
-                input=prompt,
-                capture_output=True,
-                text=True,
-                check=False,
-                timeout=self.config.timeout_seconds,
-            )
-            stdout = completed.stdout
-            stderr = completed.stderr
-            return_code = completed.returncode
-        except subprocess.TimeoutExpired as exc:
-            stdout = exc.stdout or ""
-            stderr = exc.stderr or ""
+        if timed_out:
             timeout_reason = (
                 f"codex exec timed out after {self.config.timeout_seconds}s"
             )
@@ -149,6 +142,84 @@ class CodexExecAdapter(ModelAdapter):
                 failure_reason=failure_reason,
             )
         return AdapterRunResult(response=response, events=events, usage=usage)
+
+
+def _run_streaming(
+    command: list[str],
+    *,
+    cwd: Path,
+    stdin_text: str,
+    timeout_seconds: float | None,
+    on_line: Callable[[str], None] | None = None,
+) -> tuple[str, str, int, bool]:
+    """Run ``command`` with stdout streamed line-by-line.
+
+    Returns a tuple of ``(stdout, stderr, returncode, timed_out)``. When
+    ``on_line`` is provided, it is invoked for every stdout line as soon as
+    it is read from the subprocess pipe.
+    """
+
+    proc = subprocess.Popen(
+        command,
+        cwd=cwd,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    try:
+        if proc.stdin is not None:
+            try:
+                proc.stdin.write(stdin_text)
+            finally:
+                try:
+                    proc.stdin.close()
+                except (BrokenPipeError, OSError):
+                    pass
+    except (BrokenPipeError, OSError):
+        pass
+
+    deadline = time.monotonic() + timeout_seconds if timeout_seconds else None
+    stdout_lines: list[str] = []
+
+    assert proc.stdout is not None
+    while True:
+        line = proc.stdout.readline()
+        if line:
+            stdout_lines.append(line)
+            if on_line is not None:
+                on_line(line)
+            continue
+        if proc.poll() is not None:
+            break
+        if deadline is not None and time.monotonic() > deadline:
+            proc.kill()
+            proc.wait()
+            stderr_text = proc.stderr.read() if proc.stderr is not None else ""
+            return (
+                "".join(stdout_lines),
+                stderr_text or "",
+                proc.returncode if proc.returncode is not None else -1,
+                True,
+            )
+        time.sleep(0.01)
+
+    # Drain any remaining buffered stdout after process exit.
+    if proc.stdout is not None:
+        remaining = proc.stdout.read()
+        if remaining:
+            for line in remaining.splitlines(keepends=True):
+                stdout_lines.append(line)
+                if on_line is not None:
+                    on_line(line)
+
+    stderr_text = proc.stderr.read() if proc.stderr is not None else ""
+    return (
+        "".join(stdout_lines),
+        stderr_text or "",
+        proc.returncode if proc.returncode is not None else 0,
+        False,
+    )
 
 
 def _parse_codex_output(stdout: str) -> dict[str, Any]:
