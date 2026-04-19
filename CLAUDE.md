@@ -208,3 +208,21 @@ feature surface at collection time. When you add:
 - a new `benchmark-configs/*.yaml` → `test_benchmark_configs.py` auto-validates it
 
 No test-file edits needed. CI coverage expands automatically with the feature surface.
+
+### Scoped CI (dynamic per-change)
+
+`.github/workflows/ci.yml` has a `scoped-test` job that uses `dorny/paths-filter` to
+detect which module groups changed on a PR and runs only the relevant test subtrees
+first. The full `test` job still runs — scoped is additive, not replacement. Gives
+faster feedback on small changes without weakening the coverage gate.
+
+On pushes to `main`, scoped is skipped; main always runs the full suite.
+
+### Test scaffold generator
+
+```bash
+python3 scripts/gen_test_scaffold.py src/cbc/foo/new_module.py
+# → writes tests/foo/test_new_module.py with a minimal import assertion
+```
+
+Idempotent; skips if the test file already exists. Useful when an agent adds a new module.
