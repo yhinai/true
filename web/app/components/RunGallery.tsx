@@ -219,8 +219,6 @@ function RunCard({
 
       <div className="run-card-meta">
         <span>{run.mode || "—"}</span>
-        <span className="sep" />
-        <span>{run.adapter || "—"}</span>
         {run.elapsed !== null && (
           <>
             <span className="sep" />
