@@ -30,6 +30,13 @@ PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/calculator_bug/task
 ./scripts/run_compare.sh
 ```
 
+## Run The Controller Proof Benchmark
+
+```bash
+./scripts/run_controller_compare.sh
+```
+This compares treatment `sequential` versus treatment `gearbox` on the checked-in controller subset and emits a persisted recommendation about whether gearbox should remain opt-in or become the default controller.
+
 ## Run The Live Codex Comparison
 
 ```bash
@@ -88,6 +95,7 @@ Available headless API routes:
 ```bash
 PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/calculator_bug/task.yaml --json
 PYTHONPATH=src python3 -m cbc.main compare --json
+PYTHONPATH=src python3 -m cbc.main controller-compare --json
 PYTHONPATH=src python3 -m cbc.main poc --json
 PYTHONPATH=src python3 -m cbc.main review-artifact artifacts/examples/calculator_treatment/run_ledger.json --json
 PYTHONPATH=src python3 -m cbc.main ci-artifact artifacts/examples/calculator_treatment/run_ledger.json --json

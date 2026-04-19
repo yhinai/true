@@ -8,7 +8,7 @@
       "exit_code": 0,
       "stdout": ".                                                                        [100%]\n1 passed in 0.00s\n",
       "stderr": "",
-      "duration_seconds": 0.19062449998455122,
+      "duration_seconds": 0.166742833040189,
       "details": {}
     },
     {
@@ -18,7 +18,7 @@
       "exit_code": 0,
       "stdout": "Listing '.'...\nListing './.pytest_cache'...\nListing './.pytest_cache/v'...\nListing './.pytest_cache/v/cache'...\nCompiling './property_checks.py'...\nCompiling './slugify.py'...\nCompiling './test_slugify.py'...\n",
       "stderr": "",
-      "duration_seconds": 0.04756220895797014,
+      "duration_seconds": 0.05709295900305733,
       "details": {}
     },
     {
@@ -29,7 +29,9 @@
       "stdout": "Type checking is disabled for this task.",
       "stderr": "",
       "duration_seconds": 0.0,
-      "details": {}
+      "details": {
+        "policy_reason": "disabled_in_task_config"
+      }
     },
     {
       "name": "coverage",
@@ -39,7 +41,9 @@
       "stdout": "Coverage is disabled for this task.",
       "stderr": "",
       "duration_seconds": 0.0,
-      "details": {}
+      "details": {
+        "policy_reason": "disabled_in_task_config"
+      }
     },
     {
       "name": "structural",
@@ -86,31 +90,35 @@
       "command": "static inspection",
       "status": "skipped",
       "exit_code": null,
-      "stdout": "Contracts are supported as an optional deeper verification layer.",
+      "stdout": "No recognized contract decorators found in the workspace.",
       "stderr": "",
       "duration_seconds": 0.0,
-      "details": {}
+      "details": {
+        "policy_reason": "no_recognized_contracts"
+      }
     },
     {
       "name": "crosshair",
       "command": "disabled",
       "status": "skipped",
       "exit_code": null,
-      "stdout": "Not implemented",
+      "stdout": "CrossHair is optional and non-blocking in this build.",
       "stderr": "",
       "duration_seconds": 0.0,
-      "details": {}
+      "details": {
+        "policy_reason": "disabled_in_task_config"
+      }
     },
     {
       "name": "hypothesis",
       "command": "property cases via property_checks.py:assert_slugify_properties",
       "status": "passed",
       "exit_code": null,
-      "stdout": "Property cases passed for 4 configured examples.",
+      "stdout": "Property cases passed for 8 configured examples.",
       "stderr": "",
       "duration_seconds": 0.0,
       "details": {
-        "cases_checked": 4
+        "cases_checked": 8
       }
     },
     {
@@ -121,7 +129,9 @@
       "stdout": "Mutation testing is intentionally cut by default.",
       "stderr": "",
       "duration_seconds": 0.0,
-      "details": {}
+      "details": {
+        "policy_reason": "disabled_in_task_config"
+      }
     }
   ],
   "summary": "All deterministic checks passed.",
@@ -134,13 +144,60 @@
   "verification_ledger": [
     "pytest: passed",
     "lint: passed",
-    "typecheck: skipped",
-    "coverage: skipped",
+    "typecheck: skipped (disabled_in_task_config)",
+    "coverage: skipped (disabled_in_task_config)",
     "structural: passed",
-    "contracts: skipped",
-    "crosshair: skipped",
+    "contracts: skipped (no_recognized_contracts)",
+    "crosshair: skipped (disabled_in_task_config)",
     "hypothesis: passed",
-    "mutation: skipped",
-    "contract_graph_nodes=1"
-  ]
+    "mutation: skipped (disabled_in_task_config)",
+    "contract_graph_nodes=0"
+  ],
+  "check_policy": {
+    "oracle:pytest": {
+      "requested": true,
+      "enabled": true,
+      "reason": "configured_task_oracle"
+    },
+    "lint": {
+      "requested": true,
+      "enabled": true,
+      "reason": "always_on"
+    },
+    "typecheck": {
+      "requested": true,
+      "enabled": false,
+      "reason": "disabled_in_task_config"
+    },
+    "coverage": {
+      "requested": true,
+      "enabled": false,
+      "reason": "disabled_in_task_config"
+    },
+    "structural": {
+      "requested": true,
+      "enabled": true,
+      "reason": "requires_changed_python_files"
+    },
+    "contracts": {
+      "requested": true,
+      "enabled": true,
+      "reason": "static_workspace_inspection"
+    },
+    "crosshair": {
+      "requested": true,
+      "enabled": false,
+      "reason": "disabled_in_task_config"
+    },
+    "hypothesis": {
+      "requested": true,
+      "enabled": true,
+      "reason": "configured_property_cases"
+    },
+    "mutation": {
+      "requested": true,
+      "enabled": false,
+      "reason": "disabled_in_task_config"
+    }
+  }
 }

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from cbc.headless_contract import RUN_ARTIFACT_KIND, contract_metadata
 from cbc.models import CandidateResult, ExplorerArtifact, ProofCard, RetryTranscript, RunLedger, VerificationReport
 from cbc.review.ci import build_ci_report, render_ci_report
 from cbc.review.report import compose_review_report
@@ -90,6 +91,7 @@ def build_run_artifact(
             if isinstance(artifact_path, str):
                 generated_tests.append(artifact_path)
     return {
+        "contract": contract_metadata(RUN_ARTIFACT_KIND),
         "run_id": ledger.run_id,
         "task_id": ledger.task_id,
         "title": ledger.title,
@@ -111,11 +113,13 @@ def build_run_artifact(
             "checks": [check.model_dump(mode="json") for check in verification.checks],
             "summary": verification.summary,
             "counterexample": verification.counterexample,
+            "policy": verification.check_policy,
         },
         "artifacts": {
             "artifact_dir": str(ledger.artifact_dir),
             "workspace_dir": str(ledger.workspace_dir),
         },
+        "supporting_checks": list(ledger.plan.required_checks),
         "explorer": explorer.model_dump(mode="json") if explorer is not None else None,
         "candidates": [
             {

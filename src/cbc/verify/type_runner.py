@@ -16,6 +16,7 @@ def run_typecheck(workspace: Path, enabled: bool = False, command: str | None = 
             command="disabled",
             status=CheckStatus.SKIPPED,
             stdout="Type checking is disabled for this task.",
+            details={"policy_reason": "disabled_in_task_config"},
         )
 
     resolved_command = command
@@ -30,6 +31,7 @@ def run_typecheck(workspace: Path, enabled: bool = False, command: str | None = 
                 command="unavailable",
                 status=CheckStatus.SKIPPED,
                 stdout="Type checking requested but no supported typechecker is installed.",
+                details={"policy_reason": "tool_unavailable"},
             )
 
     started = time.perf_counter()

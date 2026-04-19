@@ -9,12 +9,12 @@ from rich.table import Table
 
 from cbc.api.app import create_app
 from cbc.api.store import get_benchmark
-from cbc.benchmark.local_runner import run_local_benchmark
+from cbc.benchmark.local_runner import run_local_benchmark, run_local_controller_benchmark
 from cbc.benchmark.poc_compare import RawPromptStyle, run_poc_comparison
 from cbc.controller.artifact_flow import render_proof_card
 from cbc.controller.orchestrator import review_workspace, run_task
 from cbc.intake.normalize import load_task
-from cbc.models import PocMetrics, PocPairwiseSummary, ProofCard
+from cbc.models import ControllerBenchmarkComparison, PocMetrics, PocPairwiseSummary, ProofCard
 from cbc.review.ci import build_ci_report
 from cbc.review.merge_gate import compute_merge_gate
 from cbc.review.report import compose_review_report_from_path
@@ -77,6 +77,18 @@ def compare(
     )
     console.print(table)
     console.print(f"Reports: {comparison.report_dir}")
+
+
+@app.command("controller-compare")
+def controller_compare(
+    config_path: Path = typer.Option(Path("benchmark-configs/controller_subset.yaml")),
+    json_output: bool = typer.Option(False, "--json"),
+) -> None:
+    comparison = run_local_controller_benchmark(config_path)
+    if json_output:
+        console.print_json(json.dumps(comparison.model_dump(mode="json")))
+        return
+    _print_controller_comparison(comparison)
 
 
 @app.command()
@@ -236,6 +248,32 @@ def _add_pairwise_row(table: Table, summary: PocPairwiseSummary) -> None:
             summary.safer_outcomes.ties,
         ),
     )
+
+
+def _print_controller_comparison(comparison: ControllerBenchmarkComparison) -> None:
+    table = Table(title="Controller Benchmark")
+    table.add_column("Metric")
+    table.add_column("Sequential")
+    table.add_column("Gearbox")
+    table.add_row(
+        "Verified Success Rate",
+        f"{comparison.sequential_metrics.verified_success_rate:.2f}",
+        f"{comparison.gearbox_metrics.verified_success_rate:.2f}",
+    )
+    table.add_row(
+        "Unsafe Claim Rate",
+        f"{comparison.sequential_metrics.unsafe_claim_rate:.2f}",
+        f"{comparison.gearbox_metrics.unsafe_claim_rate:.2f}",
+    )
+    table.add_row(
+        "Avg Model Calls",
+        f"{comparison.sequential_metrics.average_model_calls:.2f}",
+        f"{comparison.gearbox_metrics.average_model_calls:.2f}",
+    )
+    console.print(table)
+    console.print(f"Recommendation: {comparison.decision.recommended_controller}")
+    console.print(comparison.decision.rationale)
+    console.print(f"Reports: {comparison.report_dir}")
 
 
 @app.command("benchmark-artifact")

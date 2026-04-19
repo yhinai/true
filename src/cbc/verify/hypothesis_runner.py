@@ -16,6 +16,7 @@ def run_hypothesis(
     enabled: bool = False,
     spec: HypothesisCheckSpec | None = None,
     artifact_dir: Path | None = None,
+    skip_reason: str = "requires_python_tag",
 ) -> CheckResult:
     command = f"property cases via {spec.path}:{spec.function}" if spec is not None else "disabled"
     if not enabled:
@@ -24,6 +25,7 @@ def run_hypothesis(
             command="disabled",
             status=CheckStatus.SKIPPED,
             stdout="Hypothesis suggestions are optional in this build.",
+            details={"policy_reason": skip_reason},
         )
     if spec is None:
         return CheckResult(
@@ -31,6 +33,7 @@ def run_hypothesis(
             command="disabled",
             status=CheckStatus.SKIPPED,
             stdout="No configured property cases for this task.",
+            details={"policy_reason": "missing_spec"},
         )
 
     if artifact_dir is None:

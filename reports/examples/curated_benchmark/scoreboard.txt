@@ -1,1 +1,0 @@
-matplotlib is not installed; scoreboard chart was skipped.

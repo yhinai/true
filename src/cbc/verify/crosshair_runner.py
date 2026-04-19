@@ -8,13 +8,20 @@ from pathlib import Path
 from cbc.models import CheckResult, CheckStatus
 
 
-def run_crosshair(workspace: Path, *, enabled: bool = False, command: str | None = None) -> CheckResult:
+def run_crosshair(
+    workspace: Path,
+    *,
+    enabled: bool = False,
+    command: str | None = None,
+    skip_reason: str = "disabled_in_task_config",
+) -> CheckResult:
     if not enabled:
         return CheckResult(
             name="crosshair",
             command="disabled",
             status=CheckStatus.SKIPPED,
             stdout="CrossHair is optional and non-blocking in this build.",
+            details={"policy_reason": skip_reason},
         )
     if not command:
         return CheckResult(
@@ -22,6 +29,7 @@ def run_crosshair(workspace: Path, *, enabled: bool = False, command: str | None
             command="unconfigured",
             status=CheckStatus.SKIPPED,
             stdout="CrossHair requested but no command was configured for this task.",
+            details={"policy_reason": "missing_command"},
         )
 
     started = time.perf_counter()

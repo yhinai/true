@@ -1,5 +1,9 @@
 {
-  "run_id": "6c613e0bf0ad",
+  "contract": {
+    "kind": "cbc.review_report",
+    "version": "2026-04-18.v1"
+  },
+  "run_id": "14902e92a6bc",
   "task_id": "slugify_property_regression",
   "summary": {
     "diff": {
@@ -37,6 +41,80 @@
         "hypothesis"
       ],
       "failing_checks": [],
+      "checks": [
+        {
+          "name": "pytest",
+          "status": "passed",
+          "command": "python3 -m pytest -q",
+          "blocking": true,
+          "policy_reason": null,
+          "artifacts": []
+        },
+        {
+          "name": "lint",
+          "status": "passed",
+          "command": "python3 -m compileall .",
+          "blocking": false,
+          "policy_reason": null,
+          "artifacts": []
+        },
+        {
+          "name": "typecheck",
+          "status": "skipped",
+          "command": "disabled",
+          "blocking": false,
+          "policy_reason": "disabled_in_task_config",
+          "artifacts": []
+        },
+        {
+          "name": "coverage",
+          "status": "skipped",
+          "command": "disabled",
+          "blocking": false,
+          "policy_reason": "disabled_in_task_config",
+          "artifacts": []
+        },
+        {
+          "name": "structural",
+          "status": "passed",
+          "command": "bounded structural analysis",
+          "blocking": false,
+          "policy_reason": null,
+          "artifacts": []
+        },
+        {
+          "name": "contracts",
+          "status": "skipped",
+          "command": "static inspection",
+          "blocking": false,
+          "policy_reason": "no_recognized_contracts",
+          "artifacts": []
+        },
+        {
+          "name": "crosshair",
+          "status": "skipped",
+          "command": "disabled",
+          "blocking": false,
+          "policy_reason": "disabled_in_task_config",
+          "artifacts": []
+        },
+        {
+          "name": "hypothesis",
+          "status": "passed",
+          "command": "property cases via property_checks.py:assert_slugify_properties",
+          "blocking": true,
+          "policy_reason": null,
+          "artifacts": []
+        },
+        {
+          "name": "mutation",
+          "status": "skipped",
+          "command": "disabled",
+          "blocking": false,
+          "policy_reason": "disabled_in_task_config",
+          "artifacts": []
+        }
+      ],
       "unsafe_claims": 1
     },
     "merge_gate": {

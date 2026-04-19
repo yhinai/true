@@ -21,6 +21,11 @@ def verification_state(run_artifact: Mapping[str, Any]) -> dict[str, Any]:
     if not isinstance(verification, Mapping):
         verification = {}
     checks = verification.get("checks", [])
+    supporting_checks = {
+        str(item)
+        for item in run_artifact.get("supporting_checks", [])
+        if isinstance(item, str)
+    }
     passed = [check["name"] for check in checks if isinstance(check, Mapping) and check.get("status") == "passed"]
     failed = [check["name"] for check in checks if isinstance(check, Mapping) and check.get("status") == "failed"]
     state = str(verification.get("status") or verification.get("verdict") or "UNPROVEN").upper()
@@ -28,6 +33,7 @@ def verification_state(run_artifact: Mapping[str, Any]) -> dict[str, Any]:
         "state": state,
         "passing_checks": passed,
         "failing_checks": failed,
+        "checks": [_summarize_check(check, supporting_checks=supporting_checks) for check in checks if isinstance(check, Mapping)],
         "unsafe_claims": int(run_artifact.get("unsafe_claims", 0) or bool(run_artifact.get("unsafe_claim"))),
     }
 
@@ -47,4 +53,23 @@ def merge_gate_verdict(run_artifact: Mapping[str, Any], *, risk_summary: Mapping
     return {
         "verdict": verdict,
         "reason": f"verification={state}, risk={risk_summary.get('risk_level', 'UNKNOWN')}",
+    }
+
+
+def _summarize_check(check: Mapping[str, Any], *, supporting_checks: set[str]) -> dict[str, Any]:
+    details = check.get("details", {})
+    artifacts = []
+    if isinstance(details, Mapping):
+        for key in ("counterexample_artifact", "regression_test_artifact"):
+            value = details.get(key)
+            if isinstance(value, str):
+                artifacts.append(value)
+    name = str(check.get("name", "unknown"))
+    return {
+        "name": name,
+        "status": check.get("status"),
+        "command": check.get("command"),
+        "blocking": name in supporting_checks,
+        "policy_reason": details.get("policy_reason") if isinstance(details, Mapping) else None,
+        "artifacts": artifacts,
     }

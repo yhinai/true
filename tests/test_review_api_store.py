@@ -131,6 +131,36 @@ class ApiStoreTests(unittest.TestCase):
             self.assertEqual(benches[0]["total_tasks"], 2)
             self.assertEqual(benches[0]["verified_success_rate"], 1.0)
 
+    def test_controller_comparison_shape_is_summarized(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            benches_dir = root / "benchmarks"
+            benches_dir.mkdir(parents=True)
+            (benches_dir / "comparison.json").write_text(
+                json.dumps(
+                    {
+                        "benchmark_id": "ctrl-1",
+                        "contract": {"kind": "cbc.controller_comparison", "version": "v1"},
+                        "task_results": [
+                            {"task_id": "task-a", "controller_mode": "sequential"},
+                            {"task_id": "task-a", "controller_mode": "gearbox"},
+                        ],
+                        "gearbox_metrics": {
+                            "verified_success_rate": 1.0,
+                            "unsafe_claim_rate": 0.0,
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            benches = list_benchmarks(root, limit=10)
+            self.assertEqual(len(benches), 1)
+            self.assertEqual(benches[0]["benchmark_id"], "ctrl-1")
+            self.assertEqual(benches[0]["total_tasks"], 1)
+            self.assertEqual(benches[0]["verified_success_rate"], 1.0)
+            self.assertEqual(benches[0]["contract"]["kind"], "cbc.controller_comparison")
+
 
 if __name__ == "__main__":
     unittest.main()

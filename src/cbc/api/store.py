@@ -99,6 +99,10 @@ def _summarize_benchmark(path: Path, payload: dict[str, Any]) -> dict[str, Any]:
         verified_success_rate = payload["treatment_metrics"].get("verified_success_rate")
     if unsafe_claim_rate is None and isinstance(payload.get("treatment_metrics"), dict):
         unsafe_claim_rate = payload["treatment_metrics"].get("unsafe_claim_rate")
+    if verified_success_rate is None and isinstance(payload.get("gearbox_metrics"), dict):
+        verified_success_rate = payload["gearbox_metrics"].get("verified_success_rate")
+    if unsafe_claim_rate is None and isinstance(payload.get("gearbox_metrics"), dict):
+        unsafe_claim_rate = payload["gearbox_metrics"].get("unsafe_claim_rate")
     if total_tasks is None and isinstance(payload.get("baseline_results"), list):
         total_tasks = len(payload["baseline_results"])
     if total_tasks is None and isinstance(payload.get("task_results"), list):
@@ -111,6 +115,7 @@ def _summarize_benchmark(path: Path, payload: dict[str, Any]) -> dict[str, Any]:
     return {
         "benchmark_id": payload.get("benchmark_id") or payload.get("benchmark_name") or payload.get("run_id") or path.stem,
         "artifact_path": str(path),
+        "contract": payload.get("contract"),
         "verified_success_rate": verified_success_rate,
         "unsafe_claim_rate": unsafe_claim_rate,
         "total_tasks": total_tasks,

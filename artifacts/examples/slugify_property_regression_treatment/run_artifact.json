@@ -1,5 +1,9 @@
 {
-  "run_id": "6c613e0bf0ad",
+  "contract": {
+    "kind": "cbc.run_artifact",
+    "version": "2026-04-18.v1"
+  },
+  "run_id": "14902e92a6bc",
   "task_id": "slugify_property_regression",
   "title": "Fix slugify and capture a regression test from a failing property case",
   "mode": "treatment",
@@ -7,7 +11,17 @@
     "mode": "sequential",
     "selected_candidate_id": null,
     "candidate_count": 0,
-    "scheduler_trace_path": "/Users/alhinai/Desktop/TRUE/artifacts/runs/55569012e4fa/scheduler_trace.json"
+    "budget": {
+      "max_model_calls_per_run": 4,
+      "max_candidates_first_attempt": 2,
+      "allow_alternate_candidates_on_retry": false
+    },
+    "budget_spent": {
+      "model_calls_used": 2,
+      "attempts_executed": 2,
+      "candidate_evaluations": 0
+    },
+    "scheduler_trace_path": "/Users/alhinai/Desktop/TRUE/artifacts/runs/a21959f231c9/scheduler_trace.json"
   },
   "changed_files": [
     "slugify.py"
@@ -27,7 +41,7 @@
     ]
   },
   "generated_test_artifacts": [
-    "/Users/alhinai/Desktop/TRUE/artifacts/runs/55569012e4fa/generated_tests/test_slugify_property_regression.py"
+    "/Users/alhinai/Desktop/TRUE/artifacts/runs/a21959f231c9/generated_tests/test_slugify_property_regression.py"
   ],
   "verification": {
     "status": "VERIFIED",
@@ -39,7 +53,7 @@
         "exit_code": 0,
         "stdout": ".                                                                        [100%]\n1 passed in 0.00s\n",
         "stderr": "",
-        "duration_seconds": 0.19062449998455122,
+        "duration_seconds": 0.166742833040189,
         "details": {}
       },
       {
@@ -49,7 +63,7 @@
         "exit_code": 0,
         "stdout": "Listing '.'...\nListing './.pytest_cache'...\nListing './.pytest_cache/v'...\nListing './.pytest_cache/v/cache'...\nCompiling './property_checks.py'...\nCompiling './slugify.py'...\nCompiling './test_slugify.py'...\n",
         "stderr": "",
-        "duration_seconds": 0.04756220895797014,
+        "duration_seconds": 0.05709295900305733,
         "details": {}
       },
       {
@@ -60,7 +74,9 @@
         "stdout": "Type checking is disabled for this task.",
         "stderr": "",
         "duration_seconds": 0.0,
-        "details": {}
+        "details": {
+          "policy_reason": "disabled_in_task_config"
+        }
       },
       {
         "name": "coverage",
@@ -70,7 +86,9 @@
         "stdout": "Coverage is disabled for this task.",
         "stderr": "",
         "duration_seconds": 0.0,
-        "details": {}
+        "details": {
+          "policy_reason": "disabled_in_task_config"
+        }
       },
       {
         "name": "structural",
@@ -117,31 +135,35 @@
         "command": "static inspection",
         "status": "skipped",
         "exit_code": null,
-        "stdout": "Contracts are supported as an optional deeper verification layer.",
+        "stdout": "No recognized contract decorators found in the workspace.",
         "stderr": "",
         "duration_seconds": 0.0,
-        "details": {}
+        "details": {
+          "policy_reason": "no_recognized_contracts"
+        }
       },
       {
         "name": "crosshair",
         "command": "disabled",
         "status": "skipped",
         "exit_code": null,
-        "stdout": "Not implemented",
+        "stdout": "CrossHair is optional and non-blocking in this build.",
         "stderr": "",
         "duration_seconds": 0.0,
-        "details": {}
+        "details": {
+          "policy_reason": "disabled_in_task_config"
+        }
       },
       {
         "name": "hypothesis",
         "command": "property cases via property_checks.py:assert_slugify_properties",
         "status": "passed",
         "exit_code": null,
-        "stdout": "Property cases passed for 4 configured examples.",
+        "stdout": "Property cases passed for 8 configured examples.",
         "stderr": "",
         "duration_seconds": 0.0,
         "details": {
-          "cases_checked": 4
+          "cases_checked": 8
         }
       },
       {
@@ -152,16 +174,69 @@
         "stdout": "Mutation testing is intentionally cut by default.",
         "stderr": "",
         "duration_seconds": 0.0,
-        "details": {}
+        "details": {
+          "policy_reason": "disabled_in_task_config"
+        }
       }
     ],
     "summary": "All deterministic checks passed.",
-    "counterexample": null
+    "counterexample": null,
+    "policy": {
+      "oracle:pytest": {
+        "requested": true,
+        "enabled": true,
+        "reason": "configured_task_oracle"
+      },
+      "lint": {
+        "requested": true,
+        "enabled": true,
+        "reason": "always_on"
+      },
+      "typecheck": {
+        "requested": true,
+        "enabled": false,
+        "reason": "disabled_in_task_config"
+      },
+      "coverage": {
+        "requested": true,
+        "enabled": false,
+        "reason": "disabled_in_task_config"
+      },
+      "structural": {
+        "requested": true,
+        "enabled": true,
+        "reason": "requires_changed_python_files"
+      },
+      "contracts": {
+        "requested": true,
+        "enabled": true,
+        "reason": "static_workspace_inspection"
+      },
+      "crosshair": {
+        "requested": true,
+        "enabled": false,
+        "reason": "disabled_in_task_config"
+      },
+      "hypothesis": {
+        "requested": true,
+        "enabled": true,
+        "reason": "configured_property_cases"
+      },
+      "mutation": {
+        "requested": true,
+        "enabled": false,
+        "reason": "disabled_in_task_config"
+      }
+    }
   },
   "artifacts": {
-    "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/55569012e4fa",
-    "workspace_dir": "/var/folders/56/k6d868zx2c755lc49bbjkt740000gn/T/cbc-workspace-uq1y_1hs/workspace"
+    "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/a21959f231c9",
+    "workspace_dir": "/var/folders/56/k6d868zx2c755lc49bbjkt740000gn/T/cbc-workspace-9rb66bc9/workspace"
   },
+  "supporting_checks": [
+    "pytest",
+    "hypothesis"
+  ],
   "explorer": {
     "summary": "Explorer found 1 likely target file(s), 1 nearby test file(s), and 2 related file(s).",
     "likely_targets": [

@@ -8,6 +8,11 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field, model_validator
 
 from cbc.config import SandboxMode
+from cbc.headless_contract import (
+    BENCHMARK_COMPARISON_KIND,
+    CONTROLLER_COMPARISON_KIND,
+    contract_metadata,
+)
 
 
 def utc_now() -> datetime:
@@ -148,6 +153,7 @@ class VerificationReport(BaseModel):
     changed_files: list[str] = Field(default_factory=list)
     failure_mode_ledger: list[str] = Field(default_factory=list)
     verification_ledger: list[str] = Field(default_factory=list)
+    check_policy: dict[str, dict[str, Any]] = Field(default_factory=dict)
 
 
 class AttemptRecord(BaseModel):
@@ -208,6 +214,7 @@ class RunLedger(BaseModel):
     attempts: list[AttemptRecord]
     candidate_results: list[CandidateResult] = Field(default_factory=list)
     unsafe_claims: int = 0
+    model_calls_used: int = 0
     final_summary: str
     started_at: datetime = Field(default_factory=utc_now)
     ended_at: datetime = Field(default_factory=utc_now)
@@ -249,6 +256,7 @@ class BenchmarkMetrics(BaseModel):
 
 
 class BenchmarkComparison(BaseModel):
+    contract: dict[str, str] = Field(default_factory=lambda: contract_metadata(BENCHMARK_COMPARISON_KIND))
     benchmark_id: str
     config_path: Path
     task_results: list[BenchmarkTaskResult]
@@ -256,6 +264,52 @@ class BenchmarkComparison(BaseModel):
     treatment_metrics: BenchmarkMetrics
     delta_verified_success_rate: float
     delta_unsafe_claim_rate: float
+    created_at: datetime = Field(default_factory=utc_now)
+    report_dir: Path
+
+
+class ControllerBenchmarkTaskResult(BaseModel):
+    task_id: str
+    controller_mode: Literal["sequential", "gearbox"]
+    verdict: VerificationVerdict
+    verified_success: bool
+    unsafe_claims: int
+    retries: int
+    elapsed_seconds: float
+    model_calls_used: int
+    candidate_evaluations: int
+    selected_candidate_id: str | None = None
+    artifact_dir: Path
+
+
+class ControllerBenchmarkMetrics(BaseModel):
+    verified_success_rate: float
+    unsafe_claim_rate: float
+    average_retries: float
+    average_elapsed_seconds: float
+    average_model_calls: float
+    average_candidate_evaluations: float
+
+
+class ControllerDecision(BaseModel):
+    recommended_controller: Literal["sequential", "gearbox"]
+    rationale: str
+    should_promote_to_default: bool
+
+
+class ControllerBenchmarkComparison(BaseModel):
+    contract: dict[str, str] = Field(default_factory=lambda: contract_metadata(CONTROLLER_COMPARISON_KIND))
+    benchmark_id: str
+    config_path: Path
+    task_results: list[ControllerBenchmarkTaskResult]
+    sequential_metrics: ControllerBenchmarkMetrics
+    gearbox_metrics: ControllerBenchmarkMetrics
+    delta_verified_success_rate: float
+    delta_unsafe_claim_rate: float
+    delta_average_retries: float
+    delta_average_elapsed_seconds: float
+    delta_average_model_calls: float
+    decision: ControllerDecision
     created_at: datetime = Field(default_factory=utc_now)
     report_dir: Path
 

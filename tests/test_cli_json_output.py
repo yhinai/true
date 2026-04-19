@@ -8,7 +8,16 @@ from rich.console import Console
 from typer.testing import CliRunner
 
 from cbc.main import app
-from cbc.models import BenchmarkComparison, BenchmarkMetrics, BenchmarkTaskResult, VerificationVerdict
+from cbc.models import (
+    BenchmarkComparison,
+    BenchmarkMetrics,
+    BenchmarkTaskResult,
+    ControllerBenchmarkComparison,
+    ControllerBenchmarkMetrics,
+    ControllerBenchmarkTaskResult,
+    ControllerDecision,
+    VerificationVerdict,
+)
 
 
 runner = CliRunner()
@@ -33,6 +42,63 @@ def test_run_command_emits_json_artifact(monkeypatch, tmp_path: Path) -> None:
     payload = json.loads(result.stdout)
     assert payload["run_id"] == "run-123"
     assert payload["controller"]["mode"] == "gearbox"
+
+
+def test_controller_compare_command_emits_json_payload(monkeypatch, tmp_path: Path) -> None:
+    comparison = ControllerBenchmarkComparison(
+        benchmark_id="ctrl-123",
+        config_path=tmp_path / "config.yaml",
+        task_results=[
+            ControllerBenchmarkTaskResult(
+                task_id="task-a",
+                controller_mode="sequential",
+                verdict=VerificationVerdict.VERIFIED,
+                verified_success=True,
+                unsafe_claims=0,
+                retries=1,
+                elapsed_seconds=1.0,
+                model_calls_used=2,
+                candidate_evaluations=0,
+                artifact_dir=tmp_path / "artifacts" / "run-a",
+            )
+        ],
+        sequential_metrics=ControllerBenchmarkMetrics(
+            verified_success_rate=1.0,
+            unsafe_claim_rate=0.0,
+            average_retries=1.0,
+            average_elapsed_seconds=1.0,
+            average_model_calls=2.0,
+            average_candidate_evaluations=0.0,
+        ),
+        gearbox_metrics=ControllerBenchmarkMetrics(
+            verified_success_rate=1.0,
+            unsafe_claim_rate=0.0,
+            average_retries=1.0,
+            average_elapsed_seconds=1.5,
+            average_model_calls=3.0,
+            average_candidate_evaluations=2.0,
+        ),
+        delta_verified_success_rate=0.0,
+        delta_unsafe_claim_rate=0.0,
+        delta_average_retries=0.0,
+        delta_average_elapsed_seconds=0.5,
+        delta_average_model_calls=1.0,
+        decision=ControllerDecision(
+            recommended_controller="sequential",
+            rationale="No verified-success lift and more model calls.",
+            should_promote_to_default=False,
+        ),
+        report_dir=tmp_path / "reports" / "ctrl-123",
+    )
+    monkeypatch.setattr("cbc.main.run_local_controller_benchmark", lambda config_path: comparison)
+
+    result = runner.invoke(app, ["controller-compare", "--json"])
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload["benchmark_id"] == "ctrl-123"
+    assert payload["decision"]["recommended_controller"] == "sequential"
+    assert payload["contract"]["kind"] == "cbc.controller_comparison"
 
 
 def test_compare_command_emits_json_payload(monkeypatch, tmp_path: Path) -> None:
@@ -75,6 +141,7 @@ def test_compare_command_emits_json_payload(monkeypatch, tmp_path: Path) -> None
     payload = json.loads(result.stdout)
     assert payload["benchmark_id"] == "bench-123"
     assert payload["treatment_metrics"]["verified_success_rate"] == 1.0
+    assert payload["contract"]["kind"] == "cbc.benchmark_comparison"
 
 
 def test_poc_command_emits_json_payload(monkeypatch, tmp_path: Path) -> None:
@@ -165,12 +232,14 @@ def test_review_and_ci_artifact_commands_emit_json(tmp_path: Path) -> None:
     review_payload = json.loads(review_result.stdout)
     assert review_payload["run_id"] == "run-123"
     assert review_payload["summary"]["merge_gate"]["verdict"] == "APPROVE"
+    assert review_payload["contract"]["kind"] == "cbc.review_report"
 
     ci_result = runner.invoke(app, ["ci-artifact", str(artifact_path), "--json"])
     assert ci_result.exit_code == 0
     ci_payload = json.loads(ci_result.stdout)
     assert ci_payload["merge_gate_verdict"] == "APPROVE"
     assert ci_payload["verification_state"] == "VERIFIED"
+    assert ci_payload["contract"]["kind"] == "cbc.ci_report"
 
 
 def test_review_workspace_command_emits_json(monkeypatch, tmp_path: Path) -> None:

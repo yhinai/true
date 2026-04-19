@@ -36,6 +36,7 @@ def run_structural(workspace: Path, *, changed_files: list[str]) -> CheckResult:
             command="bounded structural analysis",
             status=CheckStatus.SKIPPED,
             stdout="No Python files changed, so structural analysis was skipped.",
+            details={"policy_reason": "requires_changed_python_files"},
         )
 
     dependency_dag = build_dependency_dag(workspace)

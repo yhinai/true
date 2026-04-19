@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
+from cbc.headless_contract import CI_REPORT_KIND, contract_metadata
+
 
 def build_ci_report(review_report: Mapping[str, Any]) -> dict[str, Any]:
     summary = review_report.get("summary", {})
@@ -10,12 +12,14 @@ def build_ci_report(review_report: Mapping[str, Any]) -> dict[str, Any]:
     risk = summary.get("risk", {}) if isinstance(summary, Mapping) else {}
     verdict = str(merge_gate.get("verdict", "NEEDS_CHANGES"))
     return {
+        "contract": contract_metadata(CI_REPORT_KIND),
         "run_id": review_report.get("run_id"),
         "task_id": review_report.get("task_id"),
         "merge_gate_verdict": verdict,
         "verification_state": verification.get("state", "UNPROVEN"),
         "risk_level": risk.get("risk_level", "UNKNOWN"),
         "failing_checks": list(verification.get("failing_checks", [])),
+        "check_summaries": list(verification.get("checks", [])),
         "supporting_checks": list(review_report.get("supporting_checks", [])),
         "exit_code": 0 if verdict == "APPROVE" else 1,
     }

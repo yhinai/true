@@ -15,6 +15,7 @@ def inspect_contracts(workspace: Path) -> CheckResult:
             command="static inspection",
             status=CheckStatus.FAILED,
             stderr=str(exc),
+            details={"policy_reason": "workspace_parse_error"},
         )
 
     if not entries:
@@ -23,6 +24,7 @@ def inspect_contracts(workspace: Path) -> CheckResult:
             command="static inspection",
             status=CheckStatus.SKIPPED,
             stdout="No recognized contract decorators found in the workspace.",
+            details={"policy_reason": "no_recognized_contracts"},
         )
 
     modules = sorted({entry["module"] for entry in entries})

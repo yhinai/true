@@ -1,10 +1,88 @@
 {
-  "run_id": "7d73212025fb",
+  "contract": {
+    "kind": "cbc.ci_report",
+    "version": "2026-04-18.v1"
+  },
+  "run_id": "81409528ee07",
   "task_id": "calculator_bug",
   "merge_gate_verdict": "UNSAFE",
   "verification_state": "VERIFIED",
   "risk_level": "CRITICAL",
   "failing_checks": [],
+  "check_summaries": [
+    {
+      "name": "pytest",
+      "status": "passed",
+      "command": "python3 -m pytest -q",
+      "blocking": true,
+      "policy_reason": null,
+      "artifacts": []
+    },
+    {
+      "name": "lint",
+      "status": "passed",
+      "command": "python3 -m compileall .",
+      "blocking": false,
+      "policy_reason": null,
+      "artifacts": []
+    },
+    {
+      "name": "typecheck",
+      "status": "skipped",
+      "command": "disabled",
+      "blocking": false,
+      "policy_reason": "disabled_in_task_config",
+      "artifacts": []
+    },
+    {
+      "name": "coverage",
+      "status": "skipped",
+      "command": "disabled",
+      "blocking": false,
+      "policy_reason": "disabled_in_task_config",
+      "artifacts": []
+    },
+    {
+      "name": "structural",
+      "status": "passed",
+      "command": "bounded structural analysis",
+      "blocking": false,
+      "policy_reason": null,
+      "artifacts": []
+    },
+    {
+      "name": "contracts",
+      "status": "skipped",
+      "command": "static inspection",
+      "blocking": false,
+      "policy_reason": "no_recognized_contracts",
+      "artifacts": []
+    },
+    {
+      "name": "crosshair",
+      "status": "skipped",
+      "command": "disabled",
+      "blocking": false,
+      "policy_reason": "disabled_in_task_config",
+      "artifacts": []
+    },
+    {
+      "name": "hypothesis",
+      "status": "skipped",
+      "command": "disabled",
+      "blocking": false,
+      "policy_reason": "missing_spec",
+      "artifacts": []
+    },
+    {
+      "name": "mutation",
+      "status": "skipped",
+      "command": "disabled",
+      "blocking": false,
+      "policy_reason": "disabled_in_task_config",
+      "artifacts": []
+    }
+  ],
   "supporting_checks": [],
   "exit_code": 1
 }

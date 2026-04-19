@@ -132,3 +132,4 @@ def test_property_task_generates_regression_artifact_on_retry(tmp_path: Path) ->
     raw_run_artifact = (ledger.artifact_dir / "run_artifact.json").read_text(encoding="utf-8")
     assert "generated_test_artifacts" in raw_run_artifact
     assert '"explorer"' in raw_run_artifact
+    assert '"policy"' in raw_run_artifact

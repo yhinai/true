@@ -25,9 +25,18 @@
 
 On the checked-in replay smoke benchmark, treatment outperforms baseline on Verified Success Rate while keeping the same task-level Unsafe Claim Rate.
 
-## Late-Phase Open Question
+## Phase 9 Proof Gate
 
-The next benchmark question is no longer baseline versus treatment plumbing. It is whether treatment `--controller gearbox` earns its extra model calls versus sequential treatment on a bounded checked-in subset. That comparison should be treated as the Phase 9 proof gate before gearbox becomes the default controller.
+The controller proof benchmark now compares treatment `sequential` versus treatment `gearbox` on the checked-in controller subset at `benchmark-configs/controller_subset.yaml`.
+
+Current decision:
+- keep `gearbox` opt-in
+- keep `sequential` as the default treatment controller
+
+Current evidence:
+- no verified-success lift on the checked-in controller subset
+- no unsafe-claim improvement on that subset
+- higher average model-call spend for `gearbox`
 
 ## Live Codex Demo Candidate
 
@@ -40,7 +49,9 @@ The next benchmark question is no longer baseline versus treatment plumbing. It 
 
 ```bash
 ./scripts/run_compare.sh
+./scripts/run_controller_compare.sh
 python3 scripts/run_compare.py
+python3 scripts/run_controller_compare.py
 ./scripts/run_live_compare.sh
 ./scripts/run_poc_compare.sh --sample-size 2 --seed 42
 ```

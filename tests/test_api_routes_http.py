@@ -17,6 +17,11 @@ def test_http_routes_use_payload_helpers(monkeypatch) -> None:
     app = create_app()
     client = TestClient(app)
 
+    health_response = client.get("/health")
+    assert health_response.status_code == 200
+    assert health_response.json()["status"] == "ok"
+    assert "headless_contract_version" in health_response.json()
+
     monkeypatch.setattr(
         "cbc.api.routes.runs_payload",
         lambda root, limit=50: {"runs": [{"run_id": "run-123", "verification_state": "VERIFIED"}]},

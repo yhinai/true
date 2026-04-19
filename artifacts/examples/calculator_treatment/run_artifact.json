@@ -1,5 +1,9 @@
 {
-  "run_id": "7d73212025fb",
+  "contract": {
+    "kind": "cbc.run_artifact",
+    "version": "2026-04-18.v1"
+  },
+  "run_id": "81409528ee07",
   "task_id": "calculator_bug",
   "title": "Fix addition in calculator.py",
   "mode": "treatment",
@@ -7,7 +11,17 @@
     "mode": "gearbox",
     "selected_candidate_id": "candidate_a",
     "candidate_count": 2,
-    "scheduler_trace_path": "/Users/alhinai/Desktop/TRUE/artifacts/runs/179d812a8b55/scheduler_trace.json"
+    "budget": {
+      "max_model_calls_per_run": 4,
+      "max_candidates_first_attempt": 2,
+      "allow_alternate_candidates_on_retry": false
+    },
+    "budget_spent": {
+      "model_calls_used": 3,
+      "attempts_executed": 2,
+      "candidate_evaluations": 2
+    },
+    "scheduler_trace_path": "/Users/alhinai/Desktop/TRUE/artifacts/runs/07f4ff5258ba/scheduler_trace.json"
   },
   "changed_files": [
     "calculator.py"
@@ -35,9 +49,9 @@
         "command": "python3 -m pytest -q",
         "status": "passed",
         "exit_code": 0,
-        "stdout": ".                                                                        [100%]\n1 passed in 0.00s\n",
+        "stdout": ".                                                                        [100%]\n1 passed in 0.01s\n",
         "stderr": "",
-        "duration_seconds": 0.2524287920095958,
+        "duration_seconds": 0.2558851659996435,
         "details": {}
       },
       {
@@ -47,7 +61,7 @@
         "exit_code": 0,
         "stdout": "Listing '.'...\nListing './.pytest_cache'...\nListing './.pytest_cache/v'...\nListing './.pytest_cache/v/cache'...\nCompiling './calculator.py'...\nCompiling './test_calculator.py'...\n",
         "stderr": "",
-        "duration_seconds": 0.04676783399190754,
+        "duration_seconds": 0.044868083961773664,
         "details": {}
       },
       {
@@ -58,7 +72,9 @@
         "stdout": "Type checking is disabled for this task.",
         "stderr": "",
         "duration_seconds": 0.0,
-        "details": {}
+        "details": {
+          "policy_reason": "disabled_in_task_config"
+        }
       },
       {
         "name": "coverage",
@@ -68,7 +84,9 @@
         "stdout": "Coverage is disabled for this task.",
         "stderr": "",
         "duration_seconds": 0.0,
-        "details": {}
+        "details": {
+          "policy_reason": "disabled_in_task_config"
+        }
       },
       {
         "name": "structural",
@@ -108,20 +126,24 @@
         "command": "static inspection",
         "status": "skipped",
         "exit_code": null,
-        "stdout": "Contracts are supported as an optional deeper verification layer.",
+        "stdout": "No recognized contract decorators found in the workspace.",
         "stderr": "",
         "duration_seconds": 0.0,
-        "details": {}
+        "details": {
+          "policy_reason": "no_recognized_contracts"
+        }
       },
       {
         "name": "crosshair",
         "command": "disabled",
         "status": "skipped",
         "exit_code": null,
-        "stdout": "Not implemented",
+        "stdout": "CrossHair is optional and non-blocking in this build.",
         "stderr": "",
         "duration_seconds": 0.0,
-        "details": {}
+        "details": {
+          "policy_reason": "disabled_in_task_config"
+        }
       },
       {
         "name": "hypothesis",
@@ -131,7 +153,9 @@
         "stdout": "No configured property cases for this task.",
         "stderr": "",
         "duration_seconds": 0.0,
-        "details": {}
+        "details": {
+          "policy_reason": "missing_spec"
+        }
       },
       {
         "name": "mutation",
@@ -141,16 +165,68 @@
         "stdout": "Mutation testing is intentionally cut by default.",
         "stderr": "",
         "duration_seconds": 0.0,
-        "details": {}
+        "details": {
+          "policy_reason": "disabled_in_task_config"
+        }
       }
     ],
     "summary": "All deterministic checks passed.",
-    "counterexample": null
+    "counterexample": null,
+    "policy": {
+      "oracle:pytest": {
+        "requested": true,
+        "enabled": true,
+        "reason": "configured_task_oracle"
+      },
+      "lint": {
+        "requested": true,
+        "enabled": true,
+        "reason": "always_on"
+      },
+      "typecheck": {
+        "requested": true,
+        "enabled": false,
+        "reason": "disabled_in_task_config"
+      },
+      "coverage": {
+        "requested": true,
+        "enabled": false,
+        "reason": "disabled_in_task_config"
+      },
+      "structural": {
+        "requested": true,
+        "enabled": true,
+        "reason": "requires_changed_python_files"
+      },
+      "contracts": {
+        "requested": true,
+        "enabled": true,
+        "reason": "static_workspace_inspection"
+      },
+      "crosshair": {
+        "requested": true,
+        "enabled": false,
+        "reason": "disabled_in_task_config"
+      },
+      "hypothesis": {
+        "requested": true,
+        "enabled": false,
+        "reason": "missing_spec"
+      },
+      "mutation": {
+        "requested": true,
+        "enabled": false,
+        "reason": "disabled_in_task_config"
+      }
+    }
   },
   "artifacts": {
-    "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/179d812a8b55",
-    "workspace_dir": "/var/folders/56/k6d868zx2c755lc49bbjkt740000gn/T/cbc-workspace-6y43q1ej/workspace"
+    "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/07f4ff5258ba",
+    "workspace_dir": "/var/folders/56/k6d868zx2c755lc49bbjkt740000gn/T/cbc-workspace-mruyqtrg/workspace"
   },
+  "supporting_checks": [
+    "pytest"
+  ],
   "explorer": {
     "summary": "Explorer found 1 likely target file(s), 1 nearby test file(s), and 1 related file(s).",
     "likely_targets": [
@@ -173,7 +249,7 @@
       "candidate_role": "primary",
       "attempt": 1,
       "selected": true,
-      "workspace_dir": "/var/folders/56/k6d868zx2c755lc49bbjkt740000gn/T/cbc-workspace-6y43q1ej/workspace",
+      "workspace_dir": "/var/folders/56/k6d868zx2c755lc49bbjkt740000gn/T/cbc-workspace-mruyqtrg/workspace",
       "score": {
         "passed_checks": 2,
         "unsafe_claim": true,
@@ -191,7 +267,7 @@
       "candidate_role": "alternate",
       "attempt": 1,
       "selected": false,
-      "workspace_dir": "/var/folders/56/k6d868zx2c755lc49bbjkt740000gn/T/cbc-workspace-2ajkez2j/workspace",
+      "workspace_dir": "/var/folders/56/k6d868zx2c755lc49bbjkt740000gn/T/cbc-workspace-bjsi_3za/workspace",
       "score": {
         "passed_checks": 2,
         "unsafe_claim": true,

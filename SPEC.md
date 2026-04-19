@@ -30,6 +30,7 @@ Codex is the proposal engine, not the source of trust. Trust comes from determin
 - Benchmark runner: `src/cbc/benchmark/compare.py`
 - Review shell: `src/cbc/review`
 - Headless-only contract: no IDE or editor-integration surface
+- Frozen headless payload version: `2026-04-18.v1`
 
 ## Artifact Contract
 
@@ -43,12 +44,13 @@ Each run saves:
 - `risk_artifact.json`
 - `candidate_artifacts/<candidate_id>/...` when gearbox mode runs
 
-The run artifact surface also carries the selected controller mode, candidate summary, and controller budget/budget-spent metadata so CLI, API, and checked-in examples all describe the same scheduling decisions.
+The public run artifact surface also carries a top-level `contract` stamp, `supporting_checks`, the selected controller mode, candidate summary, controller budget/budget-spent metadata, and per-check verification policy so CLI, API, and checked-in examples all describe the same scheduling decisions.
 
 Each benchmark comparison saves:
 - `comparison.json`
 - `comparison.md`
 - `scoreboard.png` when matplotlib is installed, otherwise a text note
+- controller proof comparisons also save `comparison.json` and `comparison.md`, with a persisted decision about whether gearbox should remain opt-in or become default
 
 ## Phase Coverage
 
@@ -58,6 +60,6 @@ Each benchmark comparison saves:
 - Phase 2: real file-backed patching, scope guard, workspace safety
 - Phase 3-8: working deeper-verification, review, graph, and test-growth slices
 - deeper verification is still intentionally bounded: contract inspection is real, while CrossHair and mutation remain optional task-configured accelerators rather than default trust gates
-- Phase 9: bounded gearbox mode with sequential fallback
-- Phase 10: headless CLI/API/artifact completion
+- Phase 9: bounded gearbox mode with sequential fallback, plus a checked-in proof benchmark that currently keeps sequential as the default controller
+- Phase 10: headless CLI/API/artifact completion with a frozen payload contract and refreshed example artifacts
 - live Codex execution is wired through a checked-in `adapter: codex` task spec

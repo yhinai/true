@@ -151,6 +151,8 @@ def test_verification_options_run_real_commands(tmp_path: Path) -> None:
     assert by_name["coverage"].status.value == "passed"
     assert by_name["crosshair"].status.value == "passed"
     assert by_name["mutation"].status.value == "passed"
+    assert report.check_policy["crosshair"]["enabled"] is True
+    assert report.check_policy["mutation"]["reason"] == "task_configured_command"
 
 
 def test_structural_check_catches_cross_file_signature_mismatch(tmp_path: Path) -> None:
@@ -292,3 +294,28 @@ def test_hypothesis_misconfiguration_returns_failed_check(tmp_path: Path) -> Non
     assert hypothesis.status.value == "failed"
     assert hypothesis.exit_code == 1
     assert hypothesis.details["configuration_error"] is True
+
+
+def test_optional_verification_policy_reports_skip_reasons(tmp_path: Path) -> None:
+    (tmp_path / "note.txt").write_text("hello\n", encoding="utf-8")
+    task = TaskSpec(
+        task_id="verification_policy",
+        title="Explain optional verifier gates",
+        prompt="noop",
+        workspace=tmp_path,
+        adapter="codex",
+        allowed_files=["note.txt"],
+        oracles=[OracleSpec(name="oracle", kind="python", command="-c \"print('ok')\"")],
+    )
+
+    report = verify_workspace(
+        tmp_path,
+        task=task,
+        changed_files=["note.txt"],
+        claimed_success=False,
+    )
+
+    assert report.check_policy["contracts"]["enabled"] is False
+    assert report.check_policy["contracts"]["reason"] == "no_python_files_in_scope"
+    assert report.check_policy["crosshair"]["reason"] == "requires_python_tag"
+    assert report.check_policy["hypothesis"]["reason"] == "requires_python_tag"

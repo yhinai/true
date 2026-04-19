@@ -6,13 +6,14 @@ from fastapi import APIRouter
 
 from cbc.api.store import get_benchmark, get_run, list_benchmarks, list_runs
 from cbc.config import DEFAULT_CONFIG
+from cbc.headless_contract import HEADLESS_CONTRACT_VERSION
 
 router = APIRouter()
 
 
 @router.get("/health")
 def health() -> dict[str, str]:
-    return {"status": "ok"}
+    return {"status": "ok", "headless_contract_version": HEADLESS_CONTRACT_VERSION}
 
 
 @router.get("/runs")

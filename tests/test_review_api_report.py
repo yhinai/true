@@ -29,6 +29,7 @@ class ReviewReportTests(unittest.TestCase):
         }
 
         report = compose_review_report(run_artifact)
+        self.assertEqual(report["contract"]["kind"], "cbc.review_report")
         self.assertEqual(report["run_id"], "run-001")
         self.assertEqual(report["summary"]["merge_gate"]["verdict"], "APPROVE")
         self.assertEqual(report["summary"]["risk"]["risk_level"], "LOW")

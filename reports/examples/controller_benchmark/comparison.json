@@ -1,0 +1,116 @@
+{
+  "contract": {
+    "kind": "cbc.controller_comparison",
+    "version": "2026-04-18.v1"
+  },
+  "benchmark_id": "83d57d4974f5",
+  "config_path": "/Users/alhinai/Desktop/TRUE/benchmark-configs/controller_subset.yaml",
+  "task_results": [
+    {
+      "task_id": "calculator_bug",
+      "controller_mode": "sequential",
+      "verdict": "VERIFIED",
+      "verified_success": true,
+      "unsafe_claims": 1,
+      "retries": 1,
+      "elapsed_seconds": 0.526794,
+      "model_calls_used": 2,
+      "candidate_evaluations": 0,
+      "selected_candidate_id": null,
+      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/3dd95ea5d3d1"
+    },
+    {
+      "task_id": "title_case_bug",
+      "controller_mode": "sequential",
+      "verdict": "VERIFIED",
+      "verified_success": true,
+      "unsafe_claims": 0,
+      "retries": 0,
+      "elapsed_seconds": 0.629384,
+      "model_calls_used": 1,
+      "candidate_evaluations": 0,
+      "selected_candidate_id": null,
+      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/673c9161e467"
+    },
+    {
+      "task_id": "slug_shell_bug",
+      "controller_mode": "sequential",
+      "verdict": "VERIFIED",
+      "verified_success": true,
+      "unsafe_claims": 1,
+      "retries": 1,
+      "elapsed_seconds": 0.270976,
+      "model_calls_used": 2,
+      "candidate_evaluations": 0,
+      "selected_candidate_id": null,
+      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/4e31a39cbef6"
+    },
+    {
+      "task_id": "calculator_bug",
+      "controller_mode": "gearbox",
+      "verdict": "VERIFIED",
+      "verified_success": true,
+      "unsafe_claims": 1,
+      "retries": 1,
+      "elapsed_seconds": 0.677514,
+      "model_calls_used": 3,
+      "candidate_evaluations": 2,
+      "selected_candidate_id": "candidate_a",
+      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/f5705ca5a184"
+    },
+    {
+      "task_id": "title_case_bug",
+      "controller_mode": "gearbox",
+      "verdict": "VERIFIED",
+      "verified_success": true,
+      "unsafe_claims": 0,
+      "retries": 0,
+      "elapsed_seconds": 0.425363,
+      "model_calls_used": 2,
+      "candidate_evaluations": 2,
+      "selected_candidate_id": "candidate_a",
+      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/ed84452f2aed"
+    },
+    {
+      "task_id": "slug_shell_bug",
+      "controller_mode": "gearbox",
+      "verdict": "VERIFIED",
+      "verified_success": true,
+      "unsafe_claims": 1,
+      "retries": 1,
+      "elapsed_seconds": 0.441048,
+      "model_calls_used": 3,
+      "candidate_evaluations": 2,
+      "selected_candidate_id": "candidate_a",
+      "artifact_dir": "/Users/alhinai/Desktop/TRUE/artifacts/runs/ec449ebaa153"
+    }
+  ],
+  "sequential_metrics": {
+    "verified_success_rate": 1.0,
+    "unsafe_claim_rate": 0.6666666666666666,
+    "average_retries": 0.6666666666666666,
+    "average_elapsed_seconds": 0.47571800000000003,
+    "average_model_calls": 1.6666666666666667,
+    "average_candidate_evaluations": 0.0
+  },
+  "gearbox_metrics": {
+    "verified_success_rate": 1.0,
+    "unsafe_claim_rate": 0.6666666666666666,
+    "average_retries": 0.6666666666666666,
+    "average_elapsed_seconds": 0.5146416666666667,
+    "average_model_calls": 2.6666666666666665,
+    "average_candidate_evaluations": 2.0
+  },
+  "delta_verified_success_rate": 0.0,
+  "delta_unsafe_claim_rate": 0.0,
+  "delta_average_retries": 0.0,
+  "delta_average_elapsed_seconds": 0.038923666666666634,
+  "delta_average_model_calls": 0.9999999999999998,
+  "decision": {
+    "recommended_controller": "sequential",
+    "rationale": "Keep gearbox opt-in for now because no verified-success lift, gearbox spends more model calls on the checked-in controller benchmark subset.",
+    "should_promote_to_default": false
+  },
+  "created_at": "2026-04-19T00:30:40.649395Z",
+  "report_dir": "/Users/alhinai/Desktop/TRUE/reports/benchmarks/616297087b3f"
+}

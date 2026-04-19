@@ -1,0 +1,9 @@
+tasks:
+  - ../fixtures/oracle_tasks/calculator_bug/task.yaml
+  - ../fixtures/oracle_tasks/title_case_bug/task.yaml
+  - ../fixtures/oracle_tasks/slug_shell_bug/task.yaml
+controller:
+  budget:
+    max_model_calls_per_run: 4
+    max_candidates_first_attempt: 2
+    allow_alternate_candidates_on_retry: false

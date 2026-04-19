@@ -3,6 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Mapping
 
+from cbc.headless_contract import REVIEW_REPORT_KIND, contract_metadata
+
 from .artifacts import read_json
 from .merge_gate import merge_gate_verdict, verification_state
 from .risk import summarize_risk
@@ -23,6 +25,7 @@ def compose_review_report(run_artifact: Mapping[str, Any]) -> dict[str, Any]:
         supporting_checks = list(plan.get("required_checks", []))
 
     return {
+        "contract": contract_metadata(REVIEW_REPORT_KIND),
         "run_id": run_artifact.get("run_id") or run_artifact.get("id") or "unknown-run",
         "task_id": run_artifact.get("task_id") or run_artifact.get("task") or None,
         "summary": {
