@@ -1,0 +1,87 @@
+name: Auto-resolve safe conflicts
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'  # every 10 min
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate App token
+        id: app-token
+        continue-on-error: true
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.CBC_BOT_APP_ID }}
+          private-key: ${{ secrets.CBC_BOT_APP_PRIVATE_KEY }}
+
+      - name: Attempt resolution on each conflicting PR
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          # Find conflicting (DIRTY) PRs from our repo only
+          prs=$(gh pr list --repo "$REPO" --state open --base main --json number,mergeStateStatus,headRefName,headRepositoryOwner \
+                  --jq '.[] | select(.mergeStateStatus == "DIRTY") | select(.headRepositoryOwner.login == "'"${REPO%%/*}"'") | "\(.number)|\(.headRefName)"')
+
+          if [ -z "$prs" ]; then
+            echo "No conflicting PRs."
+            exit 0
+          fi
+
+          # Need a real clone with push rights
+          git config --global user.name "cbc-auto-refresh[bot]"
+          git config --global user.email "cbc-auto-refresh[bot]@users.noreply.github.com"
+          git clone "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" /tmp/repo
+          cd /tmp/repo
+
+          echo "$prs" | while IFS='|' read -r num branch; do
+            echo "═══ Attempting to resolve PR #$num ($branch) ═══"
+            git fetch origin "$branch:$branch" main
+            git checkout "$branch"
+
+            # Try plain 3-way merge first — might auto-succeed if this workflow raced with a prior push
+            if git merge --no-edit origin/main; then
+              echo "  3-way merge succeeded; pushing."
+              git push origin "$branch"
+              continue
+            fi
+
+            echo "  3-way merge failed; analyzing conflicts..."
+            git merge --abort
+
+            # Attempt: take-theirs for artifact/report/docs files only
+            git merge --no-commit -X theirs origin/main || true
+            conflicted=$(git diff --name-only --diff-filter=U)
+            if [ -z "$conflicted" ]; then
+              echo "  All conflicts resolved via -X theirs strategy."
+            else
+              safe=true
+              for f in $conflicted; do
+                case "$f" in
+                  artifacts/examples/*|reports/*|docs/*.md|docs/**/*.md) continue ;;
+                  *) safe=false ;;
+                esac
+              done
+              if $safe; then
+                echo "  All remaining conflicts are in safe classes; accepting."
+                for f in $conflicted; do git checkout --theirs "$f"; git add "$f"; done
+              else
+                echo "  Unsafe conflicts remain; labeling PR and aborting."
+                git merge --abort || git reset --hard HEAD
+                gh pr edit --repo "$REPO" "$num" --add-label conflict-needs-review || true
+                continue
+              fi
+            fi
+
+            git commit --no-edit || true
+            git push origin "$branch"
+            echo "  Pushed resolved branch for PR #$num."
+          done

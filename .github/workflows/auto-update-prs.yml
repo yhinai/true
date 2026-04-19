@@ -1,0 +1,38 @@
+name: Auto-update PRs
+
+on:
+  push:
+    branches: ["main"]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-open-prs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate App token
+        id: app-token
+        continue-on-error: true
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.CBC_BOT_APP_ID }}
+          private-key: ${{ secrets.CBC_BOT_APP_PRIVATE_KEY }}
+
+      - name: Update all open PRs that are behind main
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          prs=$(gh pr list --repo "$REPO" --state open --base main --json number,mergeStateStatus \
+                  --jq '.[] | select(.mergeStateStatus == "BEHIND") | .number')
+          if [ -z "$prs" ]; then
+            echo "No behind PRs to update."
+            exit 0
+          fi
+          for pr in $prs; do
+            echo "Updating PR #$pr..."
+            gh pr update-branch --repo "$REPO" "$pr" || echo "  (could not update; likely conflicting — will be handled by resolver)"
+          done
