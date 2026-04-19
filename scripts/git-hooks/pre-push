@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# scripts/git-hooks/pre-push — refuse direct push to main; suggest push-via-pr.sh instead.
+# Install:   ln -sf ../../scripts/git-hooks/pre-push .git/hooks/pre-push
+protected_branch="main"
+remote="$1"
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+    if [[ "$remote_ref" == "refs/heads/$protected_branch" ]]; then
+        if [[ "${ALLOW_DIRECT_MAIN_PUSH:-0}" == "1" ]]; then
+            exit 0
+        fi
+        echo "Refusing direct push to $protected_branch." >&2
+        echo "Run: scripts/push-via-pr.sh [branch-slug]" >&2
+        echo "Or override: ALLOW_DIRECT_MAIN_PUSH=1 git push origin main" >&2
+        exit 1
+    fi
+done
+exit 0

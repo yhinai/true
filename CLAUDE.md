@@ -123,3 +123,36 @@ ConTree mode (`--sandbox=contree`) requires the `contree` extra (`uv sync --extr
 - Orchestrator role decomposition and iteration state: `opencolin/ralphwiggum`
 - Sandboxed branching model: `opencolin/contree-skill`
 - Parallel branching architecture: `opencolin/opencode-cloud`
+
+## PR-gated Workflow
+
+Direct pushes to `main` are discouraged. All changes should go through a feature branch + PR with CI-gated auto-merge — no human review required (yet).
+
+### One-time install (per clone)
+
+```bash
+ln -sf ../../scripts/git-hooks/pre-push .git/hooks/pre-push
+```
+
+This installs the local `pre-push` hook that refuses direct pushes to `origin/main`.
+
+### Shipping a change
+
+```bash
+# Commit locally (pre-commit hook still runs), then:
+scripts/push-via-pr.sh [optional-slug]
+```
+
+The helper creates a timestamped `pr/<slug>` branch, pushes it, opens a PR, and calls `gh pr merge --auto --squash`. The PR merges itself once CI is green.
+
+### Emergency override
+
+```bash
+ALLOW_DIRECT_MAIN_PUSH=1 git push origin main
+```
+
+Only use this when the PR-gated path is itself broken (e.g. GitHub outage, CI infrastructure failure). Not for "I'm in a hurry."
+
+### Server-side auto-merge
+
+`.github/workflows/auto-merge.yml` re-arms `--auto --squash` on every open same-repo PR whenever a PR event fires or a check suite completes successfully. Combined with the client-side `gh pr merge --auto` from `push-via-pr.sh`, this ensures auto-merge stays enabled even if the first call happened before required checks were registered.

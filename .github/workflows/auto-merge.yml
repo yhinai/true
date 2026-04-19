@@ -1,0 +1,26 @@
+name: Auto-merge
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, labeled, unlabeled]
+  check_suite:
+    types: [completed]
+
+jobs:
+  auto-merge:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || github.event.check_suite.conclusion == 'success'
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Enable auto-merge on PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # List open PRs from this repo (same-repo only; skip forks for safety)
+          PRS=$(gh pr list --state open --base main --json number,headRepositoryOwner,author \
+                  --jq '.[] | select(.headRepositoryOwner.login == "${{ github.repository_owner }}") | .number')
+          for PR in $PRS; do
+            gh pr merge --auto --squash "$PR" || true
+          done
