@@ -30,7 +30,11 @@ CREATE TABLE IF NOT EXISTS benchmarks (
 
 def connect(db_path: Path) -> sqlite3.Connection:
     db_path.parent.mkdir(parents=True, exist_ok=True)
-    connection = sqlite3.connect(db_path)
+    connection = sqlite3.connect(db_path, timeout=30.0)
+    connection.execute("PRAGMA journal_mode=WAL")
+    connection.execute("PRAGMA busy_timeout=30000")
+    connection.execute("PRAGMA synchronous=NORMAL")
+    connection.execute("PRAGMA foreign_keys=ON")
     connection.executescript(SCHEMA)
     _ensure_column(connection, "runs", "total_tokens", "INTEGER NOT NULL DEFAULT 0")
     _ensure_column(connection, "runs", "estimated_cost_usd", "REAL")

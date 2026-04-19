@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import hashlib
 import re
+import shutil
+import subprocess
 from pathlib import Path
 from uuid import uuid4
 
@@ -124,22 +126,16 @@ def ensure_dynamic_oracle(
 def guess_scope_candidates(prompt: str, workspace: Path, *, detection: ToolchainDetection, limit: int = 8) -> list[str]:
     keywords = [token for token in _tokenize(prompt) if token not in STOP_WORDS]
     candidates: list[tuple[int, str]] = []
-    for path in _iter_candidate_files(workspace):
-        rel = path.relative_to(workspace).as_posix()
+    rg_hits = _rg_keyword_hits(workspace, keywords)
+    for rel in _iter_candidate_file_paths(workspace):
         score = 0
         lowered = rel.lower()
         for keyword in keywords:
             if keyword in lowered:
                 score += 5
-        if path.suffix in {".py", ".js", ".ts", ".rs", ".go", ".sh"}:
+        if Path(rel).suffix in {".py", ".js", ".ts", ".rs", ".go", ".sh"}:
             score += 1
-        try:
-            content = path.read_text(encoding="utf-8", errors="ignore")[:4000].lower()
-        except OSError:
-            content = ""
-        for keyword in keywords:
-            if keyword in content:
-                score += 2
+        score += rg_hits.get(rel, 0)
         if score:
             candidates.append((score, rel))
     if candidates:
@@ -170,16 +166,22 @@ def _default_scope_candidates(workspace: Path, *, detection: ToolchainDetection,
     }
     accepted_suffixes = set().union(*(suffixes.get(language, set()) for language in detection.languages))
     matches: list[str] = []
-    for path in _iter_candidate_files(workspace):
-        rel = path.relative_to(workspace).as_posix()
-        if not accepted_suffixes or path.suffix in accepted_suffixes:
+    for rel in _iter_candidate_file_paths(workspace):
+        if not accepted_suffixes or Path(rel).suffix in accepted_suffixes:
             matches.append(rel)
         if len(matches) >= limit:
             break
     return matches
 
 
-def _iter_candidate_files(workspace: Path) -> list[Path]:
+def _iter_candidate_file_paths(workspace: Path) -> list[str]:
+    rg_files = _rg_files(workspace)
+    if rg_files is not None:
+        return rg_files
+    return [path.relative_to(workspace).as_posix() for path in _iter_candidate_files_fallback(workspace)]
+
+
+def _iter_candidate_files_fallback(workspace: Path) -> list[Path]:
     excluded = {".git", ".venv", "node_modules", "__pycache__", "artifacts", "reports", ".mypy_cache", ".pytest_cache"}
     files: list[Path] = []
     for path in workspace.rglob("*"):
@@ -193,3 +195,80 @@ def _iter_candidate_files(workspace: Path) -> list[Path]:
 
 def _tokenize(prompt: str) -> list[str]:
     return [token.lower() for token in re.findall(r"[A-Za-z0-9_]{3,}", prompt)]
+
+
+def _rg_files(workspace: Path) -> list[str] | None:
+    if shutil.which("rg") is None:
+        return None
+    result = subprocess.run(
+        [
+            "rg",
+            "--files",
+            "-g",
+            "!.git",
+            "-g",
+            "!.venv",
+            "-g",
+            "!node_modules",
+            "-g",
+            "!__pycache__",
+            "-g",
+            "!artifacts",
+            "-g",
+            "!reports",
+            "-g",
+            "!.mypy_cache",
+            "-g",
+            "!.pytest_cache",
+        ],
+        cwd=workspace,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        return None
+    return sorted(line for line in result.stdout.splitlines() if line.strip())
+
+
+def _rg_keyword_hits(workspace: Path, keywords: list[str]) -> dict[str, int]:
+    if shutil.which("rg") is None or not keywords:
+        return {}
+    scores: dict[str, int] = {}
+    for keyword in keywords[:8]:
+        result = subprocess.run(
+            [
+                "rg",
+                "-l",
+                "-i",
+                keyword,
+                ".",
+                "-g",
+                "!.git",
+                "-g",
+                "!.venv",
+                "-g",
+                "!node_modules",
+                "-g",
+                "!__pycache__",
+                "-g",
+                "!artifacts",
+                "-g",
+                "!reports",
+                "-g",
+                "!.mypy_cache",
+                "-g",
+                "!.pytest_cache",
+            ],
+            cwd=workspace,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if result.returncode not in {0, 1}:
+            continue
+        for line in result.stdout.splitlines():
+            candidate = line.strip()
+            if candidate:
+                scores[candidate] = scores.get(candidate, 0) + 2
+    return scores

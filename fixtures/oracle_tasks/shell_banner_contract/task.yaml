@@ -17,7 +17,7 @@ doubt_points:
 oracles:
   - name: shell-banner
     kind: shell
-    command: sh ../oracle.sh
+    command: sh oracle.sh
 adapter: replay
 replay_file: replay.json
 retry_budget: 2

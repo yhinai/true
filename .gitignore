@@ -1,9 +1,19 @@
 __pycache__/
 .pytest_cache/
 *.pyc
+*.egg-info/
+.DS_Store
+.idea/
+.claude/
+.junie/
+.omc/
 artifacts/runs/
 artifacts/cbc.sqlite3
+artifacts/poc/
 reports/benchmarks/
+reports/controller-compare/
+reports/poc/
+plugin/.intellijPlatform/
 
 # Never commit App/SSH private keys
 *.pem
@@ -19,3 +29,5 @@ web/node_modules/
 web/.next/
 web/out/
 web/.vercel/
+web/.omc/
+web/tsconfig.tsbuildinfo

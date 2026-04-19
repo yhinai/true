@@ -1,0 +1,321 @@
+name: CBC Remediate
+
+on:
+  workflow_dispatch:
+    inputs:
+      task_path:
+        description: "path to task.yaml"
+        required: true
+      retry_budget:
+        description: "max attempts"
+        required: false
+        default: "10"
+      cost_cap_usd:
+        description: "hard USD cap"
+        required: false
+        default: "5.00"
+      remediation_id:
+        description: "cbc_remediations row id to update"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: cbc-remediate-${{ inputs.task_path }}
+  cancel-in-progress: false
+
+jobs:
+  remediate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TASK_PATH: ${{ inputs.task_path }}
+      RETRY_BUDGET: ${{ inputs.retry_budget }}
+      COST_CAP_USD: ${{ inputs.cost_cap_usd }}
+      REMEDIATION_ID: ${{ inputs.remediation_id }}
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v8.1.0
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Codex CLI
+        id: codex_install
+        run: |
+          set -e
+          if npm install -g @openai/codex; then
+            echo "installed=npm" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "::warning::npm install -g @openai/codex failed; trying pip fallback"
+          if pip install --user openai-codex; then
+            echo "installed=pip" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "::warning::No Codex CLI package installable; --agent=codex may fail at runtime"
+          echo "installed=none" >> "$GITHUB_OUTPUT"
+
+      - name: Install project
+        run: uv sync --extra dev
+
+      - name: Configure git identity
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Create remediation branch
+        id: branch
+        run: |
+          base=$(basename "$TASK_PATH")
+          base="${base%.yaml}"
+          base="${base%.yml}"
+          # Sanitize any odd characters
+          safe=$(echo "$base" | tr -c 'A-Za-z0-9._-' '-')
+          branch="cbc-remediate/${GITHUB_RUN_ID}-${safe}"
+          git checkout -b "$branch"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          echo "task_id=$safe" >> "$GITHUB_OUTPUT"
+
+      - name: Mark Supabase row running
+        if: inputs.remediation_id != ''
+        run: |
+          set -e
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::warning::Supabase env not set; skipping status=running update"
+            exit 0
+          fi
+          curl -fsS -X PATCH \
+            "${SUPABASE_URL}/rest/v1/cbc_remediations?id=eq.${REMEDIATION_ID}" \
+            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: return=minimal" \
+            -d "$(jq -nc --arg now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" '{status:"running", started_at:$now}')" \
+            || echo "::warning::Supabase status=running patch failed (non-fatal)"
+
+      - name: Run CBC remediation
+        id: cbc
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          mkdir -p /tmp/cbc
+          uv run cbc run "$TASK_PATH" \
+            --workspace-in-place "$GITHUB_WORKSPACE" \
+            --agent=codex --allow-dangerous-codex \
+            --controller=gearbox \
+            --mode=treatment \
+            --retry-budget="$RETRY_BUDGET" \
+            --json \
+            >/tmp/cbc/result.json \
+            2>/tmp/cbc/stderr.log
+          echo "cbc_exit=$?" >> "$GITHUB_OUTPUT"
+          echo "--- stderr tail ---"
+          tail -n 200 /tmp/cbc/stderr.log || true
+          echo "--- result.json ---"
+          cat /tmp/cbc/result.json || true
+
+      - name: Parse result
+        id: parsed
+        run: |
+          set -e
+          if [ ! -s /tmp/cbc/result.json ]; then
+            echo "::error::CBC produced no JSON output"
+            echo "verdict=ERROR" >> "$GITHUB_OUTPUT"
+            echo "bail_reason=no_output" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          verdict=$(jq -r '.verdict // .verification.status // "ERROR"' /tmp/cbc/result.json)
+          run_id=$(jq -r '.run_id // ""' /tmp/cbc/result.json)
+          cost=$(jq -r '.estimated_cost_usd // 0' /tmp/cbc/result.json)
+          tokens=$(jq -r '.total_tokens // 0' /tmp/cbc/result.json)
+          attempts=$(jq -r '.attempts_used // .attempts // (.history|length) // 0' /tmp/cbc/result.json)
+          changed=$(jq -c '.changed_files // []' /tmp/cbc/result.json)
+          echo "verdict=$verdict"        >> "$GITHUB_OUTPUT"
+          echo "run_id=$run_id"          >> "$GITHUB_OUTPUT"
+          echo "cost=$cost"              >> "$GITHUB_OUTPUT"
+          echo "tokens=$tokens"          >> "$GITHUB_OUTPUT"
+          echo "attempts=$attempts"      >> "$GITHUB_OUTPUT"
+          echo "changed=$changed"        >> "$GITHUB_OUTPUT"
+          # Cost cap check
+          over=$(awk -v c="$cost" -v cap="$COST_CAP_USD" 'BEGIN{print (c+0 > cap+0) ? "1" : "0"}')
+          echo "over_budget=$over"       >> "$GITHUB_OUTPUT"
+
+      - name: Decide outcome
+        id: decide
+        run: |
+          set -e
+          verdict="${{ steps.parsed.outputs.verdict }}"
+          over="${{ steps.parsed.outputs.over_budget }}"
+          reason=""
+          status=""
+          if [ "$over" = "1" ]; then
+            status="bailed_budget"
+            reason="cost ${{ steps.parsed.outputs.cost }} exceeds cap ${COST_CAP_USD}"
+          elif [ "$verdict" = "VERIFIED" ]; then
+            status="verified"
+          elif [ "$verdict" = "LOOP" ] || [ "$verdict" = "BAILED_LOOP" ]; then
+            status="bailed_loop"
+            reason="controller loop bail"
+          else
+            status="error"
+            reason="verdict=$verdict"
+          fi
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          echo "reason=$reason" >> "$GITHUB_OUTPUT"
+
+      - name: Check diff and bail if empty
+        id: diff
+        if: steps.decide.outputs.status == 'verified'
+        run: |
+          set -e
+          git add -A
+          if git diff --cached --quiet; then
+            echo "changed_any=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::VERIFIED but no files changed"
+          else
+            echo "changed_any=true" >> "$GITHUB_OUTPUT"
+            git diff --cached --stat
+          fi
+
+      - name: Commit and push remediation
+        id: commit
+        if: steps.decide.outputs.status == 'verified' && steps.diff.outputs.changed_any == 'true'
+        run: |
+          set -e
+          task_id="${{ steps.branch.outputs.task_id }}"
+          git commit -m "cbc: auto-remediate ${task_id} [verdict=VERIFIED]"
+          git push -u origin HEAD
+          echo "pushed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Mirror new run to Supabase
+        if: steps.decide.outputs.status == 'verified' && steps.commit.outputs.pushed == 'true'
+        continue-on-error: true
+        run: |
+          run_id="${{ steps.parsed.outputs.run_id }}"
+          if [ -z "$run_id" ]; then
+            echo "No run_id; skipping mirror"
+            exit 0
+          fi
+          ledger="artifacts/runs/${run_id}/run_ledger.json"
+          if [ ! -f "$ledger" ]; then
+            echo "::warning::ledger missing: $ledger — skipping mirror"
+            exit 0
+          fi
+          if [ -x scripts/remediate_mirror.py ] || [ -f scripts/remediate_mirror.py ]; then
+            uv run python scripts/remediate_mirror.py "$ledger"
+          else
+            uv run python -c "from cbc.api.supabase_writer import mirror_run_ledger_path; mirror_run_ledger_path('${ledger}')"
+          fi
+
+      - name: Open PR
+        id: pr
+        if: steps.decide.outputs.status == 'verified' && steps.commit.outputs.pushed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          task_id="${{ steps.branch.outputs.task_id }}"
+          run_id="${{ steps.parsed.outputs.run_id }}"
+          cost="${{ steps.parsed.outputs.cost }}"
+          attempts="${{ steps.parsed.outputs.attempts }}"
+          tokens="${{ steps.parsed.outputs.tokens }}"
+          changed='${{ steps.parsed.outputs.changed }}'
+          run_link="https://supabase-true.vercel.app/runs/${run_id}"
+          action_link="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          body_file=$(mktemp)
+          {
+            echo "## CBC auto-remediation"
+            echo ""
+            echo "- **task:** \`${TASK_PATH}\`"
+            echo "- **verdict:** VERIFIED"
+            echo "- **run_id:** \`${run_id}\`"
+            echo "- **attempts:** ${attempts} / ${RETRY_BUDGET}"
+            echo "- **cost:** \$${cost} (cap \$${COST_CAP_USD})"
+            echo "- **tokens:** ${tokens}"
+            echo ""
+            echo "### Changed files"
+            echo '```json'
+            echo "${changed}" | jq .
+            echo '```'
+            echo ""
+            echo "### Links"
+            echo "- Dashboard: ${run_link}"
+            echo "- GHA run: ${action_link}"
+          } > "$body_file"
+          url=$(gh pr create \
+            --base main \
+            --head "${{ steps.branch.outputs.branch }}" \
+            --title "cbc auto-remediate: ${task_id}" \
+            --body-file "$body_file" \
+            --label cbc-auto-remediation)
+          echo "pr_url=$url" >> "$GITHUB_OUTPUT"
+          echo "Opened: $url"
+
+      - name: Update Supabase remediation row (final)
+        if: always() && inputs.remediation_id != ''
+        run: |
+          set -e
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "::warning::Supabase env not set; skipping final update"
+            exit 0
+          fi
+          status="${{ steps.decide.outputs.status }}"
+          reason="${{ steps.decide.outputs.reason }}"
+          [ -z "$status" ] && status="error"
+          pr_url="${{ steps.pr.outputs.pr_url }}"
+          run_id="${{ steps.parsed.outputs.run_id }}"
+          cost="${{ steps.parsed.outputs.cost }}"
+          attempts="${{ steps.parsed.outputs.attempts }}"
+          payload=$(jq -nc \
+            --arg status "$status" \
+            --arg err "$reason" \
+            --arg pr "$pr_url" \
+            --arg run "$run_id" \
+            --arg now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --argjson cost "${cost:-0}" \
+            --argjson attempts "${attempts:-0}" \
+            '{
+              status: $status,
+              attempts_used: $attempts,
+              cost_usd: $cost,
+              pr_url: (if $pr == "" then null else $pr end),
+              new_run_id: (if $run == "" then null else $run end),
+              error: (if $err == "" then null else $err end),
+              completed_at: $now
+            }')
+          curl -fsS -X PATCH \
+            "${SUPABASE_URL}/rest/v1/cbc_remediations?id=eq.${REMEDIATION_ID}" \
+            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: return=minimal" \
+            -d "$payload" \
+            || echo "::warning::final Supabase patch failed"
+
+      - name: Fail if bailed
+        if: steps.decide.outputs.status != 'verified'
+        run: |
+          echo "::error::remediation status=${{ steps.decide.outputs.status }} reason=${{ steps.decide.outputs.reason }}"
+          exit 1

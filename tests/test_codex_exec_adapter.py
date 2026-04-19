@@ -182,7 +182,8 @@ def test_codex_exec_includes_runtime_overrides(monkeypatch, tmp_path: Path) -> N
             config_overrides=['model_reasoning_effort="medium"'],
             add_dirs=[writable],
             skip_git_repo_check=False,
-        )
+        ),
+        allow_dangerous=True,
     )
     adapter.run(prompt="fix it", workspace=tmp_path, attempt=1, schema_path=None)
 

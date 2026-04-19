@@ -18,7 +18,7 @@ doubt_points:
 oracles:
   - name: text-oracle
     kind: python
-    command: ../oracle.py
+    command: oracle.py
 adapter: replay
 replay_file: replay.json
 retry_budget: 2

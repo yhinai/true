@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import subprocess
 import time
 from collections.abc import Callable
@@ -14,11 +15,35 @@ from cbc.model.adapter import ModelAdapter
 from cbc.model.events import text_event
 from cbc.models import AdapterRunResult, ModelEvent, ModelResponse, ModelUsage
 
+logger = logging.getLogger(__name__)
+
+
+def _is_dangerous(config: CodexConfig) -> bool:
+    return bool(
+        config.dangerously_bypass_approvals
+        or config.sandbox == "danger-full-access"
+    )
+
 
 class CodexExecAdapter(ModelAdapter):
     name = "codex"
 
-    def __init__(self, config: CodexConfig) -> None:
+    def __init__(
+        self,
+        config: CodexConfig,
+        *,
+        allow_dangerous: bool = False,
+        task_id: str | None = None,
+    ) -> None:
+        if _is_dangerous(config) and not allow_dangerous:
+            raise ValueError(
+                "Dangerous Codex flags set in task YAML; pass "
+                "--allow-dangerous-codex on CLI to honor."
+            )
+        if _is_dangerous(config):
+            logger.warning(
+                "Running Codex with sandbox bypass: task=%s", task_id
+            )
         self.config = config
 
     def run(

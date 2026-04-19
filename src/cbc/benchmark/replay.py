@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 import json
+import os
+import shlex
 import subprocess
 import time
 from pathlib import Path
 from typing import Callable, Mapping
+
+from cbc.verify.env_utils import scrub_env
 
 from .types import (
     BenchmarkTaskResult,
@@ -22,9 +26,10 @@ TaskOrchestrator = Callable[..., object]
 def _oracle_run(command: str, cwd: Path, timeout_s: int) -> tuple[bool, int, float, str, str]:
     started = time.perf_counter()
     proc = subprocess.run(
-        command,
-        shell=True,
+        shlex.split(command),
+        shell=False,
         cwd=str(cwd),
+        env=scrub_env(os.environ),
         capture_output=True,
         text=True,
         timeout=timeout_s,
