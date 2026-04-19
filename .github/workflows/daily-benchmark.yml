@@ -1,0 +1,92 @@
+name: Daily benchmark
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate App token
+        id: app-token
+        continue-on-error: true
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.CBC_BOT_APP_ID }}
+          private-key: ${{ secrets.CBC_BOT_APP_PRIVATE_KEY }}
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          token: ${{ steps.app-token.outputs.token || github.token }}
+          fetch-depth: 0
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v8.1.0
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install project
+        run: uv sync --extra dev
+
+      - name: Run curated benchmark
+        run: ./scripts/run_compare.sh --json > /tmp/curated.json
+
+      - name: Run controller benchmark
+        run: ./scripts/run_controller_compare.sh --json > /tmp/controller.json
+
+      - name: Compare to baselines
+        id: diff
+        continue-on-error: true
+        run: |
+          uv run python3 scripts/regression_detector.py \
+              --current /tmp/curated.json \
+              --baseline reports/examples/curated_benchmark/comparison.json \
+              --current /tmp/controller.json \
+              --baseline reports/examples/controller_benchmark/comparison.json \
+              --output /tmp/regression.md
+
+      - name: Open regression issue if needed
+        if: steps.diff.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+              --title "Daily benchmark regression on $(date -u +%Y-%m-%d)" \
+              --label regression,automated \
+              --body-file /tmp/regression.md
+
+      - name: Commit fresh report if clean
+        if: steps.diff.outcome == 'success'
+        env:
+          GH_APP_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          cp /tmp/curated.json reports/examples/curated_benchmark/comparison.json
+          cp /tmp/controller.json reports/examples/controller_benchmark/comparison.json
+          if git diff --quiet -- reports/examples; then
+            echo "No report drift — nothing to commit."
+            exit 0
+          fi
+          git config user.name  "cbc-auto-refresh[bot]"
+          git config user.email "cbc-auto-refresh[bot]@users.noreply.github.com"
+          git add reports/examples/curated_benchmark/comparison.json \
+                  reports/examples/controller_benchmark/comparison.json
+          git commit -m "chore: refresh daily benchmark report"
+          if [ -n "${GH_APP_TOKEN}" ]; then
+            git remote set-url origin "https://x-access-token:${GH_APP_TOKEN}@github.com/${{ github.repository }}.git"
+          fi
+          git push origin HEAD:main || echo "::warning::direct push blocked; PR-gated hook will reroute in next run"
+
+      - name: Fail job if regression detected
+        if: steps.diff.outcome == 'failure'
+        run: exit 1
