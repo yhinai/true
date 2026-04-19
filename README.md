@@ -9,9 +9,44 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](pyproject.toml)
 [![Contract](https://img.shields.io/badge/contract-2026--04--18.v2-green.svg)](src/cbc/headless_contract.py)
 [![main: PR-gated](https://img.shields.io/badge/main-PR--gated-brightgreen.svg)](#silent-pr-gated-workflow)
-[![tests: 132](https://img.shields.io/badge/tests-132_passing-brightgreen.svg)](#)
+[![tests: 249](https://img.shields.io/badge/tests-249_passing-brightgreen.svg)](#)
+[![dashboard live](https://img.shields.io/badge/dashboard-live-blueviolet.svg)](https://supabase-true.vercel.app/)
+[![demo video](https://img.shields.io/badge/demo-video-red.svg)](https://www.youtube.com/watch?v=OOqca_EjjwQ)
 
 </div>
+
+---
+
+## Live Dashboard & Demo
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+### 📺 Watch it run
+
+[![CBC demo video](https://img.youtube.com/vi/OOqca_EjjwQ/maxresdefault.jpg)](https://www.youtube.com/watch?v=OOqca_EjjwQ)
+
+End-to-end walkthrough — task in, verdict out, proof in the ledger.
+
+</td>
+<td width="50%" valign="top">
+
+### 🎛️ Command Center
+
+**→ [supabase-true.vercel.app](https://supabase-true.vercel.app/)**
+
+Live mission-telemetry dashboard:
+
+- Pulsing telemetry ticker under the hero
+- Thermal-printer **live event tail** (SSE + Supabase realtime)
+- Full-bleed **Verdict Reel** of recent runs
+- Run gallery, KPI row, remediation feed, check suite
+- All hydrated from `cbc_runs` + `cbc_run_events` + `cbc_remediations` Supabase tables
+
+</td>
+</tr>
+</table>
 
 ---
 
