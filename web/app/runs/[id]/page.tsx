@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { use, useMemo } from "react";
-import { streamUrl } from "@/lib/api";
+import { use, useEffect, useMemo, useState } from "react";
+import { fetchRunReview, streamUrl, type RunReview } from "@/lib/api";
 import { useSSE } from "@/lib/useSSE";
 
 type Check = {
@@ -55,11 +55,33 @@ export default function RunDetailPage({ params }: { params: Promise<{ id: string
   const { id: runId } = use(params);
   const url = useMemo(() => streamUrl(runId), [runId]);
   const sse = useSSE<Ledger>(url);
+  const [fallback, setFallback] = useState<RunReview | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchRunReview(runId)
+      .then((payload) => {
+        if (!cancelled) setFallback(payload);
+      })
+      .catch(() => {
+        if (!cancelled) setFallback(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [runId]);
 
   const ledger = sse.data;
   const attempts = ledger?.attempts ?? [];
   const latest = attempts[attempts.length - 1];
-  const verdict = (ledger?.verdict || "PENDING").toUpperCase();
+  const fallbackChecks = fallback?.summary?.verification?.checks ?? [];
+  const fallbackFiles = fallback?.summary?.diff?.files ?? [];
+  const verdict = (
+    ledger?.verdict
+    || fallback?.summary?.verification?.state
+    || fallback?.summary?.merge_gate?.verdict
+    || "PENDING"
+  ).toUpperCase();
   const terminal = sse.event === "done";
   const errored = sse.event === "error";
   const streamState = errored
@@ -78,7 +100,7 @@ export default function RunDetailPage({ params }: { params: Promise<{ id: string
         </Link>
         <div>
           <div className="run-kicker">Run ledger</div>
-          <h1>{ledger?.title || ledger?.task_id || runId}</h1>
+          <h1>{ledger?.title || ledger?.task_id || fallback?.task_id || runId}</h1>
           <div className="run-subtitle">{runId}</div>
         </div>
         <div className="run-badges">
@@ -91,11 +113,75 @@ export default function RunDetailPage({ params }: { params: Promise<{ id: string
       </div>
 
       {!ledger ? (
-        <div className="panel" style={{ marginTop: 32 }}>
-          <div className="panel-body pad event-empty">
-            Waiting for the first ledger frame from <code>/api/cbc/runs/{runId}/stream</code>.
+        <>
+          <div className="meta-grid">
+            <Meta label="Task" value={fallback?.task_id} />
+            <Meta label="Mode" value={fallback?.summary?.merge_gate?.verdict ? "review snapshot" : "—"} />
+            <Meta label="Controller" value="—" />
+            <Meta label="Adapter" value="—" />
+            <Meta label="Attempts" value="—" />
+            <Meta label="Unsafe claims" value={String(fallback?.summary?.verification?.unsafe_claims ?? "—")} />
+            <Meta label="Model calls" value="—" />
+            <Meta label="Selected candidate" value="—" />
+            <Meta label="Started" value="—" />
+            <Meta label="Ended" value="—" />
+            <Meta label="Tokens" value="—" />
+            <Meta label="Est. cost" value="—" />
           </div>
-        </div>
+
+          <div className="run-layout">
+            <div className="panel run-summary-panel">
+              <div className="panel-head">
+                <strong>Historical snapshot</strong>
+                <span>REST FALLBACK</span>
+              </div>
+              <div className="run-summary-copy">
+                {fallback?.summary?.merge_gate?.reason
+                  || "Waiting for the live ledger stream to hydrate this page."}
+              </div>
+              {fallbackChecks.length > 0 && (
+                <div className="failure-chip-row">
+                  {fallbackChecks.slice(0, 6).map((check) => (
+                    <span className="failure-chip" key={`${check.name}-${check.status}`}>
+                      {(check.name || "check").toLowerCase()} · {(check.status || "unknown").toLowerCase()}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="panel run-summary-panel">
+              <div className="panel-head">
+                <strong>Fallback state</strong>
+                <span>{fallback ? "HISTORICAL" : "LOADING"}</span>
+              </div>
+              <div className="attempt-summary">
+                <div>
+                  <span className="attempt-label">Review summary</span>
+                  <strong>
+                    {fallback?.summary?.verification?.state
+                      ? `Verification ${fallback.summary.verification.state}.`
+                      : "No historical review snapshot yet."}
+                  </strong>
+                </div>
+                <div>
+                  <span className="attempt-label">Changed files</span>
+                  <strong>
+                    {fallbackFiles.length > 0
+                      ? fallbackFiles.map((file) => file.path).filter(Boolean).join(", ")
+                      : "Waiting for stream or snapshot details."}
+                  </strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="panel" style={{ marginTop: 24 }}>
+            <div className="panel-body pad event-empty">
+              Waiting for the live ledger stream from <code>/api/cbc/runs/{runId}/stream</code>.
+            </div>
+          </div>
+        </>
       ) : (
         <>
           <div className="meta-grid">
