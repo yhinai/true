@@ -11,6 +11,8 @@
 [![main: PR-gated](https://img.shields.io/badge/main-PR--gated-brightgreen.svg)](#silent-pr-gated-workflow)
 [![tests: 249](https://img.shields.io/badge/tests-249_passing-brightgreen.svg)](#)
 [![dashboard live](https://img.shields.io/badge/dashboard-live-blueviolet.svg)](https://supabase-true.vercel.app/)
+[![autonomous: yes](https://img.shields.io/badge/remediation-autonomous-orange.svg)](#autonomous-remediation-loop)
+[![IntelliJ plugin](https://img.shields.io/badge/JetBrains-plugin-000.svg)](plugin/README.md)
 [![demo video](https://img.shields.io/badge/demo-video-red.svg)](https://www.youtube.com/watch?v=OOqca_EjjwQ)
 
 </div>
@@ -274,6 +276,43 @@ Measured by `scripts/bench_gearbox_parallel.py` into `reports/gearbox_speedup.js
 
 ---
 
+## Autonomous Remediation Loop
+
+A FALSIFIED run no longer sits on the floor. A Supabase trigger enqueues it, a GitHub Actions cron dispatches a Codex YOLO remediation, and the successful PR auto-merges — all without a human in the loop.
+
+```mermaid
+flowchart LR
+    Run["Baseline run<br/>FALSIFIED / TIMED_OUT"] --> Trig["cbc_runs trigger<br/>enqueues cbc_remediations"]
+    Trig --> Cron["cbc-remediate-dispatch.yml<br/>cron every 5 min"]
+    Cron --> Reap["reap rows stuck<br/>in running &gt;60min"]
+    Cron --> Drain["drain queued rows"]
+    Drain --> WF["cbc-remediate.yml<br/>workflow_dispatch"]
+    WF --> Codex["cbc run --agent=codex<br/>--allow-dangerous-codex<br/>--controller=gearbox<br/>--retry-budget=10"]
+    Codex --> Gate{"VERIFIED?"}
+    Gate -- yes --> PR["git commit + push<br/>gh pr create<br/>auto-merge armed"]
+    Gate -- no  --> Bail["bailed_budget /<br/>bailed_loop / error"]
+    PR --> Main["main"]
+
+    classDef g fill:#e8f5e9,stroke:#388e3c
+    classDef y fill:#fff3cd,stroke:#856404
+    classDef r fill:#f8d7da,stroke:#721c24
+    class Main,PR g
+    class Cron,Reap,Drain y
+    class Bail r
+```
+
+| Piece | Path |
+|---|---|
+| Enqueue trigger | `migrations/supabase/0002_cbc_remediations.sql` |
+| Dispatcher script | `scripts/remediate_dispatcher.py` (drain + reap) |
+| Dispatcher cron | `.github/workflows/cbc-remediate-dispatch.yml` (5 min) |
+| Remediation runner | `.github/workflows/cbc-remediate.yml` |
+| Mirror helper | `scripts/remediate_mirror.py` |
+
+Required secrets: `OPENAI_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ANON_KEY`, `POSTGRES_URL_NON_POOLING`. Branch protection keeps the `test` check required — failures still block merge.
+
+---
+
 ## Silent PR-gated Workflow
 
 You keep typing `git push origin main`. The system handles the rest.
@@ -379,7 +418,9 @@ Python 3.11+ and [uv](https://docs.astral.sh/uv/).
 | `--mode {baseline,treatment,review}` | `treatment` | Execution mode |
 | `--controller {sequential,gearbox}` | `sequential` | Candidate strategy |
 | `--sandbox {local,contree}` | `local` | Workspace isolation |
+| `--workspace-in-place PATH` | — | Edit a caller-supplied tree in place (mutually exclusive with `--sandbox`); used by the remediation workflow against `$GITHUB_WORKSPACE`. |
 | `--agent {codex,replay}` | per task.yaml | Model adapter |
+| `--allow-dangerous-codex` | off | Honor `dangerously_bypass_approvals` / `sandbox=danger-full-access` from task YAML. Gated because it disables Codex sandbox. |
 | `--max-seconds-per-attempt` | none | Wall-clock budget per attempt |
 | `--json` | off | Machine-readable stdout |
 | `--stream` | off | NDJSON lifecycle events |
@@ -446,7 +487,12 @@ curl http://127.0.0.1:8000/benchmarks
 ```
 src/cbc/
 ├── main.py                  CLI entry (Typer)
-├── api/                     FastAPI read surface
+├── api/                     FastAPI read surface + Supabase mirror
+│   ├── app.py               bearer auth + CORS allowlist
+│   ├── routes.py            /health /runs /runs/{id}/mirror /benchmarks
+│   ├── streams.py           SSE tail of run_ledger.json
+│   ├── store.py             artifact reader (narrow except + logging)
+│   └── supabase_writer.py   mirror run + fan events into cbc_run_events
 ├── controller/
 │   ├── orchestrator.py      run_task (sequential + gearbox)
 │   ├── run_state.py         RunState, IterationRecord, AttemptTimeout
@@ -455,20 +501,77 @@ src/cbc/
 │   ├── gearbox_runner.py    asyncio.gather
 │   └── scoring.py           tunable CheckWeights
 ├── model/
-│   ├── codex_exec.py        streaming subprocess
+│   ├── codex_exec.py        streaming subprocess, sandbox gate
 │   ├── replay.py            deterministic replay
 │   └── prompts.py           program.md injection
 ├── prompts/program_loader.py
 ├── roles/                   coder, planner, explorer, reviewer
-├── verify/core.py           parallel ThreadPoolExecutor
+├── verify/
+│   ├── core.py              parallel ThreadPoolExecutor
+│   ├── env_utils.py         scrub_env (drops SUPABASE_*/OPENAI_*/…)
+│   └── *_runner.py          shell=False + shlex.split across all runners
 ├── workspace/
-│   ├── backends.py          WorkspaceBackend protocol
+│   ├── backends.py          LocalBackend / InPlaceBackend / SandboxMode
 │   ├── contree_adapter.py   ContreeWorkspace
 │   └── staging.py           create_workspace_lease
 └── storage/
+    ├── db.py                SQLite (WAL + busy_timeout)
     ├── runs.py              SQLite index
     └── candidate_lineage.py candidate_snapshots
+
+web/                         Next.js 16 command center
+├── app/
+│   ├── page.tsx             Hero + Runs + Events + Remediation + Pipeline
+│   ├── runs/[id]/           live run detail with SSE + Supabase fallback
+│   ├── components/          RunGallery, EventTail, RemediationFeed, …
+│   └── globals.css          mission telemetry theme
+└── lib/                     supabase.ts, api.ts, useSSE hook
+
+plugin/                      JetBrains plugin (tool window + gutter badges)
+├── build.gradle.kts
+└── src/main/kotlin/dev/cbc/plugin/
+
+migrations/supabase/
+├── 0001_cbc_ledger.sql      cbc_runs + cbc_run_events
+└── 0002_cbc_remediations.sql cbc_remediations + enqueue trigger
+
+scripts/
+├── remediate_dispatcher.py  drain + reap queue → workflow_dispatch
+├── remediate_mirror.py      mirror a completed run ledger
+└── bench_gearbox_parallel.py
 ```
+
+---
+
+## JetBrains Plugin
+
+An IntelliJ-platform plugin (`plugin/`) brings CBC into the editor.
+
+- **CBC tool window** streams `cbc solve --stream` NDJSON events into a live Attempt → Check → Verdict tree.
+- **Gutter badges** paint VERIFIED / FALSIFIED / TIMED_OUT / UNPROVEN next to files changed by the latest run.
+- **Run CBC on Selection** (`⌃⌥V`) sends editor selection to `cbc solve` and renders the verdict. Plays well with AI Assistant / Codex so CBC is the "verify" button on any suggestion.
+
+```bash
+cd plugin
+./gradlew buildPlugin          # → build/distributions/cbc-plugin-0.1.0.zip
+./gradlew runIde               # sandbox IDE with the plugin loaded
+```
+
+Install into your main IDE by unzipping the artifact into `~/Library/Application Support/JetBrains/<IDE-version>/plugins/`.
+
+---
+
+## Supabase Schema
+
+The control plane ships three tables (migrations in `migrations/supabase/`):
+
+| Table | Rows on production | Purpose |
+|---|---|---|
+| `cbc_runs` | 77 (verified+falsified) | Mirror of every completed `RunLedger` |
+| `cbc_run_events` | 1,528 | `run_started` / `attempt_started` / `check_result` / `attempt_verdict` / `run_verdict` |
+| `cbc_remediations` | live queue | FALSIFIED/TIMED_OUT rows enqueued by trigger; drained by cron dispatcher |
+
+All three are members of the `supabase_realtime` publication so the dashboard streams inserts live. The `cbc_runs_enqueue_remediation` trigger on `cbc_runs` fires on `verdict IN ('FALSIFIED','TIMED_OUT')` and upserts a queued remediation row with the task path resolved from convention (`fixtures/oracle_tasks/<task_id>/task.yaml`) or the `cbc_tasks` mapping table.
 
 ---
 
@@ -506,7 +609,11 @@ python3 -m compileall src tests scripts
 - Sequential + gearbox controllers; parallel gearbox under ConTree
 - Zero-config intake via `cbc solve`
 - `main` is PR-gated with silent auto-merge
-- 132 tests; fast suite ~11s
+- **249 tests passing**; fast suite ~10s
+- **Live dashboard** at [supabase-true.vercel.app](https://supabase-true.vercel.app/) (Next.js 16 + Supabase)
+- **Autonomous remediation loop**: FALSIFIED runs trigger → Codex YOLO → PR → auto-merge
+- **JetBrains plugin** ships the tool window, gutter badges, and "Run CBC on Selection"
+- Supabase ledger mirror: `cbc_runs`, `cbc_run_events`, `cbc_remediations` (+ enqueue trigger)
 
 ---
 
