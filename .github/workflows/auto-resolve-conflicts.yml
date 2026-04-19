@@ -66,7 +66,7 @@ jobs:
               safe=true
               for f in $conflicted; do
                 case "$f" in
-                  artifacts/examples/*|reports/*|docs/*.md|docs/**/*.md) continue ;;
+                  artifacts/examples/*|reports/*|docs/*.md|docs/**/*.md|CLAUDE.md|AGENTS.md|README.md|CHANGELOG.md) continue ;;
                   *) safe=false ;;
                 esac
               done
