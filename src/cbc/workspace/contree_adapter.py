@@ -8,6 +8,29 @@ from typing import Any
 
 from cbc.workspace.backends import SandboxMode, StagedLease
 
+_IGNORED_DIRS = frozenset({".git", "__pycache__", "node_modules"})
+
+
+def _walk_workspace_files(base: Path) -> dict[str, str]:
+    """Walk ``base`` recursively and return a container-path -> local-path map.
+
+    Skips common VCS/cache directories and any top-level entry beginning with
+    a dot so staging stays aligned with what belongs in the sandbox.
+    """
+
+    mapping: dict[str, str] = {}
+    for path in base.rglob("*"):
+        if not path.is_file():
+            continue
+        rel = path.relative_to(base)
+        parts = rel.parts
+        if parts[0] in _IGNORED_DIRS or parts[0].startswith("."):
+            continue
+        if any(part in _IGNORED_DIRS for part in parts[:-1]):
+            continue
+        mapping[f"/work/{rel.as_posix()}"] = str(path)
+    return mapping
+
 
 @dataclass
 class ContreeExecResult:
@@ -31,9 +54,10 @@ class ContreeWorkspace:
 
     async def prepare_async(self, base_dir: Path) -> StagedLease:
         image = await self.client.images.use(self.tag())
+        files = _walk_workspace_files(base_dir)
         await image.run(
             shell="true",
-            files={"/work": str(base_dir)},
+            files=files,
             disposable=False,
         )
         return StagedLease(root=Path("/work"), backend=self)

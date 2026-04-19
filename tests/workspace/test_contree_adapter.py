@@ -60,7 +60,43 @@ async def test_contree_workspace_prepare_uses_tagged_image(tmp_path: Path):
     assert len(fake_image.run_calls) == 1
     kwargs = fake_image.run_calls[0]["kwargs"]
     assert kwargs.get("disposable") is False
-    assert kwargs.get("files") == {"/work": str(tmp_path)}
+    # Empty base_dir -> empty file mapping.
+    assert kwargs.get("files") == {}
+
+
+@pytest.mark.asyncio
+async def test_prepare_async_walks_directory(tmp_path: Path):
+    from cbc.workspace.contree_adapter import ContreeWorkspace
+
+    # Build a fake base dir: two files in subdirs, one ignored
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "hello.py").write_text("print('hi')\n")
+    (tmp_path / "README.md").write_text("# x\n")
+    (tmp_path / ".git").mkdir()
+    (tmp_path / ".git" / "config").write_text("ignore me\n")
+    (tmp_path / "__pycache__").mkdir()
+    (tmp_path / "__pycache__" / "x.pyc").write_bytes(b"binary")
+
+    fake_client = MagicMock()
+    fake_image = MagicMock()
+    fake_session = MagicMock()
+    fake_session.image_id = "img-1"
+    fake_image.run = AsyncMock(return_value=fake_session)
+    fake_client.images.use = AsyncMock(return_value=fake_image)
+
+    ws = ContreeWorkspace(client=fake_client, task_id="t1")
+    await ws.prepare_async(tmp_path)
+
+    # Inspect the files kwarg passed to image.run
+    call_kwargs = fake_image.run.call_args.kwargs
+    files_mapping = call_kwargs["files"]
+    # Dict mapping container paths -> local paths
+    assert isinstance(files_mapping, dict)
+    assert any("hello.py" in str(k) for k in files_mapping)
+    assert any("README.md" in str(k) for k in files_mapping)
+    # Ignored
+    assert not any(".git" in str(k) for k in files_mapping.keys())
+    assert not any("__pycache__" in str(k) for k in files_mapping.keys())
 
 
 def test_contree_workspace_sync_prepare_raises(tmp_path: Path):
