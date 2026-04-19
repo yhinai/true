@@ -1,0 +1,19 @@
+{
+  "task": "fixtures/oracle_tasks/calculator_bug/task.yaml",
+  "sequential": {
+    "sandbox": "local",
+    "elapsed_seconds": 1.0239752909983508,
+    "returncode": 0,
+    "stderr_tail": "",
+    "stdout_tail": "    \"weighted_score\": -60.0\n          }\n        },\n        \"model_calls_used\": 2\n      },\n      {\n        \"attempt\": 2,\n        \"controller_mode\": \"sequential\",\n        \"selected_candidate_id\": null,\n        \"candidate_ids\": [],\n        \"model_calls_used\": 3\n      }\n    ]\n  },\n  \"risk_artifact\": {\n    \"risk_level\": \"CRITICAL\",\n    \"reasons\": [\n      \"1 changed files\",\n      \"unsafe claim detected\"\n    ],\n    \"verification_state\": \"VERIFIED\",\n    \"unsafe_claims\": 1,\n    \"failure_modes\": []\n  }\n}\n"
+  },
+  "parallel": {
+    "sandbox": "contree",
+    "elapsed_seconds": 0.4423196249990724,
+    "returncode": 1,
+    "stderr_tail": "i/.local/share/uv/python/cpython-3.12.13-macos-aarch64-none/lib \u2502\n\u2502 /python3.12/concurrent/futures/thread.py:59 in run                           \u2502\n\u2502                                                                              \u2502\n\u2502    56 \u2502   \u2502   \u2502   return                                                     \u2502\n\u2502    57 \u2502   \u2502                                                                  \u2502\n\u2502    58 \u2502   \u2502   try:                                                           \u2502\n\u2502 \u2771  59 \u2502   \u2502   \u2502   result = self.fn(*self.args, **self.kwargs)                \u2502\n\u2502    60 \u2502   \u2502   except BaseException as exc:                                   \u2502\n\u2502    61 \u2502   \u2502   \u2502   self.future.set_exception(exc)                             \u2502\n\u2502    62 \u2502   \u2502   \u2502   # Break a reference cycle with the exception 'exc'         \u2502\n\u2570\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256f\nIsADirectoryError: [Errno 21] Is a directory: \n'/Users/alhinai/Desktop/TRUE/fixtures/oracle_tasks/calculator_bug/workspace'\n",
+    "stdout_tail": ""
+  },
+  "conclusion": "parallel_unavailable_or_failed",
+  "speedup": null
+}
