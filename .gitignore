@@ -4,3 +4,7 @@ __pycache__/
 artifacts/runs/
 artifacts/cbc.sqlite3
 reports/benchmarks/
+
+# Never commit App/SSH private keys
+*.pem
+*.key

@@ -10,10 +10,20 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
     steps:
+      - name: Generate App token
+        id: app-token
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.CBC_BOT_APP_ID }}
+          private-key: ${{ secrets.CBC_BOT_APP_PRIVATE_KEY }}
+
       - name: Checkout
         uses: actions/checkout@v6
         with:
+          token: ${{ steps.app-token.outputs.token || github.token }}
           ref: ${{ github.head_ref || github.ref }}
           fetch-depth: 0
 
@@ -39,14 +49,18 @@ jobs:
 
       - name: Auto-commit refreshed snapshots on PR branches
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          # App-installation token so the push re-triggers CI (GITHUB_TOKEN pushes do not)
+          GH_APP_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           if ! git diff --quiet -- artifacts/examples reports/examples; then
-            git config user.name  "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git config user.name  "cbc-auto-refresh[bot]"
+            git config user.email "cbc-auto-refresh[bot]@users.noreply.github.com"
             git add artifacts/examples reports/examples
             git commit -m "chore: refresh example snapshots"
+            git remote set-url origin "https://x-access-token:${GH_APP_TOKEN}@github.com/${{ github.repository }}.git"
             git push origin HEAD:${{ github.head_ref }}
-            echo "Pushed refreshed snapshots; CI will re-run on the new commit."
+            echo "Pushed refreshed snapshots as App; CI will re-run on the new commit."
           else
             echo "Snapshots are clean."
           fi
