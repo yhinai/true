@@ -151,14 +151,14 @@ def main(argv: list[str]) -> int:
             pr_number = os.environ.get("PR_NUMBER")
             pr_url = os.environ.get("PR_URL")
             commit_sha = os.environ.get("COMMIT_SHA")
-            task_id_display = (
-                f"PR#{pr_number}" if pr_number
-                else (commit_sha[:7] if commit_sha else task_meta.get("task_id"))
-            )
+            # Keep the fixture task_id in the DB column so the Supabase
+            # auto-remediation trigger can resolve it to a real task.yaml.
+            # The PR/commit linkage lives in the title + payload instead.
+            fixture_task_id = task_meta.get("task_id")
             upsert_run(
                 {
                     "run_id": run_id,
-                    "task_id": task_id_display,
+                    "task_id": fixture_task_id,
                     "title": override_title or task_meta.get("title"),
                     "mode": "treatment",
                     "verdict": "PENDING",
@@ -170,7 +170,7 @@ def main(argv: list[str]) -> int:
                         "pr_number": pr_number,
                         "pr_url": pr_url,
                         "commit_sha": commit_sha,
-                        "fixture_task_id": task_meta.get("task_id"),
+                        "fixture_task_id": fixture_task_id,
                     },
                 }
             )
