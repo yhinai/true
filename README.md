@@ -301,7 +301,7 @@ Branch protection on the server still rejects unless temporarily disabled.
 
 ```mermaid
 flowchart LR
-    A["program.md<br/>repo root"] --> M(( merge ))
+    A["program.md<br/>repo root"] --> M(("merge"))
     B["task program.md<br/>overrides"] --> M
     M --> I["inject into<br/>coder prompt"]
     I --> L["RunLedger.program_text"]
