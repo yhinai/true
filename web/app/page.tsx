@@ -1,6 +1,8 @@
 import { Hero } from "./components/Hero";
+import { PromiseStrip } from "./components/PromiseStrip";
 import { KpiRow } from "./components/KpiRow";
 import { RunGallery } from "./components/RunGallery";
+import { VerdictReel } from "./components/VerdictReel";
 import { EventTail } from "./components/EventTail";
 import { RemediationFeed } from "./components/RemediationFeed";
 import { Capabilities } from "./components/Capabilities";
@@ -13,6 +15,8 @@ export default function CommandCenter() {
   return (
     <>
       <Hero />
+
+      <PromiseStrip />
 
       <Section
         tag="Telemetry — 002"
@@ -31,6 +35,8 @@ export default function CommandCenter() {
       >
         <RunGallery />
       </Section>
+
+      <VerdictReel />
 
       <Section
         id="events"

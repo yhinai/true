@@ -184,8 +184,16 @@ function RunCard({
   remediation?: CbcRemediationRow;
 }) {
   const verdict = run.verdict.toUpperCase();
+  const visibleChecks = run.checks.slice(0, 3);
+  const extraChecks = run.checks.slice(3);
+  const extraTitle = extraChecks
+    .map((c) => `${c.name} · ${c.status}`)
+    .join("\n");
   return (
-    <Link href={`/runs/${run.run_id}`} className="run-card">
+    <Link
+      href={`/runs/${run.run_id}`}
+      className={`run-card run-card-verdict-${verdict}`}
+    >
       <div className="run-card-top">
         <div className="run-card-tag">
           <span className="run-card-idx">{run.run_id.slice(0, 12)}</span>
@@ -249,7 +257,7 @@ function RunCard({
 
       {run.checks.length > 0 && (
         <div className="run-card-checks">
-          {run.checks.map((c, i) => (
+          {visibleChecks.map((c, i) => (
             <span
               key={i}
               className={`check-pill ${c.status.toUpperCase()}`}
@@ -259,6 +267,15 @@ function RunCard({
               {c.name}
             </span>
           ))}
+          {extraChecks.length > 0 && (
+            <span
+              className="check-pill check-pill-more"
+              title={extraTitle}
+              onClick={(e) => e.preventDefault()}
+            >
+              +{extraChecks.length} more
+            </span>
+          )}
         </div>
       )}
 
