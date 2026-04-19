@@ -226,3 +226,14 @@ python3 scripts/gen_test_scaffold.py src/cbc/foo/new_module.py
 ```
 
 Idempotent; skips if the test file already exists. Useful when an agent adds a new module.
+
+### Dependency autonomy
+
+`.github/dependabot.yml` opens PRs for outdated Python deps (weekly Mon) and GitHub
+Actions (weekly Mon). `.github/workflows/dependabot-auto-merge.yml` watches these PRs:
+
+- **Patch/minor bumps** → auto-merged (via `gh pr merge --auto --squash`) after CI passes
+- **Major bumps** → labeled `needs-review,major-bump` and left for a human
+
+Effect: patches and safe minors flow to main without any action. Majors halt at the
+PR for review.
