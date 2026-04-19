@@ -8,6 +8,14 @@ from typing import Any
 
 import typer
 from rich.console import Console
+from rich.progress import (
+    BarColumn,
+    Progress,
+    SpinnerColumn,
+    TaskProgressColumn,
+    TextColumn,
+    TimeElapsedColumn,
+)
 from rich.table import Table
 
 from cbc.api.app import create_app
@@ -40,6 +48,21 @@ def _spinner(console: Console, message: str, *, enabled: bool) -> Any:
     if enabled:
         return console.status(f"[bold green]{message}[/]", spinner="dots")
     return _nullcontext()
+
+
+def _benchmark_progress(console: Console, *, enabled: bool) -> Any:
+    """Return a Rich Progress for per-task benchmark bars, or nullcontext when disabled."""
+    if not enabled:
+        return _nullcontext()
+    return Progress(
+        SpinnerColumn(),
+        TextColumn("[bold]{task.description}[/]"),
+        BarColumn(),
+        TaskProgressColumn(),
+        TimeElapsedColumn(),
+        console=console,
+        transient=False,
+    )
 
 
 @app.command()
@@ -160,11 +183,11 @@ def compare(
     config_path: Path = typer.Option(Path("benchmark-configs/curated_subset.yaml")),
     json_output: bool = typer.Option(False, "--json"),
 ) -> None:
-    with _spinner(
-        console,
-        "Running benchmark comparison...",
-        enabled=_spinner_enabled(json_output=json_output),
-    ):
+    progress_enabled = _spinner_enabled(json_output=json_output)
+    if progress_enabled:
+        with _benchmark_progress(console, enabled=True) as progress:
+            comparison = run_local_benchmark(config_path, progress=progress)
+    else:
         comparison = run_local_benchmark(config_path)
     if json_output:
         console.print_json(json.dumps(comparison.model_dump(mode="json")))
@@ -192,11 +215,11 @@ def controller_compare(
     config_path: Path = typer.Option(Path("benchmark-configs/controller_subset.yaml")),
     json_output: bool = typer.Option(False, "--json"),
 ) -> None:
-    with _spinner(
-        console,
-        "Running controller comparison...",
-        enabled=_spinner_enabled(json_output=json_output),
-    ):
+    progress_enabled = _spinner_enabled(json_output=json_output)
+    if progress_enabled:
+        with _benchmark_progress(console, enabled=True) as progress:
+            comparison = run_local_controller_benchmark(config_path, progress=progress)
+    else:
         comparison = run_local_controller_benchmark(config_path)
     if json_output:
         console.print_json(json.dumps(comparison.model_dump(mode="json")))
@@ -214,11 +237,19 @@ def poc(
     simulated: bool = typer.Option(False, "--simulated"),
     json_output: bool = typer.Option(False, "--json"),
 ) -> None:
-    with _spinner(
-        console,
-        "Running POC comparison...",
-        enabled=_spinner_enabled(json_output=json_output),
-    ):
+    progress_enabled = _spinner_enabled(json_output=json_output)
+    if progress_enabled:
+        with _benchmark_progress(console, enabled=True) as progress:
+            comparison = run_poc_comparison(
+                config_path,
+                seed=seed,
+                sample_size=sample_size,
+                repetitions=repetitions,
+                raw_prompt_style=raw_prompt_style,
+                simulated=simulated,
+                progress=progress,
+            )
+    else:
         comparison = run_poc_comparison(
             config_path,
             seed=seed,

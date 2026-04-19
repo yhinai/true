@@ -66,20 +66,37 @@ def apply_benchmark_config(config: AppConfig, benchmark_config: ResolvedBenchmar
     return config.model_copy(deep=True, update=updates)
 
 
-def run_local_benchmark(config_path: Path, config: AppConfig = DEFAULT_CONFIG) -> BenchmarkComparison:
+def run_local_benchmark(
+    config_path: Path,
+    config: AppConfig = DEFAULT_CONFIG,
+    *,
+    progress: object | None = None,
+) -> BenchmarkComparison:
     benchmark_config = load_benchmark_config(config_path)
     effective_config = apply_benchmark_config(config, benchmark_config)
-    return run_comparison(task_paths=benchmark_config.task_paths, config_path=config_path.resolve(), config=effective_config)
+    kwargs: dict[str, object] = {
+        "task_paths": benchmark_config.task_paths,
+        "config_path": config_path.resolve(),
+        "config": effective_config,
+    }
+    if progress is not None:
+        kwargs["progress"] = progress
+    return run_comparison(**kwargs)
 
 
 def run_local_controller_benchmark(
     config_path: Path,
     config: AppConfig = DEFAULT_CONFIG,
+    *,
+    progress: object | None = None,
 ) -> ControllerBenchmarkComparison:
     benchmark_config = load_benchmark_config(config_path)
     effective_config = apply_benchmark_config(config, benchmark_config)
-    return run_controller_comparison(
-        task_paths=benchmark_config.task_paths,
-        config_path=config_path.resolve(),
-        config=effective_config,
-    )
+    kwargs: dict[str, object] = {
+        "task_paths": benchmark_config.task_paths,
+        "config_path": config_path.resolve(),
+        "config": effective_config,
+    }
+    if progress is not None:
+        kwargs["progress"] = progress
+    return run_controller_comparison(**kwargs)

@@ -21,13 +21,33 @@ def run_controller_comparison(
     task_paths: list[Path],
     config_path: Path,
     config: AppConfig = DEFAULT_CONFIG,
+    progress: object | None = None,
 ) -> ControllerBenchmarkComparison:
     sequential_results: list[ControllerBenchmarkTaskResult] = []
     gearbox_results: list[ControllerBenchmarkTaskResult] = []
-    for task_path in task_paths:
+    total_steps = len(task_paths) * 2
+    progress_task_id = None
+    if progress is not None:
+        progress_task_id = progress.add_task(
+            f"Running {config_path.stem}", total=total_steps
+        )
+    for index, task_path in enumerate(task_paths, start=1):
         task = load_task(task_path)
+        if progress is not None and progress_task_id is not None:
+            progress.update(
+                progress_task_id,
+                description=f"{index}/{len(task_paths)} sequential {task.task_id}",
+            )
         sequential_results.append(_run_controller_arm(task, controller_mode="sequential", config=config))
+        if progress is not None and progress_task_id is not None:
+            progress.advance(progress_task_id)
+            progress.update(
+                progress_task_id,
+                description=f"{index}/{len(task_paths)} gearbox {task.task_id}",
+            )
         gearbox_results.append(_run_controller_arm(task, controller_mode="gearbox", config=config))
+        if progress is not None and progress_task_id is not None:
+            progress.advance(progress_task_id)
 
     sequential_metrics = _compute_controller_metrics(sequential_results)
     gearbox_metrics = _compute_controller_metrics(gearbox_results)
