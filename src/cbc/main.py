@@ -21,6 +21,7 @@ from cbc.review.merge_gate import compute_merge_gate
 from cbc.review.report import compose_review_report_from_path
 from cbc.review.summarize import summarize_run
 from cbc.storage.runs import load_recent_runs
+from cbc.workspace.backends import SandboxMode
 
 app = typer.Typer(help="Correct by Construction CLI")
 console = Console()
@@ -34,10 +35,23 @@ def run(
     agent: str | None = typer.Option(None, "--agent"),
     json_output: bool = typer.Option(False, "--json"),
     stream: bool = typer.Option(False, "--stream"),
+    sandbox: str = typer.Option(
+        "local",
+        "--sandbox",
+        help="Sandbox backend: local (default) or contree",
+    ),
 ) -> None:
+    try:
+        sandbox_mode = SandboxMode(sandbox)
+    except ValueError as exc:
+        raise typer.BadParameter(f"Invalid sandbox: {sandbox}") from exc
     task = load_task(task_path)
     event_sink = _make_stream_sink() if stream else None
-    run_kwargs: dict[str, object] = {"mode": mode, "controller_mode": controller}
+    run_kwargs: dict[str, object] = {
+        "mode": mode,
+        "controller_mode": controller,
+        "sandbox": sandbox_mode,
+    }
     if agent is not None:
         run_kwargs["agent_name"] = agent
     if event_sink is not None:

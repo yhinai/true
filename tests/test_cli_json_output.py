@@ -33,7 +33,7 @@ def test_run_command_emits_json_artifact(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.setattr("cbc.main.load_task", lambda path: object())
     monkeypatch.setattr(
         "cbc.main.run_task",
-        lambda task, mode="treatment", controller_mode="sequential": SimpleNamespace(artifact_dir=artifact_dir),
+        lambda task, **kwargs: SimpleNamespace(artifact_dir=artifact_dir),
     )
 
     result = runner.invoke(app, ["run", "fixtures/oracle_tasks/calculator_bug/task.yaml", "--json"])
