@@ -2,6 +2,10 @@
 
 Correct by Construction is a verification-first control plane around Codex.
 
+Roadmap status:
+- the implementation roadmap in `plan.md` currently runs through Phase 10
+- the later numbered sections 12 through 16 in `plan.md` are operating rules and definition-of-done material, not additional build phases
+
 Baseline:
 - one model attempt
 - no external retry-with-evidence loop

@@ -77,6 +77,30 @@ Hard construction rule:
 Not:
   Each phase = new architecture + new assumptions + partial rewrite.
 
+Roadmap note:
+  The implementation phases in this plan are:
+    - Phase 0
+    - Phase 1
+    - Phase 1.5
+    - Phase 2
+    - Phase 3
+    - Phase 4
+    - Phase 5
+    - Phase 6
+    - Phase 7
+    - Phase 8
+    - Phase 9
+    - Phase 10
+
+  The later numbered sections in this file:
+    - 12. Master Rule For Every Phase
+    - 13. Cut Lines If Time Collapses
+    - 14. Hackathon Execution Order
+    - 15. Master Coding Agent Instruction
+    - 16. Definition Of Done
+
+  are governance/reference sections, not additional implementation phases.
+
 ################################################################################
 # 2. TWO INVARIANTS
 ################################################################################

@@ -2,6 +2,9 @@
 
 ## Working Now
 
+- Roadmap status: the implementation roadmap in `plan.md` is complete through Phase 10.
+- `plan.md` sections 12 through 16 are reference sections, not additional implementation phases.
+
 - Truthful baseline and treatment loops are implemented.
 - Deterministic verification gates every completion claim.
 - Treatment retries with concrete evidence.
