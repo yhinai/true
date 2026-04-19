@@ -19,12 +19,16 @@ def normalize_write_path(workspace: Path, path: str) -> Path:
 
 def apply_writes(workspace: Path, writes: list[FileWrite], allowed_files: list[str]) -> list[str]:
     changed: list[str] = []
+    workspace_root = workspace.resolve()
     for write in writes:
         relative_path = normalize_write_path(workspace, write.path)
         normalized = relative_path.as_posix()
         assert_allowed_path(normalized, allowed_files)
         target = workspace / relative_path
         target.parent.mkdir(parents=True, exist_ok=True)
+        resolved_target = target.resolve(strict=False)
+        if not resolved_target.is_relative_to(workspace_root):
+            raise ValueError(f"write to {write.path!r} resolves outside the staged workspace")
         target.write_text(write.content, encoding="utf-8")
         if write.executable:
             target.chmod(target.stat().st_mode | stat.S_IXUSR)

@@ -49,6 +49,20 @@ def test_normalize_text_content_scrubs_transient_ids() -> None:
     assert str(REPO_ROOT) not in normalized
 
 
+def test_normalize_text_content_keeps_unrelated_hex_strings() -> None:
+    content = "Counterexample payload: `deadbeefcafe`\n"
+
+    normalized = _normalize_text_content(
+        content,
+        source_root=REPO_ROOT / "artifacts" / "runs" / "07f4ff5258ba",
+        repo_root=REPO_ROOT,
+        example_id="example-calculator-treatment",
+        example_dir=Path("artifacts/examples/calculator_treatment"),
+    )
+
+    assert "`deadbeefcafe`" in normalized
+
+
 def test_normalize_string_supports_expanded_benchmark_example_paths() -> None:
     source_root = REPO_ROOT / "reports" / "benchmarks" / "abc123def456"
     normalized = _normalize_string(

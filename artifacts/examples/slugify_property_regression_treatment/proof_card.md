@@ -16,6 +16,7 @@ All deterministic checks passed. Source workspace <repo>/fixtures/oracle_tasks/s
 - adapter=replay
 - controller_mode=sequential
 - workspace_isolation=<staged_workspace>
+- total_tokens=0
 - explorer_targets=slugify.py
 - explorer_tests=test_slugify.py
 - generated_regression_test=artifacts/examples/slugify_property_regression_treatment/generated_tests/test_slugify_property_regression.py

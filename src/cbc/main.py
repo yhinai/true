@@ -13,12 +13,14 @@ from cbc.benchmark.local_runner import run_local_benchmark, run_local_controller
 from cbc.benchmark.poc_compare import RawPromptStyle, run_poc_comparison
 from cbc.controller.artifact_flow import render_proof_card
 from cbc.controller.orchestrator import review_workspace, run_task
+from cbc.intake.dynamic import build_dynamic_task, ensure_dynamic_oracle
 from cbc.intake.normalize import load_task
 from cbc.models import ControllerBenchmarkComparison, PocMetrics, PocPairwiseSummary, ProofCard
 from cbc.review.ci import build_ci_report
 from cbc.review.merge_gate import compute_merge_gate
 from cbc.review.report import compose_review_report_from_path
 from cbc.review.summarize import summarize_run
+from cbc.storage.runs import load_recent_runs
 
 app = typer.Typer(help="Correct by Construction CLI")
 console = Console()
@@ -29,10 +31,59 @@ def run(
     task_path: Path,
     mode: str = typer.Option("treatment", "--mode", "-m"),
     controller: str = typer.Option("sequential", "--controller"),
+    agent: str | None = typer.Option(None, "--agent"),
     json_output: bool = typer.Option(False, "--json"),
+    stream: bool = typer.Option(False, "--stream"),
 ) -> None:
     task = load_task(task_path)
-    ledger = run_task(task, mode=mode, controller_mode=controller)
+    event_sink = _make_stream_sink() if stream else None
+    run_kwargs: dict[str, object] = {"mode": mode, "controller_mode": controller}
+    if agent is not None:
+        run_kwargs["agent_name"] = agent
+    if event_sink is not None:
+        run_kwargs["event_sink"] = event_sink
+    if stream:
+        ledger = run_task(task, **run_kwargs)
+    else:
+        with console.status("[bold green]Running verification-first pipeline..."):
+            ledger = run_task(task, **run_kwargs)
+    if json_output:
+        payload = _read_json_artifact(ledger.artifact_dir / "run_artifact.json")
+        console.print_json(json.dumps(payload))
+        return
+    proof_card = ProofCard(
+        run_id=ledger.run_id,
+        task_id=ledger.task_id,
+        mode=ledger.mode,
+        verdict=ledger.verdict,
+        unsafe_claims=ledger.unsafe_claims,
+        attempts=len(ledger.attempts),
+        summary=ledger.final_summary,
+        proof_points=[f"artifact_dir={ledger.artifact_dir}", f"workspace={ledger.workspace_dir}"],
+        artifact_dir=ledger.artifact_dir,
+    )
+    console.print(render_proof_card(proof_card))
+    console.print(f"Artifacts: {ledger.artifact_dir}")
+
+
+@app.command()
+def solve(
+    prompt: str = typer.Argument(..., help="What needs to be fixed or built?"),
+    verify_cmd: str | None = typer.Option(None, "--verify"),
+    controller: str = typer.Option("gearbox", "--controller"),
+    agent: str = typer.Option("codex", "--agent"),
+    json_output: bool = typer.Option(False, "--json"),
+    stream: bool = typer.Option(False, "--stream"),
+) -> None:
+    task = build_dynamic_task(prompt, Path.cwd(), verify_cmd=verify_cmd, agent_name=agent)
+    if not task.oracles:
+        task = ensure_dynamic_oracle(task, agent_name=agent)
+    event_sink = _make_stream_sink() if stream else None
+    if stream:
+        ledger = run_task(task, mode="treatment", controller_mode=controller, agent_name=agent, event_sink=event_sink)
+    else:
+        with console.status("[bold green]Solving with dynamic intake..."):
+            ledger = run_task(task, mode="treatment", controller_mode=controller, agent_name=agent)
     if json_output:
         payload = _read_json_artifact(ledger.artifact_dir / "run_artifact.json")
         console.print_json(json.dumps(payload))
@@ -57,7 +108,8 @@ def compare(
     config_path: Path = typer.Option(Path("benchmark-configs/curated_subset.yaml")),
     json_output: bool = typer.Option(False, "--json"),
 ) -> None:
-    comparison = run_local_benchmark(config_path)
+    with console.status("[bold green]Running benchmark comparison..."):
+        comparison = run_local_benchmark(config_path)
     if json_output:
         console.print_json(json.dumps(comparison.model_dump(mode="json")))
         return
@@ -84,7 +136,8 @@ def controller_compare(
     config_path: Path = typer.Option(Path("benchmark-configs/controller_subset.yaml")),
     json_output: bool = typer.Option(False, "--json"),
 ) -> None:
-    comparison = run_local_controller_benchmark(config_path)
+    with console.status("[bold green]Running controller comparison..."):
+        comparison = run_local_controller_benchmark(config_path)
     if json_output:
         console.print_json(json.dumps(comparison.model_dump(mode="json")))
         return
@@ -98,15 +151,18 @@ def poc(
     sample_size: int = typer.Option(3, min=1),
     repetitions: int = typer.Option(1, min=1),
     raw_prompt_style: RawPromptStyle = typer.Option(RawPromptStyle.SCAFFOLDED),
+    simulated: bool = typer.Option(False, "--simulated"),
     json_output: bool = typer.Option(False, "--json"),
 ) -> None:
-    comparison = run_poc_comparison(
-        config_path,
-        seed=seed,
-        sample_size=sample_size,
-        repetitions=repetitions,
-        raw_prompt_style=raw_prompt_style,
-    )
+    with console.status("[bold green]Running POC comparison..."):
+        comparison = run_poc_comparison(
+            config_path,
+            seed=seed,
+            sample_size=sample_size,
+            repetitions=repetitions,
+            raw_prompt_style=raw_prompt_style,
+            simulated=simulated,
+        )
     if json_output:
         console.print_json(json.dumps(comparison.model_dump(mode="json")))
         return
@@ -215,6 +271,40 @@ def api(host: str = "127.0.0.1", port: int = 8000) -> None:
     uvicorn.run(create_app(), host=host, port=port)
 
 
+@app.command()
+def trends(last: int = typer.Option(20, "--last", min=1), json_output: bool = typer.Option(False, "--json")) -> None:
+    runs = load_recent_runs(Path.cwd() / "artifacts" / "cbc.sqlite3", limit=last)
+    if json_output:
+        console.print_json(json.dumps(_summarize_trends(runs)))
+        return
+    table = Table(title=f"Recent Trends ({len(runs)} runs)")
+    table.add_column("Run")
+    table.add_column("Task")
+    table.add_column("Mode")
+    table.add_column("Verdict")
+    table.add_column("Unsafe")
+    table.add_column("Seconds")
+    table.add_column("Tokens")
+    for run in runs:
+        table.add_row(
+            str(run["run_id"]),
+            str(run["task_id"]),
+            str(run["mode"]),
+            str(run["verdict"]),
+            str(run["unsafe_claims"]),
+            f"{float(run['elapsed_seconds']):.2f}",
+            str(run["total_tokens"]),
+        )
+    console.print(table)
+    summary = _summarize_trends(runs)
+    console.print(
+        f"verified_success_rate={summary['verified_success_rate']:.2f} "
+        f"unsafe_claim_rate={summary['unsafe_claim_rate']:.2f} "
+        f"avg_elapsed_seconds={summary['average_elapsed_seconds']:.2f} "
+        f"avg_total_tokens={summary['average_total_tokens']:.2f}"
+    )
+
+
 def _add_poc_row(table: Table, arm: str, metrics: PocMetrics) -> None:
     table.add_row(
         arm,
@@ -270,6 +360,11 @@ def _print_controller_comparison(comparison: ControllerBenchmarkComparison) -> N
         f"{comparison.sequential_metrics.average_model_calls:.2f}",
         f"{comparison.gearbox_metrics.average_model_calls:.2f}",
     )
+    table.add_row(
+        "Avg Total Tokens",
+        f"{comparison.sequential_metrics.average_total_tokens:.2f}",
+        f"{comparison.gearbox_metrics.average_total_tokens:.2f}",
+    )
     console.print(table)
     console.print(f"Recommendation: {comparison.decision.recommended_controller}")
     console.print(comparison.decision.rationale)
@@ -290,6 +385,39 @@ def benchmark_artifact(benchmark_id: str, json_output: bool = typer.Option(False
 
 def _read_json_artifact(path: Path) -> dict[str, object]:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _make_stream_sink():
+    def sink(event: dict[str, object]) -> None:
+        print(json.dumps(event, sort_keys=True), flush=True)
+
+    return sink
+
+
+def _summarize_trends(runs: list[dict[str, object]]) -> dict[str, float | int]:
+    if not runs:
+        return {
+            "count": 0,
+            "verified_success_rate": 0.0,
+            "unsafe_claim_rate": 0.0,
+            "average_elapsed_seconds": 0.0,
+            "average_total_tokens": 0.0,
+            "average_estimated_cost_usd": 0.0,
+        }
+    count = len(runs)
+    verified = sum(1 for run in runs if str(run["verdict"]).upper() == "VERIFIED")
+    unsafe = sum(1 for run in runs if int(run["unsafe_claims"]) > 0)
+    elapsed = sum(float(run["elapsed_seconds"]) for run in runs)
+    tokens = sum(int(run["total_tokens"]) for run in runs)
+    costs = sum(float(run["estimated_cost_usd"] or 0.0) for run in runs)
+    return {
+        "count": count,
+        "verified_success_rate": verified / count,
+        "unsafe_claim_rate": unsafe / count,
+        "average_elapsed_seconds": elapsed / count,
+        "average_total_tokens": tokens / count,
+        "average_estimated_cost_usd": costs / count,
+    }
 
 
 def _format_interval(low: float, high: float) -> str:

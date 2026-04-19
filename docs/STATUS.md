@@ -19,13 +19,14 @@
 - A seeded POC harness now compares direct raw Codex against CBC baseline and treatment on a checked-in live task bank.
 - The seeded POC harness now emits pairwise win/loss/tie summaries, rate deltas, and 95% confidence intervals so raw Codex and CBC can be compared numerically.
 - A treatment-only gearbox mode now evaluates isolated primary and alternate coder candidates, selects one deterministically, and persists scheduler plus risk artifacts.
-- The headless surface now includes JSON CLI outputs and benchmark detail lookup via the API/store path.
-- The headless public payloads are now versioned and frozen at `2026-04-18.v1` across run artifacts, review reports, CI reports, and benchmark comparison JSON.
+- The headless surface now includes JSON CLI outputs, streamed NDJSON lifecycle events, benchmark detail lookup via the API/store path, and SQLite-backed trends reporting.
+- The headless public payloads are now versioned and frozen at `2026-04-18.v2` across run artifacts, review reports, CI reports, and benchmark comparison JSON.
 - Python contract inspection is now real rather than placeholder-only: the verifier extracts recognized decorators from workspace modules and reports contract coverage honestly.
 - CrossHair and mutation lanes are now task-configurable command runners instead of hard-coded stubs, while remaining optional and non-blocking.
 - Property checks can now expand checked-in examples with bounded generated edge-case corpora before emitting counterexamples and regression artifacts.
 - The Phase 9 proof gate is now answered on a checked-in controller subset: sequential remains the default treatment controller because gearbox adds model calls without improving verified success on that subset.
 - Checked-in demo artifacts can now be regenerated through a deterministic refresh path instead of manual copy steps.
+- The expanded replay bank now includes a multi-file propagation task, a second property-regression task, and a non-Python Node task.
 
 ## Evidence
 
@@ -44,6 +45,9 @@
 - json CLI path: `PYTHONPATH=src python3 -m cbc.main compare --json`
 - controller json path: `PYTHONPATH=src python3 -m cbc.main controller-compare --json`
 - POC json path: `PYTHONPATH=src python3 -m cbc.main poc --json`
+- zero-config solve path: `PYTHONPATH=src python3 -m cbc.main solve "Fix the failing tests" --stream --json`
+- trends path: `PYTHONPATH=src python3 -m cbc.main trends --last 20 --json`
+- simulated POC path: `./scripts/run_poc_compare.sh --simulated --sample-size 2 --seed 42`
 - example refresh path: `python3 scripts/refresh_examples.py`
 
 ## Remaining Depth

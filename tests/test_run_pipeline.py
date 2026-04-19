@@ -133,3 +133,41 @@ def test_property_task_generates_regression_artifact_on_retry(tmp_path: Path) ->
     assert "generated_test_artifacts" in raw_run_artifact
     assert '"explorer"' in raw_run_artifact
     assert '"policy"' in raw_run_artifact
+
+
+def test_multi_file_structural_task_retries_to_verified(tmp_path: Path) -> None:
+    task = load_task(REPO_ROOT / "fixtures/oracle_tasks/checkout_tax_propagation/task.yaml")
+    ledger = run_task(task, mode="treatment", config=build_test_config(tmp_path))
+
+    assert ledger.verdict == VerificationVerdict.VERIFIED
+    assert len(ledger.attempts) == 2
+
+    first_attempt_checks = {check.name: check for check in ledger.attempts[0].verification.checks}
+    assert first_attempt_checks["structural"].status.value == "failed"
+    assert first_attempt_checks["pytest"].status.value == "failed"
+
+    final_checks = {check.name: check for check in ledger.attempts[-1].verification.checks}
+    assert final_checks["structural"].status.value == "passed"
+    assert final_checks["pytest"].status.value == "passed"
+
+
+def test_second_property_task_generates_regression_artifact(tmp_path: Path) -> None:
+    task = load_task(REPO_ROOT / "fixtures/oracle_tasks/price_format_property_regression/task.yaml")
+    ledger = run_task(task, mode="treatment", config=build_test_config(tmp_path))
+
+    assert ledger.verdict == VerificationVerdict.VERIFIED
+    assert len(ledger.attempts) == 2
+
+    first_attempt_checks = {check.name: check for check in ledger.attempts[0].verification.checks}
+    assert first_attempt_checks["hypothesis"].status.value == "failed"
+    assert Path(first_attempt_checks["hypothesis"].details["counterexample_artifact"]).exists()
+    assert Path(first_attempt_checks["hypothesis"].details["regression_test_artifact"]).exists()
+
+
+def test_non_python_js_task_retries_to_verified(tmp_path: Path) -> None:
+    task = load_task(REPO_ROOT / "fixtures/oracle_tasks/status_badge_js_contract/task.yaml")
+    ledger = run_task(task, mode="treatment", config=build_test_config(tmp_path))
+
+    assert ledger.verdict == VerificationVerdict.VERIFIED
+    assert len(ledger.attempts) == 2
+    assert ledger.attempts[0].verification.checks[0].name == "node-oracle"

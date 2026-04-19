@@ -16,6 +16,7 @@ All deterministic checks passed. Source workspace <repo>/fixtures/oracle_tasks/c
 - adapter=replay
 - controller_mode=gearbox
 - workspace_isolation=<staged_workspace>
+- total_tokens=0
 - explorer_targets=calculator.py
 - explorer_tests=test_calculator.py
 - selected_candidate=candidate_a

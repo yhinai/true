@@ -1,7 +1,7 @@
 {
   "contract": {
     "kind": "cbc.review_report",
-    "version": "2026-04-18.v1"
+    "version": "2026-04-18.v2"
   },
   "run_id": "example-calculator-treatment",
   "task_id": "calculator_bug",

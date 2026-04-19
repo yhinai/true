@@ -5,3 +5,6 @@ tasks:
   - ../fixtures/oracle_tasks/greeting_text_patch/task.yaml
   - ../fixtures/oracle_tasks/json_status_rollup/task.yaml
   - ../fixtures/oracle_tasks/shell_banner_contract/task.yaml
+  - ../fixtures/oracle_tasks/checkout_tax_propagation/task.yaml
+  - ../fixtures/oracle_tasks/price_format_property_regression/task.yaml
+  - ../fixtures/oracle_tasks/status_badge_js_contract/task.yaml

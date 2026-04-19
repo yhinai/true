@@ -171,3 +171,18 @@ def test_codex_exec_includes_runtime_overrides(monkeypatch, tmp_path: Path) -> N
     assert 'model_reasoning_effort="medium"' in command
     assert "--add-dir" in command and str(writable) in command
     assert "--skip-git-repo-check" not in command
+
+
+def test_codex_exec_timeout_returns_structured_failure(monkeypatch, tmp_path: Path) -> None:
+    def fake_run(command: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+        raise subprocess.TimeoutExpired(command, timeout=5)
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    adapter = CodexExecAdapter(CodexConfig(timeout_seconds=5))
+    result = adapter.run(prompt="fix it", workspace=tmp_path, attempt=1, schema_path=None)
+
+    assert result.response.claimed_success is False
+    assert result.failure_reason == "codex exec timed out after 5s"
+    assert result.events[-1].kind == "adapter.timeout"
+    assert "timed out" in result.response.summary.lower()

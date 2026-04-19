@@ -48,6 +48,9 @@ def test_expanded_comparison_includes_growth_fixtures(tmp_path: Path) -> None:
             REPO_ROOT / "fixtures/oracle_tasks/greeting_text_patch/task.yaml",
             REPO_ROOT / "fixtures/oracle_tasks/json_status_rollup/task.yaml",
             REPO_ROOT / "fixtures/oracle_tasks/shell_banner_contract/task.yaml",
+            REPO_ROOT / "fixtures/oracle_tasks/checkout_tax_propagation/task.yaml",
+            REPO_ROOT / "fixtures/oracle_tasks/price_format_property_regression/task.yaml",
+            REPO_ROOT / "fixtures/oracle_tasks/status_badge_js_contract/task.yaml",
         ],
         config_path=REPO_ROOT / "benchmark-configs/expanded_subset.yaml",
         config=build_test_config(tmp_path),
@@ -58,5 +61,8 @@ def test_expanded_comparison_includes_growth_fixtures(tmp_path: Path) -> None:
         "greeting_text_patch",
         "json_status_rollup",
         "shell_banner_contract",
+        "checkout_tax_propagation",
+        "price_format_property_regression",
+        "status_badge_js_contract",
     }.issubset(task_ids)
     assert comparison.treatment_metrics.verified_success_rate > comparison.baseline_metrics.verified_success_rate

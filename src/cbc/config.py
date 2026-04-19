@@ -42,6 +42,9 @@ class CodexConfig(BaseModel):
     add_dirs: list[Path] = Field(default_factory=list)
     skip_git_repo_check: bool = True
     dangerously_bypass_approvals: bool = False
+    timeout_seconds: int = 300
+    prompt_token_cost_per_1k: float | None = None
+    completion_token_cost_per_1k: float | None = None
 
 
 class AppConfig(BaseModel):

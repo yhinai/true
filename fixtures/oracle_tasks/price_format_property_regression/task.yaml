@@ -1,0 +1,33 @@
+task_id: price_format_property_regression
+title: Fix price formatting and emit a regression artifact from a property case
+prompt: |
+  `format_price` should always emit a dollar string with exactly two cents digits.
+  Update only `format_price.py` so the unit test passes and the configured property cases hold.
+workspace: workspace
+allowed_files:
+  - format_price.py
+required_checks:
+  - pytest
+  - hypothesis
+doubt_points:
+  - Keep the implementation minimal.
+oracles:
+  - name: pytest
+    kind: pytest
+    command: -q
+adapter: replay
+replay_file: replay.json
+retry_budget: 2
+tags:
+  - python
+hypothesis:
+  path: property_checks.py
+  function: assert_price_format_properties
+  cases:
+    - 105
+    - 5
+    - 0
+  generated_case_strategy: small_integers
+  generated_case_limit: 4
+  artifact_name: price_format_counterexample.json
+  regression_test_path: test_price_format_property_regression.py

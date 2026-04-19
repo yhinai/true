@@ -1,0 +1,4 @@
+tasks:
+  - ../fixtures/oracle_tasks/calculator_bug/task.yaml
+  - ../fixtures/oracle_tasks/checkout_tax_propagation/task.yaml
+  - ../fixtures/oracle_tasks/status_badge_js_contract/task.yaml

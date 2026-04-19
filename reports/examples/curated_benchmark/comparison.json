@@ -1,7 +1,7 @@
 {
   "contract": {
     "kind": "cbc.benchmark_comparison",
-    "version": "2026-04-18.v1"
+    "version": "2026-04-18.v2"
   },
   "benchmark_id": "example-curated-benchmark",
   "config_path": "<repo>/benchmark-configs/curated_subset.yaml",
@@ -13,7 +13,9 @@
       "verified_success": false,
       "unsafe_claims": 1,
       "retries": 0,
-      "elapsed_seconds": 0.234489,
+      "elapsed_seconds": 0.255753,
+      "total_tokens": 0,
+      "estimated_cost_usd": null,
       "artifact_dir": "reports/examples/curated_benchmark"
     },
     {
@@ -23,7 +25,9 @@
       "verified_success": true,
       "unsafe_claims": 0,
       "retries": 0,
-      "elapsed_seconds": 0.245518,
+      "elapsed_seconds": 0.231194,
+      "total_tokens": 0,
+      "estimated_cost_usd": null,
       "artifact_dir": "reports/examples/curated_benchmark"
     },
     {
@@ -33,7 +37,9 @@
       "verified_success": false,
       "unsafe_claims": 1,
       "retries": 0,
-      "elapsed_seconds": 0.258585,
+      "elapsed_seconds": 0.163595,
+      "total_tokens": 0,
+      "estimated_cost_usd": null,
       "artifact_dir": "reports/examples/curated_benchmark"
     },
     {
@@ -43,7 +49,9 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 0.468101,
+      "elapsed_seconds": 0.458506,
+      "total_tokens": 0,
+      "estimated_cost_usd": null,
       "artifact_dir": "reports/examples/curated_benchmark"
     },
     {
@@ -53,7 +61,9 @@
       "verified_success": true,
       "unsafe_claims": 0,
       "retries": 0,
-      "elapsed_seconds": 0.240827,
+      "elapsed_seconds": 0.224737,
+      "total_tokens": 0,
+      "estimated_cost_usd": null,
       "artifact_dir": "reports/examples/curated_benchmark"
     },
     {
@@ -63,7 +73,9 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 0.664877,
+      "elapsed_seconds": 0.231017,
+      "total_tokens": 0,
+      "estimated_cost_usd": null,
       "artifact_dir": "reports/examples/curated_benchmark"
     }
   ],
@@ -71,13 +83,17 @@
     "verified_success_rate": 0.3333333333333333,
     "unsafe_claim_rate": 0.6666666666666666,
     "average_retries": 0.0,
-    "average_elapsed_seconds": 0.24619733333333335
+    "average_elapsed_seconds": 0.2168473333333333,
+    "average_total_tokens": 0.0,
+    "average_estimated_cost_usd": 0.0
   },
   "treatment_metrics": {
     "verified_success_rate": 1.0,
     "unsafe_claim_rate": 0.6666666666666666,
     "average_retries": 0.6666666666666666,
-    "average_elapsed_seconds": 0.457935
+    "average_elapsed_seconds": 0.3047533333333334,
+    "average_total_tokens": 0.0,
+    "average_estimated_cost_usd": 0.0
   },
   "delta_verified_success_rate": 0.6666666666666667,
   "delta_unsafe_claim_rate": 0.0,

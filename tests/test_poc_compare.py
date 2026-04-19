@@ -8,6 +8,7 @@ import pytest
 
 from cbc.benchmark.poc_compare import (
     RawPromptStyle,
+    _resolve_poc_task_path,
     build_raw_codex_prompt,
     build_pairwise_summary,
     compute_poc_metrics,
@@ -328,3 +329,11 @@ def test_run_poc_comparison_writes_report_with_seeded_sample(monkeypatch, tmp_pa
     assert "## Pairwise Scoreboard" in markdown
     assert "cbc_treatment vs cbc_baseline" in markdown
     assert "95% CI" in markdown
+
+
+def test_resolve_poc_task_path_uses_replay_sibling_for_simulated_lane() -> None:
+    codex_task = ROOT / "fixtures/oracle_tasks/slugify_property_regression_codex/task.yaml"
+
+    resolved = _resolve_poc_task_path(codex_task, simulated=True)
+
+    assert resolved == (ROOT / "fixtures/oracle_tasks/slugify_property_regression/task.yaml").resolve()

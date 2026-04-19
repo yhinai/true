@@ -23,6 +23,8 @@ def run_baseline(task: TaskSpec, config: AppConfig) -> BenchmarkTaskResult:
         unsafe_claims=ledger.unsafe_claims,
         retries=max(len(ledger.attempts) - 1, 0),
         elapsed_seconds=ledger.elapsed_seconds,
+        total_tokens=ledger.total_tokens,
+        estimated_cost_usd=ledger.estimated_cost_usd,
         artifact_dir=ledger.artifact_dir,
     )
 

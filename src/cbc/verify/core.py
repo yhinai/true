@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import shutil
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from cbc.models import CheckResult, CheckStatus, TaskSpec, VerificationReport, VerificationVerdict
@@ -38,56 +39,16 @@ def verify_workspace(
     for oracle in task.oracles:
         if _should_run_oracle(selected, oracle.name, oracle.kind):
             checks.append(run_oracle(workspace, oracle))
-    if _should_run(selected, "lint"):
-        checks.append(run_lint(workspace, command=task.verification.lint_command))
-    if _should_run(selected, "typecheck"):
-        checks.append(
-            run_typecheck(
-                workspace,
-                enabled=task.verification.typecheck_enabled,
-                command=task.verification.typecheck_command,
-            )
+    checks.extend(
+        _run_parallel_checks(
+            workspace,
+            task=task,
+            changed_files=changed_files,
+            artifact_dir=artifact_dir,
+            selected=selected,
+            check_policy=check_policy,
         )
-    if _should_run(selected, "coverage"):
-        checks.append(
-            run_coverage(
-                workspace,
-                enabled=task.verification.coverage_enabled,
-                command=task.verification.coverage_command,
-            )
-        )
-    if _should_run(selected, "structural"):
-        checks.append(run_structural(workspace, changed_files=changed_files))
-    if _should_run(selected, "contracts"):
-        checks.append(inspect_contracts(workspace))
-    if _should_run(selected, "crosshair"):
-        checks.append(
-            run_crosshair(
-                workspace,
-                enabled="python" in task.tags and task.verification.crosshair_enabled,
-                command=task.verification.crosshair_command,
-                skip_reason=str(check_policy["crosshair"]["reason"]),
-            )
-        )
-    if _should_run(selected, "hypothesis"):
-        checks.append(
-            run_hypothesis(
-                workspace,
-                enabled="python" in task.tags,
-                spec=task.hypothesis,
-                artifact_dir=artifact_dir,
-                skip_reason=str(check_policy["hypothesis"]["reason"]),
-            )
-        )
-    if _should_run(selected, "mutation"):
-        checks.append(
-            run_mutation(
-                workspace,
-                enabled=task.verification.mutation_enabled,
-                command=task.verification.mutation_command,
-                skip_reason=str(check_policy["mutation"]["reason"]),
-            )
-        )
+    )
 
     verdict = verdict_from_checks(checks)
     failed_checks = [check for check in checks if check.status == CheckStatus.FAILED]
@@ -250,3 +211,88 @@ def _crosshair_reason(task: TaskSpec, python_tagged: bool) -> str:
     if not task.verification.crosshair_command:
         return "missing_command"
     return "task_configured_command"
+
+
+def _run_parallel_checks(
+    workspace: Path,
+    *,
+    task: TaskSpec,
+    changed_files: list[str],
+    artifact_dir: Path | None,
+    selected: set[str] | None,
+    check_policy: dict[str, dict[str, object]],
+) -> list[CheckResult]:
+    jobs: list[tuple[str, object]] = []
+    if _should_run(selected, "lint"):
+        jobs.append(("lint", lambda: run_lint(workspace, command=task.verification.lint_command)))
+    if _should_run(selected, "typecheck"):
+        jobs.append(
+            (
+                "typecheck",
+                lambda: run_typecheck(
+                    workspace,
+                    enabled=task.verification.typecheck_enabled,
+                    command=task.verification.typecheck_command,
+                ),
+            )
+        )
+    if _should_run(selected, "coverage"):
+        jobs.append(
+            (
+                "coverage",
+                lambda: run_coverage(
+                    workspace,
+                    enabled=task.verification.coverage_enabled,
+                    command=task.verification.coverage_command,
+                ),
+            )
+        )
+    if _should_run(selected, "structural"):
+        jobs.append(("structural", lambda: run_structural(workspace, changed_files=changed_files)))
+    if _should_run(selected, "contracts"):
+        jobs.append(("contracts", lambda: inspect_contracts(workspace)))
+    if _should_run(selected, "crosshair"):
+        jobs.append(
+            (
+                "crosshair",
+                lambda: run_crosshair(
+                    workspace,
+                    enabled="python" in task.tags and task.verification.crosshair_enabled,
+                    command=task.verification.crosshair_command,
+                    skip_reason=str(check_policy["crosshair"]["reason"]),
+                ),
+            )
+        )
+    if _should_run(selected, "hypothesis"):
+        jobs.append(
+            (
+                "hypothesis",
+                lambda: run_hypothesis(
+                    workspace,
+                    enabled="python" in task.tags,
+                    spec=task.hypothesis,
+                    artifact_dir=artifact_dir,
+                    skip_reason=str(check_policy["hypothesis"]["reason"]),
+                ),
+            )
+        )
+    if _should_run(selected, "mutation"):
+        jobs.append(
+            (
+                "mutation",
+                lambda: run_mutation(
+                    workspace,
+                    enabled=task.verification.mutation_enabled,
+                    command=task.verification.mutation_command,
+                    skip_reason=str(check_policy["mutation"]["reason"]),
+                ),
+            )
+        )
+    if not jobs:
+        return []
+    ordered_results: dict[str, CheckResult] = {}
+    with ThreadPoolExecutor(max_workers=len(jobs)) as executor:
+        future_map = {name: executor.submit(func) for name, func in jobs}
+        for name, future in future_map.items():
+            ordered_results[name] = future.result()
+    return [ordered_results[name] for name, _func in jobs]

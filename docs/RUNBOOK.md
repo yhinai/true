@@ -12,6 +12,12 @@ uv run --extra dev pytest
 ./scripts/run_treatment.sh
 ```
 
+## Run A Zero-Config Solve
+
+```bash
+PYTHONPATH=src python3 -m cbc.main solve "Fix the failing tests" --stream --json
+```
+
 ## Run One Treatment Task With The Gearbox Controller
 
 ```bash
@@ -59,6 +65,13 @@ The checked-in live lane also standardizes on `model_reasoning_effort="medium"` 
 ```
 This samples from a checked-in live task bank, runs a direct raw Codex arm plus CBC baseline and treatment, and writes a JSON/markdown comparison under `reports/poc/`.
 The report now includes per-arm 95% confidence intervals plus paired scoreboards for `cbc_baseline vs raw_codex`, `cbc_treatment vs raw_codex`, and `cbc_treatment vs cbc_baseline`.
+
+## Run The Simulated Raw-vs-CBC POC
+
+```bash
+./scripts/run_poc_compare.sh --simulated --sample-size 2 --seed 42 --repetitions 2
+```
+This uses replay-backed sibling task specs so the full POC path works without live credentials.
 
 ## Run One Live Codex Task
 
@@ -113,6 +126,12 @@ PYTHONPATH=src python3 -m cbc.main controller-compare --json
 PYTHONPATH=src python3 -m cbc.main poc --json
 PYTHONPATH=src python3 -m cbc.main review-artifact artifacts/examples/calculator_treatment/run_ledger.json --json
 PYTHONPATH=src python3 -m cbc.main ci-artifact artifacts/examples/calculator_treatment/run_ledger.json --json
+```
+
+## Inspect Recent Trends
+
+```bash
+PYTHONPATH=src python3 -m cbc.main trends --last 20 --json
 ```
 
 ## Switching To Live Codex

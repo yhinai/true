@@ -4,7 +4,7 @@ from pathlib import Path
 
 from cbc.model.adapter import ModelAdapter
 from cbc.model.prompts import build_coder_prompt
-from cbc.models import ExplorerArtifact, ModelEvent, ModelResponse, PlanArtifact
+from cbc.models import AdapterRunResult, ExplorerArtifact, PlanArtifact
 
 
 def run_coder(
@@ -19,9 +19,9 @@ def run_coder(
     candidate_role: str = "primary",
     evidence: str | None,
     schema_path: Path | None,
-) -> tuple[ModelResponse, list[ModelEvent], str]:
+) -> tuple[AdapterRunResult, str]:
     prompt = build_coder_prompt(task_prompt, plan, evidence, explorer, candidate_role)
-    response, events = adapter.run(
+    result = adapter.run(
         prompt=prompt,
         workspace=workspace,
         attempt=attempt,
@@ -29,4 +29,4 @@ def run_coder(
         candidate_role=candidate_role,
         schema_path=schema_path,
     )
-    return response, events, prompt
+    return result, prompt

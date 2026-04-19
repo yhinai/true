@@ -161,7 +161,6 @@ dependencies = [
     { name = "fastapi" },
     { name = "httpx" },
     { name = "jinja2" },
-    { name = "matplotlib" },
     { name = "orjson" },
     { name = "pandas" },
     { name = "pydantic" },
@@ -172,6 +171,9 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+charts = [
+    { name = "matplotlib" },
+]
 dev = [
     { name = "pytest" },
 ]
@@ -181,7 +183,7 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.115" },
     { name = "httpx", specifier = ">=0.28" },
     { name = "jinja2", specifier = ">=3.1" },
-    { name = "matplotlib", specifier = ">=3.9" },
+    { name = "matplotlib", marker = "extra == 'charts'", specifier = ">=3.9" },
     { name = "orjson", specifier = ">=3.10" },
     { name = "pandas", specifier = ">=2.2" },
     { name = "pydantic", specifier = ">=2.10" },
@@ -191,7 +193,7 @@ requires-dist = [
     { name = "typer", specifier = ">=0.12" },
     { name = "uvicorn", specifier = ">=0.34" },
 ]
-provides-extras = ["dev"]
+provides-extras = ["dev", "charts"]
 
 [[package]]
 name = "cycler"

@@ -1,0 +1,29 @@
+task_id: checkout_tax_propagation
+title: Propagate a taxed total signature across pricing and checkout
+prompt: |
+  Update the checkout flow so tax is applied to the subtotal.
+
+  Requirements:
+  - `pricing.compute_total` must accept `subtotal` and `tax_rate`.
+  - `checkout.checkout_total` must pass `tax_rate` through to `pricing.compute_total`.
+  - Keep the change minimal and scoped to the pricing flow.
+workspace: workspace
+allowed_files:
+  - pricing.py
+  - checkout.py
+required_checks:
+  - pytest
+  - structural
+doubt_points:
+  - Do not edit the tests.
+oracles:
+  - name: pytest
+    kind: pytest
+    command: -q
+adapter: replay
+replay_file: replay.json
+retry_budget: 2
+tags:
+  - python
+  - multi-file
+  - structural

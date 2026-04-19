@@ -5,7 +5,7 @@ from pathlib import Path
 
 from cbc.model.adapter import ModelAdapter
 from cbc.model.events import text_event
-from cbc.models import ModelEvent, ModelResponse
+from cbc.models import AdapterRunResult, ModelResponse
 
 
 class ReplayModelAdapter(ModelAdapter):
@@ -27,10 +27,10 @@ class ReplayModelAdapter(ModelAdapter):
         candidate_index: int = 0,
         candidate_role: str = "primary",
         schema_path: Path | None = None,
-    ) -> tuple[ModelResponse, list[ModelEvent]]:
+    ) -> AdapterRunResult:
         response = self._resolve_response(attempt=attempt, candidate_index=candidate_index)
         events = [text_event("replay_prompt", prompt), text_event("replay_summary", response.summary)]
-        return response, events
+        return AdapterRunResult(response=response, events=events)
 
     def _resolve_response(self, *, attempt: int, candidate_index: int) -> ModelResponse:
         if self._responses:

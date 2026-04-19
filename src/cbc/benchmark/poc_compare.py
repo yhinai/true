@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import math
 import subprocess
 import time
@@ -30,7 +31,7 @@ from cbc.models import (
 from cbc.storage.artifacts import create_artifact_dir, write_json, write_markdown
 from cbc.verify.core import verify_workspace
 from cbc.workspace.diffing import summarize_workspace_diff
-from cbc.workspace.staging import stage_workspace
+from cbc.workspace.staging import create_workspace_lease
 
 
 class RawPromptStyle(str, Enum):
@@ -85,66 +86,70 @@ def run_raw_codex_arm(
     artifact_dir = artifact_root / f"{task.task_id}-rep{repetition}" / PocArm.RAW_CODEX.value
     artifact_dir.mkdir(parents=True, exist_ok=True)
 
-    workspace = stage_workspace(task.workspace)
-    raw_config = resolve_codex_config(task, config)
-    prompt = build_raw_codex_prompt(task, prompt_style=prompt_style)
-    command = _build_raw_codex_command(raw_config, workspace)
+    workspace_lease = create_workspace_lease(task.workspace)
+    try:
+        workspace = workspace_lease.path
+        raw_config = resolve_codex_config(task, config)
+        prompt = build_raw_codex_prompt(task, prompt_style=prompt_style)
+        command = _build_raw_codex_command(raw_config, workspace)
 
-    started = time.monotonic()
-    completed = subprocess.run(
-        command,
-        cwd=workspace,
-        input=prompt,
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    elapsed_seconds = time.monotonic() - started
+        started = time.monotonic()
+        completed = subprocess.run(
+            command,
+            cwd=workspace,
+            input=prompt,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        elapsed_seconds = time.monotonic() - started
 
-    diff_summary = summarize_workspace_diff(task.workspace, workspace)
-    changed_files = [entry["path"] for entry in diff_summary["files"] if isinstance(entry.get("path"), str)]
-    verification = verify_workspace(
-        workspace,
-        task=task,
-        changed_files=changed_files,
-        claimed_success=completed.returncode == 0,
-        artifact_dir=artifact_dir,
-    )
-    scope_mismatches = find_scope_mismatches(changed_files, task.allowed_files)
-    verification = _apply_scope_guard(verification, scope_mismatches, claimed_success=completed.returncode == 0)
+        diff_summary = summarize_workspace_diff(task.workspace, workspace)
+        changed_files = [entry["path"] for entry in diff_summary["files"] if isinstance(entry.get("path"), str)]
+        verification = verify_workspace(
+            workspace,
+            task=task,
+            changed_files=changed_files,
+            claimed_success=completed.returncode == 0,
+            artifact_dir=artifact_dir,
+        )
+        scope_mismatches = find_scope_mismatches(changed_files, task.allowed_files)
+        verification = _apply_scope_guard(verification, scope_mismatches, claimed_success=completed.returncode == 0)
 
-    raw_artifact = {
-        "task_id": task.task_id,
-        "task_path": str(task_path),
-        "arm": PocArm.RAW_CODEX.value,
-        "prompt_style": prompt_style.value,
-        "command": command,
-        "exit_code": completed.returncode,
-        "prompt": prompt,
-        "stdout": completed.stdout,
-        "stderr": completed.stderr,
-        "diff_summary": diff_summary,
-        "scope_mismatches": scope_mismatches,
-        "verification": verification.model_dump(mode="json"),
-    }
-    write_json(artifact_dir / "raw_codex_artifact.json", raw_artifact)
-    write_markdown(artifact_dir / "summary.md", render_raw_codex_markdown(raw_artifact))
+        raw_artifact = {
+            "task_id": task.task_id,
+            "task_path": str(task_path),
+            "arm": PocArm.RAW_CODEX.value,
+            "prompt_style": prompt_style.value,
+            "command": command,
+            "exit_code": completed.returncode,
+            "prompt": prompt,
+            "stdout": completed.stdout,
+            "stderr": completed.stderr,
+            "diff_summary": diff_summary,
+            "scope_mismatches": scope_mismatches,
+            "verification": verification.model_dump(mode="json"),
+        }
+        write_json(artifact_dir / "raw_codex_artifact.json", raw_artifact)
+        write_markdown(artifact_dir / "summary.md", render_raw_codex_markdown(raw_artifact))
 
-    return PocRunResult(
-        task_id=task.task_id,
-        task_path=task_path.resolve(),
-        title=task.title,
-        arm=PocArm.RAW_CODEX,
-        repetition=repetition,
-        verdict=verification.verdict,
-        verified_success=verification.verdict == VerificationVerdict.VERIFIED,
-        unsafe_claims=int(verification.unsafe_claim_detected),
-        retries=0,
-        elapsed_seconds=elapsed_seconds,
-        changed_files=diff_summary["total_files"],
-        artifact_dir=artifact_dir,
-        summary=verification.summary,
-    )
+        return PocRunResult(
+            task_id=task.task_id,
+            task_path=task_path.resolve(),
+            title=task.title,
+            arm=PocArm.RAW_CODEX,
+            repetition=repetition,
+            verdict=verification.verdict,
+            verified_success=verification.verdict == VerificationVerdict.VERIFIED,
+            unsafe_claims=int(verification.unsafe_claim_detected),
+            retries=0,
+            elapsed_seconds=elapsed_seconds,
+            changed_files=diff_summary["total_files"],
+            artifact_dir=artifact_dir,
+            summary=verification.summary,
+        )
+    finally:
+        workspace_lease.cleanup()
 
 
 def run_cbc_arm(
@@ -156,7 +161,7 @@ def run_cbc_arm(
     config: AppConfig,
 ) -> PocRunResult:
     ledger = run_task(task, mode=mode, config=config)
-    diff_summary = summarize_workspace_diff(task.workspace, ledger.workspace_dir)
+    diff_summary = _load_diff_summary(ledger.artifact_dir)
     arm = PocArm.CBC_BASELINE if mode == "baseline" else PocArm.CBC_TREATMENT
     return PocRunResult(
         task_id=task.task_id,
@@ -170,8 +175,38 @@ def run_cbc_arm(
         retries=max(len(ledger.attempts) - 1, 0),
         elapsed_seconds=ledger.elapsed_seconds,
         changed_files=diff_summary["total_files"],
+        total_tokens=ledger.total_tokens,
+        estimated_cost_usd=ledger.estimated_cost_usd,
         artifact_dir=ledger.artifact_dir,
         summary=ledger.final_summary,
+    )
+
+
+def run_simulated_raw_arm(
+    *,
+    task: TaskSpec,
+    task_path: Path,
+    repetition: int,
+    config: AppConfig,
+) -> PocRunResult:
+    ledger = run_task(task, mode="baseline", config=config)
+    diff_summary = _load_diff_summary(ledger.artifact_dir)
+    return PocRunResult(
+        task_id=task.task_id,
+        task_path=task_path.resolve(),
+        title=task.title,
+        arm=PocArm.RAW_CODEX,
+        repetition=repetition,
+        verdict=ledger.verdict,
+        verified_success=ledger.verdict == VerificationVerdict.VERIFIED,
+        unsafe_claims=ledger.unsafe_claims,
+        retries=max(len(ledger.attempts) - 1, 0),
+        elapsed_seconds=ledger.elapsed_seconds,
+        changed_files=diff_summary["total_files"],
+        total_tokens=ledger.total_tokens,
+        estimated_cost_usd=ledger.estimated_cost_usd,
+        artifact_dir=ledger.artifact_dir,
+        summary=f"simulated raw-agent baseline: {ledger.final_summary}",
     )
 
 
@@ -204,6 +239,8 @@ def compute_poc_metrics(results: list[PocRunResult]) -> PocMetrics:
         average_retries=sum(result.retries for result in results) / total,
         average_elapsed_seconds=sum(result.elapsed_seconds for result in results) / total,
         average_changed_files=sum(result.changed_files for result in results) / total,
+        average_total_tokens=sum(result.total_tokens for result in results) / total,
+        average_estimated_cost_usd=sum(result.estimated_cost_usd or 0.0 for result in results) / total,
     )
 
 
@@ -291,6 +328,7 @@ def run_poc_comparison(
     sample_size: int,
     repetitions: int,
     raw_prompt_style: RawPromptStyle = RawPromptStyle.SCAFFOLDED,
+    simulated: bool = False,
     config: AppConfig = DEFAULT_CONFIG,
 ) -> PocComparison:
     benchmark_config = load_benchmark_config(config_path)
@@ -304,19 +342,30 @@ def run_poc_comparison(
     results: list[PocRunResult] = []
     for repetition in range(1, repetitions + 1):
         for task_path in sampled_task_paths:
-            task = load_task(task_path)
-            results.append(
-                run_raw_codex_arm(
-                    task=task,
-                    task_path=task_path,
-                    config=effective_config,
-                    prompt_style=raw_prompt_style,
-                    repetition=repetition,
-                    artifact_root=artifact_root,
+            resolved_task_path = _resolve_poc_task_path(task_path, simulated=simulated)
+            task = load_task(resolved_task_path)
+            if simulated:
+                results.append(
+                    run_simulated_raw_arm(
+                        task=task,
+                        task_path=resolved_task_path,
+                        repetition=repetition,
+                        config=effective_config,
+                    )
                 )
-            )
-            results.append(run_cbc_arm(task=task, task_path=task_path, mode="baseline", repetition=repetition, config=effective_config))
-            results.append(run_cbc_arm(task=task, task_path=task_path, mode="treatment", repetition=repetition, config=effective_config))
+            else:
+                results.append(
+                    run_raw_codex_arm(
+                        task=task,
+                        task_path=resolved_task_path,
+                        config=effective_config,
+                        prompt_style=raw_prompt_style,
+                        repetition=repetition,
+                        artifact_root=artifact_root,
+                    )
+                )
+            results.append(run_cbc_arm(task=task, task_path=resolved_task_path, mode="baseline", repetition=repetition, config=effective_config))
+            results.append(run_cbc_arm(task=task, task_path=resolved_task_path, mode="treatment", repetition=repetition, config=effective_config))
 
     comparison = PocComparison(
         poc_id=uuid4().hex[:12],
@@ -338,6 +387,21 @@ def run_poc_comparison(
     )
     save_poc_report(comparison)
     return comparison
+
+
+def _resolve_poc_task_path(task_path: Path, *, simulated: bool) -> Path:
+    if not simulated:
+        return task_path
+    if task_path.parent.name.endswith("_codex"):
+        sibling_dir = task_path.parent.with_name(task_path.parent.name.removesuffix("_codex"))
+        sibling_task = sibling_dir / task_path.name
+        if sibling_task.exists():
+            return sibling_task
+    return task_path
+
+
+def _load_diff_summary(artifact_dir: Path) -> dict[str, object]:
+    return json.loads((artifact_dir / "diff_summary.json").read_text(encoding="utf-8"))
 
 
 def save_poc_report(comparison: PocComparison) -> None:

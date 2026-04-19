@@ -16,7 +16,7 @@ def test_checked_in_run_example_matches_frozen_contract() -> None:
 
     assert payload["contract"] == {
         "kind": "cbc.run_artifact",
-        "version": "2026-04-18.v1",
+        "version": "2026-04-18.v2",
     }
     assert payload["controller"]["mode"] == "gearbox"
     assert "budget_spent" in payload["controller"]
@@ -32,21 +32,24 @@ def test_checked_in_benchmark_examples_match_frozen_contract() -> None:
 
     assert curated["contract"] == {
         "kind": "cbc.benchmark_comparison",
-        "version": "2026-04-18.v1",
+        "version": "2026-04-18.v2",
     }
     assert expanded["contract"] == {
         "kind": "cbc.benchmark_comparison",
-        "version": "2026-04-18.v1",
+        "version": "2026-04-18.v2",
     }
     assert controller["contract"] == {
         "kind": "cbc.controller_comparison",
-        "version": "2026-04-18.v1",
+        "version": "2026-04-18.v2",
     }
     expanded_task_ids = {result["task_id"] for result in expanded["task_results"]}
     assert {
         "greeting_text_patch",
         "json_status_rollup",
         "shell_banner_contract",
+        "checkout_tax_propagation",
+        "price_format_property_regression",
+        "status_badge_js_contract",
     }.issubset(expanded_task_ids)
     assert controller["decision"]["recommended_controller"] == "sequential"
 

@@ -204,7 +204,16 @@ def _normalize_text_content(
     content = content.replace(str(source_root), example_dir.as_posix())
     content = content.replace(str(repo_root), "<repo>")
     content = content.replace("`" + example_id + "`", "`" + example_id + "`")
-    content = re.sub(r"`[0-9a-f]{12}`", f"`{example_id}`", content)
+    content = re.sub(
+        r"(?m)(Run ID:\s*`)[0-9a-f]{12}(`)",
+        rf"\g<1>{example_id}\g<2>",
+        content,
+    )
+    content = re.sub(
+        r"(?m)(Benchmark ID:\s*`)[0-9a-f]{12}(`)",
+        rf"\g<1>{example_id}\g<2>",
+        content,
+    )
     content = _normalize_temp_paths(content)
     return content
 

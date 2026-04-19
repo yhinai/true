@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from pathlib import Path
 
-from cbc.models import ModelEvent, ModelResponse
+from cbc.models import AdapterRunResult
 
 
 class ModelAdapter(ABC):
@@ -19,5 +19,5 @@ class ModelAdapter(ABC):
         candidate_index: int = 0,
         candidate_role: str = "primary",
         schema_path: Path | None = None,
-    ) -> tuple[ModelResponse, list[ModelEvent]]:
+    ) -> AdapterRunResult:
         raise NotImplementedError

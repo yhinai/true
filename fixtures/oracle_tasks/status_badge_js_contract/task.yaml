@@ -1,0 +1,27 @@
+task_id: status_badge_js_contract
+title: Repair JavaScript status badge labels
+prompt: |
+  Update `status.js` so `renderStatusBadge` returns the exact contract labels:
+
+  - `"PASS"` for `"ok"`
+  - `"FAIL"` for `"fail"`
+  - `"UNKNOWN"` for anything else
+
+  Do not modify the test script.
+workspace: workspace
+allowed_files:
+  - status.js
+required_checks:
+  - node-oracle
+doubt_points:
+  - Keep the fix scoped to status.js.
+oracles:
+  - name: node-oracle
+    kind: shell
+    command: node test_status.js
+adapter: replay
+replay_file: replay.json
+retry_budget: 2
+tags:
+  - javascript
+  - node

@@ -108,16 +108,40 @@ def build_run_artifact(
         "unsafe_claim": ledger.unsafe_claims > 0,
         "diff": diff_summary,
         "generated_test_artifacts": generated_tests,
+        "telemetry": {
+            "prompt_tokens": ledger.prompt_tokens,
+            "completion_tokens": ledger.completion_tokens,
+            "total_tokens": ledger.total_tokens,
+            "estimated_cost_usd": ledger.estimated_cost_usd,
+            "adapter_failure_reasons": ledger.adapter_failure_reasons,
+        },
         "verification": {
             "status": verification.verdict.value,
-            "checks": [check.model_dump(mode="json") for check in verification.checks],
             "summary": verification.summary,
             "counterexample": verification.counterexample,
             "policy": verification.check_policy,
+            "checks": [
+                {
+                    "name": check.name,
+                    "status": check.status.value,
+                    "command": check.command,
+                    "exit_code": check.exit_code,
+                    "duration_seconds": check.duration_seconds,
+                    "details": {
+                        key: value
+                        for key, value in check.details.items()
+                        if key in {"policy_reason", "counterexample_artifact", "regression_test_artifact"}
+                    },
+                }
+                for check in verification.checks
+            ],
         },
         "artifacts": {
             "artifact_dir": str(ledger.artifact_dir),
             "workspace_dir": str(ledger.workspace_dir),
+            "run_ledger_path": str(ledger.artifact_dir / "run_ledger.json"),
+            "retry_transcript_path": str(ledger.artifact_dir / "retry_transcript.json"),
+            "verification_report_path": str(ledger.artifact_dir / "verification_report.json"),
         },
         "supporting_checks": list(ledger.plan.required_checks),
         "explorer": explorer.model_dump(mode="json") if explorer is not None else None,

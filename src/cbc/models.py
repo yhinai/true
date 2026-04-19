@@ -44,6 +44,29 @@ class ModelResponse(BaseModel):
     notes: list[str] = Field(default_factory=list)
 
 
+class ModelEvent(BaseModel):
+    kind: str
+    payload: dict[str, Any] = Field(default_factory=dict)
+
+
+class ModelUsage(BaseModel):
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    total_tokens: int = 0
+    estimated_cost_usd: float | None = None
+
+
+class AdapterRunResult(BaseModel):
+    response: ModelResponse
+    events: list[ModelEvent] = Field(default_factory=list)
+    usage: ModelUsage = Field(default_factory=ModelUsage)
+    failure_reason: str | None = None
+
+    def __iter__(self):
+        yield self.response
+        yield self.events
+
+
 class OracleSpec(BaseModel):
     name: str
     kind: Literal["shell", "pytest", "python"] = "shell"
@@ -131,6 +154,7 @@ class CandidateScore(BaseModel):
     changed_files: int = 0
     diff_additions: int = 0
     diff_deletions: int = 0
+    weighted_score: float = 0.0
 
 
 class CheckResult(BaseModel):
@@ -164,6 +188,8 @@ class AttemptRecord(BaseModel):
     evidence: str | None = None
     model_response: ModelResponse
     verification: VerificationReport
+    usage: ModelUsage = Field(default_factory=ModelUsage)
+    adapter_failure_reason: str | None = None
     started_at: datetime = Field(default_factory=utc_now)
     ended_at: datetime = Field(default_factory=utc_now)
 
@@ -215,6 +241,11 @@ class RunLedger(BaseModel):
     candidate_results: list[CandidateResult] = Field(default_factory=list)
     unsafe_claims: int = 0
     model_calls_used: int = 0
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    total_tokens: int = 0
+    estimated_cost_usd: float | None = None
+    adapter_failure_reasons: list[str] = Field(default_factory=list)
     final_summary: str
     started_at: datetime = Field(default_factory=utc_now)
     ended_at: datetime = Field(default_factory=utc_now)
@@ -245,6 +276,8 @@ class BenchmarkTaskResult(BaseModel):
     unsafe_claims: int
     retries: int
     elapsed_seconds: float
+    total_tokens: int = 0
+    estimated_cost_usd: float | None = None
     artifact_dir: Path
 
 
@@ -253,6 +286,8 @@ class BenchmarkMetrics(BaseModel):
     unsafe_claim_rate: float
     average_retries: float
     average_elapsed_seconds: float
+    average_total_tokens: float = 0.0
+    average_estimated_cost_usd: float = 0.0
 
 
 class BenchmarkComparison(BaseModel):
@@ -278,6 +313,8 @@ class ControllerBenchmarkTaskResult(BaseModel):
     elapsed_seconds: float
     model_calls_used: int
     candidate_evaluations: int
+    total_tokens: int = 0
+    estimated_cost_usd: float | None = None
     selected_candidate_id: str | None = None
     artifact_dir: Path
 
@@ -289,6 +326,8 @@ class ControllerBenchmarkMetrics(BaseModel):
     average_elapsed_seconds: float
     average_model_calls: float
     average_candidate_evaluations: float
+    average_total_tokens: float = 0.0
+    average_estimated_cost_usd: float = 0.0
 
 
 class ControllerDecision(BaseModel):
@@ -332,6 +371,8 @@ class PocRunResult(BaseModel):
     retries: int
     elapsed_seconds: float
     changed_files: int
+    total_tokens: int = 0
+    estimated_cost_usd: float | None = None
     artifact_dir: Path
     summary: str
 
@@ -352,6 +393,8 @@ class PocMetrics(BaseModel):
     average_retries: float
     average_elapsed_seconds: float
     average_changed_files: float
+    average_total_tokens: float = 0.0
+    average_estimated_cost_usd: float = 0.0
 
 
 class PocWinLossTie(BaseModel):
@@ -390,8 +433,3 @@ class PocComparison(BaseModel):
     pairwise_summaries: list[PocPairwiseSummary]
     created_at: datetime = Field(default_factory=utc_now)
     report_dir: Path
-
-
-class ModelEvent(BaseModel):
-    kind: str
-    payload: dict[str, Any] = Field(default_factory=dict)

@@ -1,0 +1,22 @@
+[
+  {
+    "summary": "Mapped the ok state to PASS but left fail falling through to UNKNOWN.",
+    "claimed_success": true,
+    "writes": [
+      {
+        "path": "status.js",
+        "content": "function renderStatusBadge(status) {\n  if (status === \"ok\") {\n    return \"PASS\";\n  }\n  return \"UNKNOWN\";\n}\n\nmodule.exports = { renderStatusBadge };\n"
+      }
+    ]
+  },
+  {
+    "summary": "Handled ok, fail, and unknown status badge labels explicitly.",
+    "claimed_success": true,
+    "writes": [
+      {
+        "path": "status.js",
+        "content": "function renderStatusBadge(status) {\n  if (status === \"ok\") {\n    return \"PASS\";\n  }\n  if (status === \"fail\") {\n    return \"FAIL\";\n  }\n  return \"UNKNOWN\";\n}\n\nmodule.exports = { renderStatusBadge };\n"
+      }
+    ]
+  }
+]

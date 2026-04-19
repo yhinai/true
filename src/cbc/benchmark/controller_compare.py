@@ -63,6 +63,8 @@ def _run_controller_arm(task, *, controller_mode: str, config: AppConfig) -> Con
         elapsed_seconds=ledger.elapsed_seconds,
         model_calls_used=ledger.model_calls_used,
         candidate_evaluations=len(ledger.candidate_results),
+        total_tokens=ledger.total_tokens,
+        estimated_cost_usd=ledger.estimated_cost_usd,
         selected_candidate_id=ledger.selected_candidate_id,
         artifact_dir=ledger.artifact_dir,
     )
@@ -77,6 +79,8 @@ def _compute_controller_metrics(results: list[ControllerBenchmarkTaskResult]) ->
             average_elapsed_seconds=0.0,
             average_model_calls=0.0,
             average_candidate_evaluations=0.0,
+            average_total_tokens=0.0,
+            average_estimated_cost_usd=0.0,
         )
     total = len(results)
     verified = sum(1 for result in results if result.verified_success)
@@ -85,6 +89,8 @@ def _compute_controller_metrics(results: list[ControllerBenchmarkTaskResult]) ->
     elapsed = sum(result.elapsed_seconds for result in results)
     model_calls = sum(result.model_calls_used for result in results)
     candidate_evaluations = sum(result.candidate_evaluations for result in results)
+    total_tokens = sum(result.total_tokens for result in results)
+    total_cost = sum(result.estimated_cost_usd or 0.0 for result in results)
     return ControllerBenchmarkMetrics(
         verified_success_rate=verified / total,
         unsafe_claim_rate=unsafe / total,
@@ -92,6 +98,8 @@ def _compute_controller_metrics(results: list[ControllerBenchmarkTaskResult]) ->
         average_elapsed_seconds=elapsed / total,
         average_model_calls=model_calls / total,
         average_candidate_evaluations=candidate_evaluations / total,
+        average_total_tokens=total_tokens / total,
+        average_estimated_cost_usd=total_cost / total,
     )
 
 

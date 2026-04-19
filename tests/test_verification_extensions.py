@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import sys
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -9,7 +10,7 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from cbc.models import HypothesisCheckSpec, OracleSpec, TaskSpec
+from cbc.models import CheckResult, CheckStatus, HypothesisCheckSpec, OracleSpec, TaskSpec
 from cbc.graph.mismatch import detect_bounded_signature_mismatches
 from cbc.verify.contract_ir import build_contract_graph
 from cbc.verify.contracts import inspect_contracts
@@ -257,6 +258,59 @@ def test_generated_property_cases_extend_configured_examples() -> None:
     assert "" in cases
     assert " " in cases
     assert len(cases) == 5
+
+
+def test_verify_workspace_runs_independent_checks_concurrently_and_keeps_order(monkeypatch, tmp_path: Path) -> None:
+    (tmp_path / "app.py").write_text("value = 1\n", encoding="utf-8")
+
+    task = TaskSpec(
+        task_id="concurrency_demo",
+        title="Run lint and typecheck concurrently",
+        prompt="noop",
+        workspace=tmp_path,
+        adapter="codex",
+        allowed_files=["app.py"],
+        oracles=[OracleSpec(name="oracle", kind="python", command="-c \"print('ok')\"")],
+        verification={
+            "typecheck_enabled": True,
+            "typecheck_command": "python3 -m py_compile app.py",
+        },
+        tags=["python"],
+    )
+
+    def slow_lint(*args, **kwargs):
+        time.sleep(0.2)
+        return CheckResult(
+            name="lint",
+            command="lint",
+            status=CheckStatus.PASSED,
+            stdout="lint-ok",
+        )
+
+    def slow_typecheck(*args, **kwargs):
+        time.sleep(0.2)
+        return CheckResult(
+            name="typecheck",
+            command="typecheck",
+            status=CheckStatus.PASSED,
+            stdout="type-ok",
+        )
+
+    monkeypatch.setattr("cbc.verify.core.run_lint", slow_lint)
+    monkeypatch.setattr("cbc.verify.core.run_typecheck", slow_typecheck)
+
+    started = time.perf_counter()
+    report = verify_workspace(
+        tmp_path,
+        task=task,
+        changed_files=["app.py"],
+        claimed_success=True,
+        requested_checks=["lint", "typecheck"],
+    )
+    elapsed = time.perf_counter() - started
+
+    assert [check.name for check in report.checks] == ["oracle", "lint", "typecheck"]
+    assert elapsed < 0.35
 
 
 def test_hypothesis_misconfiguration_returns_failed_check(tmp_path: Path) -> None:

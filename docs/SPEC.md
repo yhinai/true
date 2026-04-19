@@ -30,8 +30,9 @@ Codex is the proposal engine, not the source of trust. Trust comes from determin
 - Benchmark runner: `src/cbc/benchmark/compare.py`
 - Review shell: `src/cbc/review`
 - Headless-only contract: no IDE or editor-integration surface
-- Frozen headless payload version: `2026-04-18.v1`
+- Frozen headless payload version: `2026-04-18.v2`
 - Example refresh helper: `scripts/refresh_examples.py`
+- Zero-config intake path: `cbc solve`
 
 ## Artifact Contract
 
@@ -65,5 +66,6 @@ Checked-in examples are refreshed through a deterministic replay-backed export p
 - deeper verification is still intentionally bounded: contract inspection is real, while CrossHair and mutation remain optional task-configured accelerators rather than default trust gates
 - Phase 9: bounded gearbox mode with sequential fallback, plus a checked-in proof benchmark that currently keeps sequential as the default controller
 - Phase 10: headless CLI/API/artifact completion with a frozen payload contract and refreshed example artifacts
+- Post-Phase 10 hardening: streamed NDJSON events, SQLite trends, simulated POC, and wider replay coverage
 - live Codex execution is wired through a checked-in `adapter: codex` task spec
 - The roadmap phases are implemented; further work is post-plan hardening and benchmark growth rather than missing core pipeline phases

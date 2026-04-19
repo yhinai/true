@@ -2,6 +2,9 @@ tasks:
   - ../fixtures/oracle_tasks/calculator_bug/task.yaml
   - ../fixtures/oracle_tasks/title_case_bug/task.yaml
   - ../fixtures/oracle_tasks/slug_shell_bug/task.yaml
+  - ../fixtures/oracle_tasks/checkout_tax_propagation/task.yaml
+  - ../fixtures/oracle_tasks/price_format_property_regression/task.yaml
+  - ../fixtures/oracle_tasks/status_badge_js_contract/task.yaml
 controller:
   budget:
     max_model_calls_per_run: 4

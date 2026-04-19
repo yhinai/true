@@ -22,6 +22,15 @@
 - `fixtures/oracle_tasks/greeting_text_patch/task.yaml`
 - `fixtures/oracle_tasks/json_status_rollup/task.yaml`
 - `fixtures/oracle_tasks/shell_banner_contract/task.yaml`
+- `fixtures/oracle_tasks/checkout_tax_propagation/task.yaml`
+- `fixtures/oracle_tasks/price_format_property_regression/task.yaml`
+- `fixtures/oracle_tasks/status_badge_js_contract/task.yaml`
+
+## Golden Demo Subset
+
+- `fixtures/oracle_tasks/calculator_bug/task.yaml`
+- `fixtures/oracle_tasks/checkout_tax_propagation/task.yaml`
+- `fixtures/oracle_tasks/status_badge_js_contract/task.yaml`
 
 ## Primary Metrics
 
@@ -64,6 +73,7 @@ python3 scripts/run_compare.py
 python3 scripts/run_controller_compare.py
 ./scripts/run_live_compare.sh
 ./scripts/run_poc_compare.sh --sample-size 2 --seed 42
+./scripts/run_poc_compare.sh --simulated --sample-size 2 --seed 42
 ```
 
 The comparison contract stays headless: CLI commands, API-readable artifacts, and checked-in reports use the same underlying run artifacts and verifier outputs.

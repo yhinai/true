@@ -1,173 +1,113 @@
 # Correct by Construction
 
-Correct by Construction is a verification-first control plane around Codex.
+Correct by Construction is a verification-first control plane for coding agents.
 
-Roadmap status:
-- the implementation roadmap in `plan.md` currently runs through Phase 10
-- the later numbered sections 12 through 16 in `plan.md` are operating rules and definition-of-done material, not additional build phases
+The core idea is simple: staged execution, deterministic verification, and retry-with-evidence sit between an agent's claims and your repo.
 
-Baseline:
-- one model attempt
-- no external retry-with-evidence loop
-- verdict comes from the first completion claim plus deterministic verification
+## Status
 
-Treatment:
-- staged workspace
-- deterministic oracle gate
-- retry with concrete verifier evidence
-- bounded attempts
-- proof artifacts and honest verdicts
+- Headless product surface is live: CLI, FastAPI API, checked-in artifacts, and benchmark reports.
+- Replay-backed baseline and treatment loops are complete and reproducible.
+- `gearbox` exists as a treatment-only controller mode, but the checked-in controller benchmark currently keeps it opt-in.
+- The additive zero-config path is live as `cbc solve`.
+- The headless public contract is frozen at `2026-04-18.v2`.
 
-First working milestone:
-- `Codex/replay -> staged workspace -> deterministic oracle -> retry -> proof card`
+## Install
 
-Single command path:
+Minimal install:
+
+```bash
+uv sync --extra dev
+```
+
+If you want chart image generation as well:
+
+```bash
+uv sync --extra dev --extra charts
+```
+
+## Fast Start
+
+Run the deterministic smoke benchmark:
 
 ```bash
 ./scripts/run_compare.sh
 ```
 
-Expanded replay benchmark:
+Run a single treatment task:
 
 ```bash
-./scripts/run_expanded_compare.sh
+PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/calculator_bug/task.yaml --mode treatment
 ```
 
-Golden task:
-- `fixtures/oracle_tasks/calculator_bug/task.yaml`
-
-Current implementation:
-- real CLI for `run`, `compare`, `review`, `review-workspace`, `ci`, and `api`
-- a seeded POC harness compares direct raw Codex against CBC baseline and treatment on a checked-in live task bank
-- headless-only product surface: CLI, FastAPI API, and checked-in artifacts/reports
-- the headless JSON contract is now frozen at `2026-04-18.v1` across run artifacts, review reports, CI reports, and benchmark comparison payloads
-- checked-in example artifacts and reports can now be deterministically regenerated with `python3 scripts/refresh_examples.py`
-- replay-backed fixtures for a reproducible smoke benchmark
-- Codex adapter wired through `codex exec --json --output-schema`
-- deterministic verification via pytest, shell oracles, bounded structural checks, and property-case checks that can emit counterexample artifacts plus generated regression tests
-- Python contract inspection now extracts recognized decorators from the staged workspace and reports what contract annotations were actually found
-- optional CrossHair and mutation lanes are task-configurable command runners instead of fixed stubs
-- a bounded read-only explorer brief now feeds likely targets and nearby tests into the coder prompt and run artifacts
-- a treatment-only `gearbox` controller mode can run isolated primary and alternate coder candidates, score them deterministically, and persist scheduler and risk artifacts
-- SQLite-backed run and benchmark index
-- proof cards, ledgers, diff summaries, CI reports, compare reports, and scoreboard output
-
-Current benchmark honesty:
-- the default checked-in benchmark is a replay smoke benchmark, not a live Codex benchmark
-- a second checked-in replay benchmark expands that bank with text, JSON-rollup, and shell-banner repair tasks
-- live Codex execution is supported through `adapter: codex`
-- the checked-in curated subset stays replay-backed for deterministic CI and local smoke runs
-- the checked-in expanded subset broadens deterministic local coverage without changing the smoke subset's fast command path
-- a separate checked-in live suite is available at `benchmark-configs/live_codex.yaml`
-- live task specs can pin Codex runtime knobs through a checked-in `codex:` block instead of relying on local app defaults
-- the checked-in live lane is standardized on `gpt-5.4`, `workspace-write`, no approval bypass, and `model_reasoning_effort="medium"`
-- the Phase 9 proof gate now says to keep `gearbox` opt-in: on the checked-in controller subset it shows no verified-success lift and spends more model calls than sequential treatment
-
-Live Codex lane:
-- [benchmark-configs/live_codex.yaml](benchmark-configs/live_codex.yaml)
-- [fixtures/oracle_tasks/calculator_bug_codex/task.yaml](fixtures/oracle_tasks/calculator_bug_codex/task.yaml)
-- [fixtures/oracle_tasks/title_case_bug_codex/task.yaml](fixtures/oracle_tasks/title_case_bug_codex/task.yaml)
-- [fixtures/oracle_tasks/slug_shell_bug_codex/task.yaml](fixtures/oracle_tasks/slug_shell_bug_codex/task.yaml)
-- Codex runtime is pinned in the benchmark file under `codex:`, with task-level `codex:` blocks keeping single-task live runs on the same `gpt-5.4` / `workspace-write` / no-bypass / medium-reasoning stance
-- `./scripts/run_live_compare.sh`
-
-Quick start:
+Run the additive zero-config path from the current repo:
 
 ```bash
-uv run --extra dev pytest
+PYTHONPATH=src python3 -m cbc.main solve "Fix the failing tests" --stream --json
+```
+
+## CLI Surface
+
+Single-task runs:
+
+```bash
 ./scripts/run_baseline.sh
 ./scripts/run_treatment.sh
-./scripts/run_compare.sh
-./scripts/run_expanded_compare.sh
-./scripts/run_controller_compare.sh
 PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/calculator_bug/task.yaml --mode treatment
 PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/calculator_bug/task.yaml --controller gearbox
 PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/slugify_property_regression/task.yaml --mode treatment
-python3 scripts/run_compare.py
-python3 scripts/run_controller_compare.py
-python3 scripts/refresh_examples.py
-./scripts/run_live_codex.sh
-./scripts/run_live_compare.sh
-./scripts/run_poc_compare.sh --sample-size 2 --seed 42 --repetitions 2
+PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/price_format_property_regression/task.yaml --mode treatment
 ```
 
-Key docs:
-- [SPEC.md](SPEC.md)
-- [RUNBOOK.md](RUNBOOK.md)
-- [STATUS.md](STATUS.md)
-- [BENCHMARK_PLAN.md](BENCHMARK_PLAN.md)
-
-Full pipeline commands:
-
-Setup and test environment:
+Dynamic intake:
 
 ```bash
-uv run --extra dev pytest
+PYTHONPATH=src python3 -m cbc.main solve "Add a /health endpoint that returns 200"
+PYTHONPATH=src python3 -m cbc.main solve "Fix the Node status badge labels" --verify "node test_status.js"
 ```
 
-Single-task pipeline:
-
-```bash
-./scripts/run_baseline.sh
-./scripts/run_treatment.sh
-PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/calculator_bug/task.yaml --mode treatment
-PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/calculator_bug/task.yaml --mode treatment --controller gearbox
-PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/slugify_property_regression/task.yaml --mode treatment
-```
-
-Replay benchmarks:
+Benchmarks and controller proof:
 
 ```bash
 ./scripts/run_compare.sh
 ./scripts/run_expanded_compare.sh
 ./scripts/run_controller_compare.sh
+./scripts/run_live_compare.sh
 python3 scripts/run_compare.py
 python3 scripts/run_controller_compare.py
 ```
 
-Live Codex task:
-
-```bash
-./scripts/run_live_codex.sh
-```
-
-Live Codex benchmark:
-
-```bash
-./scripts/run_live_compare.sh
-```
-
-Automated raw-vs-CBC POC:
+POC:
 
 ```bash
 ./scripts/run_poc_compare.sh --sample-size 2 --seed 42 --repetitions 2
+./scripts/run_poc_compare.sh --simulated --sample-size 2 --seed 42 --repetitions 2
 ```
-This emits an arm-level scoreboard plus paired comparison summaries with win/loss/tie counts, rate deltas, and 95% confidence intervals under `reports/poc/`.
 
-Review/CI validation against an existing workspace diff:
+Review and CI:
 
 ```bash
 PYTHONPATH=src python3 -m cbc.main review-workspace fixtures/oracle_tasks/calculator_bug/task.yaml /path/to/workspace
 PYTHONPATH=src python3 -m cbc.main ci fixtures/oracle_tasks/calculator_bug/task.yaml /path/to/workspace
-```
-
-Artifact-based review/CI:
-
-```bash
 PYTHONPATH=src python3 -m cbc.main review-artifact artifacts/examples/calculator_treatment/run_ledger.json --json
 PYTHONPATH=src python3 -m cbc.main ci-artifact artifacts/examples/calculator_treatment/run_ledger.json --json
 ```
 
-Property-regression task with counterexample and generated test artifacts:
+Headless utility commands:
 
 ```bash
-PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/slugify_property_regression/task.yaml --mode treatment
+PYTHONPATH=src python3 -m cbc.main trends --last 20
+PYTHONPATH=src python3 -m cbc.main benchmark-artifact <benchmark_id> --json
+python3 scripts/refresh_examples.py
 ```
 
-Machine-readable CLI outputs:
+## JSON And Streaming
+
+The headless CLI supports machine-readable output on the main product surface:
 
 ```bash
 PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/calculator_bug/task.yaml --json
+PYTHONPATH=src python3 -m cbc.main solve "Fix the failing tests" --json
 PYTHONPATH=src python3 -m cbc.main compare --json
 PYTHONPATH=src python3 -m cbc.main controller-compare --json
 PYTHONPATH=src python3 -m cbc.main poc --json
@@ -176,10 +116,24 @@ PYTHONPATH=src python3 -m cbc.main review-artifact artifacts/examples/calculator
 PYTHONPATH=src python3 -m cbc.main ci-artifact artifacts/examples/calculator_treatment/run_ledger.json --json
 ```
 
-API:
+`run` and `solve` also support NDJSON lifecycle streaming:
+
+```bash
+PYTHONPATH=src python3 -m cbc.main run fixtures/oracle_tasks/calculator_bug/task.yaml --stream --json
+PYTHONPATH=src python3 -m cbc.main solve "Add a /health endpoint that returns 200" --stream --json
+```
+
+## API
+
+Start the API:
 
 ```bash
 uv run cbc api
+```
+
+Routes:
+
+```bash
 curl http://127.0.0.1:8000/health
 curl http://127.0.0.1:8000/runs
 curl http://127.0.0.1:8000/runs/<run_id>
@@ -187,24 +141,51 @@ curl http://127.0.0.1:8000/benchmarks
 curl http://127.0.0.1:8000/benchmarks/<benchmark_id>
 ```
 
-Refresh checked-in examples:
+## Benchmarks
 
-```bash
-python3 scripts/refresh_examples.py
-```
+Checked-in subsets:
 
-Full verification sweep:
+- `benchmark-configs/curated_subset.yaml`: smallest deterministic smoke benchmark
+- `benchmark-configs/expanded_subset.yaml`: wider replay benchmark with multi-file, property, and Node coverage
+- `benchmark-configs/controller_subset.yaml`: sequential vs gearbox proof gate
+- `benchmark-configs/demo_subset.yaml`: named three-task demo slice
+- `benchmark-configs/live_codex.yaml`: live Codex benchmark lane
+- `benchmark-configs/poc_live_codex.yaml`: POC comparison lane
+
+Replay task bank now includes:
+
+- single-file Python repairs
+- multi-file propagation via `checkout_tax_propagation`
+- two property-regression tasks
+- a non-Python Node task via `status_badge_js_contract`
+
+## Outputs
+
+- transient run artifacts: `artifacts/runs/`
+- transient benchmark reports: `reports/benchmarks/`
+- checked-in examples: `artifacts/examples/` and `reports/examples/`
+- dynamic oracle artifacts: `artifacts/dynamic_oracles/`
+- SQLite run index: `artifacts/cbc.sqlite3`
+
+## Verification
+
+Full local verification sweep:
 
 ```bash
 PYTHONPATH=src pytest -q
 ./scripts/run_compare.sh
 ./scripts/run_expanded_compare.sh
 ./scripts/run_controller_compare.sh
+./scripts/run_poc_compare.sh --simulated --sample-size 2 --seed 42 --repetitions 2
 python3 scripts/refresh_examples.py
 python3 -m compileall src tests scripts
 ```
 
-Outputs:
-- run artifacts: `artifacts/runs`
-- benchmark reports: `reports/benchmarks`
-- checked-in examples: `artifacts/examples` and `reports/examples`
+## Docs
+
+- [Demo](docs/DEMO.md)
+- [Spec](docs/SPEC.md)
+- [Runbook](docs/RUNBOOK.md)
+- [Status](docs/STATUS.md)
+- [Benchmark Plan](docs/BENCHMARK_PLAN.md)
+- [Roadmap](plan.md)
