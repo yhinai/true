@@ -62,3 +62,31 @@ def test_run_rejects_invalid_sandbox_value(tmp_path: Path, monkeypatch) -> None:
 
     result = runner.invoke(app, ["run", str(task_file), "--sandbox", "nonsense", "--json"])
     assert result.exit_code != 0
+
+
+def test_run_json_mode_suppresses_spinner(tmp_path: Path, monkeypatch):
+    """--json output must not contain Rich spinner escape codes."""
+    from pathlib import Path as _P
+
+    def fake_run_task(*args, **kwargs):
+        class _R:
+            def model_dump(self, *a, **kw):
+                return {"verdict": "VERIFIED", "status": "VERIFIED"}
+        return _R()
+
+    monkeypatch.setattr("cbc.main.run_task", fake_run_task)
+    try:
+        monkeypatch.setattr(
+            "cbc.main.load_task",
+            lambda p: type("T", (), {"task_id": "t1", "root": _P(p).parent, "title": "x", "workspace": _P(p).parent / "workspace"})(),
+        )
+    except AttributeError:
+        pass
+
+    task_file = tmp_path / "task.yaml"
+    task_file.write_text("task_id: t1\n")
+
+    result = runner.invoke(app, ["run", str(task_file), "--json"])
+    # No Rich escape codes for spinner frames
+    assert "\x1b[?25l" not in result.output  # cursor-hide
+    assert "⠋" not in result.output and "⠙" not in result.output  # spinner glyphs

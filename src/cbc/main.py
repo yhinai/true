@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import sys
+from contextlib import nullcontext as _nullcontext
 from pathlib import Path
 
 import typer
@@ -56,11 +58,18 @@ def run(
         run_kwargs["agent_name"] = agent
     if event_sink is not None:
         run_kwargs["event_sink"] = event_sink
-    if stream:
+    spinner_console = Console(stderr=True)
+    show_spinner = (not json_output) and (not stream) and sys.stderr.isatty()
+    status_cm = (
+        spinner_console.status(
+            f"[bold green]Running CBC on {task.task_id}...[/]",
+            spinner="dots",
+        )
+        if show_spinner
+        else _nullcontext()
+    )
+    with status_cm:
         ledger = run_task(task, **run_kwargs)
-    else:
-        with console.status("[bold green]Running verification-first pipeline..."):
-            ledger = run_task(task, **run_kwargs)
     if json_output:
         payload = _read_json_artifact(ledger.artifact_dir / "run_artifact.json")
         console.print_json(json.dumps(payload))
