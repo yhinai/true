@@ -131,12 +131,15 @@ jobs:
             WS="$GITHUB_WORKSPACE"
           fi
           echo "workspace-in-place: $WS"
+          # Note: retry_budget is a task YAML field, not a CLI flag.
+          # The workflow's RETRY_BUDGET input is reported in the Supabase
+          # status row for display, but cbc picks up the value from the
+          # task spec directly.
           uv run cbc run "$TASK_PATH" \
             --workspace-in-place "$WS" \
             --agent=codex --allow-dangerous-codex \
             --controller=gearbox \
             --mode=treatment \
-            --retry-budget="$RETRY_BUDGET" \
             --json \
             >/tmp/cbc/result.json \
             2>/tmp/cbc/stderr.log
