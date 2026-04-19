@@ -249,3 +249,10 @@ python3 scripts/gen_test_scaffold.py src/cbc/foo/new_module.py
 ```
 
 Idempotent; skips if the test file already exists. Useful when an agent adds a new module.
+
+### Nightly cloud-dependent checks
+
+- `.github/workflows/contree-e2e-nightly.yml` (04:00 UTC) — runs `tests/integration/` with `-m slow` against a real ConTree backend. Skips cleanly when `CONTREE_BASE_URL` + `CONTREE_TOKEN` secrets absent.
+- `.github/workflows/live-codex-nightly.yml` (04:30 UTC) — installs the `@openai/codex` CLI, runs a live oracle task using the real Codex model. Skips cleanly when `OPENAI_API_KEY` absent.
+
+Both are opt-in via secret presence; no code change to disable.

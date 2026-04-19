@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
@@ -45,7 +46,14 @@ def runs_index_sse() -> StreamingResponse:
 
 @router.post("/runs/{run_id}/mirror")
 def mirror_run(run_id: str) -> dict[str, object]:
-    """Force-mirror a completed run to Supabase (if configured)."""
+    """Force-mirror a completed run to Supabase (if configured).
+
+    Uses the Supabase service-role key, so this route always requires
+    ``CBC_API_TOKEN`` to be configured even though other routes can run
+    unauthenticated on localhost.
+    """
+    if not os.environ.get("CBC_API_TOKEN"):
+        raise HTTPException(status_code=503, detail="auth not configured")
     ledger = _find_ledger(DEFAULT_CONFIG.paths.artifacts_dir, run_id)
     if ledger is None:
         raise HTTPException(status_code=404, detail="run not found")

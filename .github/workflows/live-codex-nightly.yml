@@ -1,0 +1,71 @@
+name: Live Codex (nightly)
+
+on:
+  schedule:
+    - cron: '30 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live-codex:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Gate on OpenAI key
+        id: gate
+        env:
+          KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          if [ -n "$KEY" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::OPENAI_API_KEY not set; skipping."
+          fi
+
+      - uses: actions/checkout@v6
+        if: steps.gate.outputs.run == 'true'
+
+      - uses: actions/setup-node@v4
+        if: steps.gate.outputs.run == 'true'
+        with:
+          node-version: '20'
+
+      - name: Install OpenAI Codex CLI
+        if: steps.gate.outputs.run == 'true'
+        run: npm install -g @openai/codex
+
+      - uses: astral-sh/setup-uv@v8.1.0
+        if: steps.gate.outputs.run == 'true'
+
+      - uses: actions/setup-python@v6
+        if: steps.gate.outputs.run == 'true'
+        with:
+          python-version: "3.11"
+
+      - name: Install project
+        if: steps.gate.outputs.run == 'true'
+        run: uv sync --extra dev
+
+      - name: Run live Codex oracle task
+        if: steps.gate.outputs.run == 'true'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          # Pick the live-codex fixture that exists; fall back if the preferred is missing
+          TASK=fixtures/oracle_tasks/live_codex_calculator/task.yaml
+          [ -f "$TASK" ] || TASK=fixtures/oracle_tasks/calculator_bug_codex/task.yaml
+          uv run cbc run "$TASK" --mode treatment --agent codex --json > /tmp/codex.json
+          jq '.verification.status' /tmp/codex.json
+
+      - name: Assert VERIFIED
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          status=$(jq -r '.verification.status' /tmp/codex.json)
+          echo "Status: $status"
+          if [ "$status" != "VERIFIED" ]; then
+            echo "::error::Live Codex did not verify: $status"
+            exit 1
+          fi

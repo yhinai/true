@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import os
+import subprocess
 import sys
 from contextlib import nullcontext as _nullcontext
 from pathlib import Path
@@ -73,10 +75,15 @@ def run(
     agent: str | None = typer.Option(None, "--agent"),
     json_output: bool = typer.Option(False, "--json"),
     stream: bool = typer.Option(False, "--stream"),
-    sandbox: str = typer.Option(
-        "local",
+    sandbox: str | None = typer.Option(
+        None,
         "--sandbox",
         help="Sandbox backend: local (default) or contree",
+    ),
+    workspace_in_place: Path | None = typer.Option(
+        None,
+        "--workspace-in-place",
+        help="Run against PATH directly without a temp copy. Mutually exclusive with --sandbox.",
     ),
     max_seconds_per_attempt: float | None = typer.Option(
         None,
@@ -88,11 +95,26 @@ def run(
         "--scoring-weights",
         help="Path to a YAML file overriding default CandidateScoringEngine weights",
     ),
+    allow_dangerous_codex: bool = typer.Option(
+        False,
+        "--allow-dangerous-codex",
+        help="Honor dangerously_bypass_approvals / danger-full-access flags from task YAML",
+    ),
 ) -> None:
-    try:
-        sandbox_mode = SandboxMode(sandbox)
-    except ValueError as exc:
-        raise typer.BadParameter(f"Invalid sandbox: {sandbox}") from exc
+    if workspace_in_place is not None and sandbox is not None:
+        raise typer.BadParameter(
+            "--workspace-in-place is mutually exclusive with --sandbox"
+        )
+    inplace_root: Path | None = None
+    if workspace_in_place is not None:
+        inplace_root = _validate_inplace_root(workspace_in_place)
+        sandbox_mode = SandboxMode.INPLACE
+    else:
+        sandbox_value = sandbox if sandbox is not None else "local"
+        try:
+            sandbox_mode = SandboxMode(sandbox_value)
+        except ValueError as exc:
+            raise typer.BadParameter(f"Invalid sandbox: {sandbox_value}") from exc
     weights = None
     if scoring_weights is not None:
         from cbc.controller.scoring import CheckWeights
@@ -113,6 +135,10 @@ def run(
         run_kwargs["max_wall_seconds_per_attempt"] = max_seconds_per_attempt
     if weights is not None:
         run_kwargs["scoring_weights"] = weights
+    if allow_dangerous_codex:
+        run_kwargs["allow_dangerous_codex"] = True
+    if inplace_root is not None:
+        run_kwargs["inplace_root"] = inplace_root
     spinner_console = Console(stderr=True)
     spinner_enabled = _spinner_enabled(json_output=json_output, stream=stream)
     message = f"Running CBC on {getattr(task, 'task_id', '')}..." if spinner_enabled else ""
@@ -141,7 +167,7 @@ def run(
 def solve(
     prompt: str = typer.Argument(..., help="What needs to be fixed or built?"),
     verify_cmd: str | None = typer.Option(None, "--verify"),
-    controller: str = typer.Option("gearbox", "--controller"),
+    controller: str = typer.Option("sequential", "--controller"),
     agent: str = typer.Option("codex", "--agent"),
     json_output: bool = typer.Option(False, "--json"),
     stream: bool = typer.Option(False, "--stream"),
@@ -363,7 +389,7 @@ def ci_artifact(artifact_path: Path, json_output: bool = typer.Option(False, "--
 def api(host: str = "127.0.0.1", port: int = 8000) -> None:
     import uvicorn
 
-    uvicorn.run(create_app(), host=host, port=port)
+    uvicorn.run(create_app(host=host), host=host, port=port)
 
 
 @app.command()
@@ -521,6 +547,84 @@ def _format_interval(low: float, high: float) -> str:
 
 def _format_outcomes(wins: int, losses: int, ties: int) -> str:
     return f"{wins}-{losses}-{ties}"
+
+
+def _validate_inplace_root(path: Path) -> Path:
+    resolved = path.expanduser().resolve()
+    if not resolved.exists():
+        raise typer.BadParameter(f"--workspace-in-place: {resolved} does not exist")
+    if not resolved.is_dir():
+        raise typer.BadParameter(f"--workspace-in-place: {resolved} is not a directory")
+
+    # Refuse obviously dangerous targets: filesystem root, a single-segment
+    # directory directly under /Users or $HOME, or $HOME itself.
+    home = Path(os.path.expanduser("~")).resolve() if os.path.expanduser("~") else None
+    forbidden_roots = [Path("/")]
+    if resolved == Path("/") or len(resolved.parts) < 2:
+        raise typer.BadParameter(
+            f"--workspace-in-place: refusing to operate on {resolved} (too close to filesystem root)"
+        )
+    if home is not None and resolved == home:
+        raise typer.BadParameter(
+            f"--workspace-in-place: refusing to operate on $HOME ({resolved})"
+        )
+    # Reject /Users/<single> style — at least 2 components under a users-root.
+    for users_root in (Path("/Users"), Path("/home")):
+        try:
+            rel = resolved.relative_to(users_root)
+        except ValueError:
+            continue
+        if len(rel.parts) < 2:
+            raise typer.BadParameter(
+                f"--workspace-in-place: refusing to operate on {resolved} "
+                "(need at least 2 path components under a home directory)"
+            )
+    for forbidden in forbidden_roots:
+        if resolved == forbidden:
+            raise typer.BadParameter(
+                f"--workspace-in-place: refusing to operate on {resolved}"
+            )
+
+    # Warn (don't block) on dirty git trees.
+    if (resolved / ".git").exists() or _is_inside_git_repo(resolved):
+        status = _git_status_short(resolved)
+        if status:
+            typer.echo(
+                f"warning: --workspace-in-place target has uncommitted changes:\n{status}",
+                err=True,
+            )
+    return resolved
+
+
+def _is_inside_git_repo(path: Path) -> bool:
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(path), "rev-parse", "--is-inside-work-tree"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return result.returncode == 0 and result.stdout.strip() == "true"
+
+
+def _git_status_short(path: Path) -> str | None:
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(path), "status", "--porcelain"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if result.returncode != 0:
+        return None
+    output = result.stdout.strip()
+    return output or None
 
 
 if __name__ == "__main__":

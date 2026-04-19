@@ -95,6 +95,7 @@ jobs:
           done
 
   test:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -171,3 +172,22 @@ jobs:
       - name: Fail on unclean snapshots (fork PR)
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
         run: git diff --exit-code -- artifacts/examples reports/examples
+
+  test-fork:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v8.1.0
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Install project
+        run: uv sync --extra dev
+      - name: Run fast pytest (fork smoke)
+        run: uv run --extra dev pytest tests/ -m "not slow" -q

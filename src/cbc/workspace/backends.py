@@ -13,6 +13,7 @@ from typing import Protocol
 class SandboxMode(str, Enum):
     LOCAL = "local"
     CONTREE = "contree"
+    INPLACE = "inplace"
 
 
 @dataclass
@@ -42,3 +43,36 @@ class LocalBackend:
 
     def release(self, lease: StagedLease) -> None:
         shutil.rmtree(lease.root, ignore_errors=True)
+
+
+class InPlaceBackend:
+    """No-copy backend: edits happen directly inside the caller's directory.
+
+    Intended for GitHub Actions / git worktree callers that already have an
+    isolated checkout and want CBC to operate on it without staging overhead.
+    """
+
+    mode = SandboxMode.INPLACE
+
+    def __init__(self, root: Path) -> None:
+        self.root = Path(root)
+
+    def prepare(self, base_dir: Path) -> StagedLease:
+        # base_dir is ignored — the caller-supplied root is the workspace.
+        target = self.root
+        if not target.exists():
+            raise FileNotFoundError(f"InPlaceBackend: {target} does not exist")
+        if not target.is_dir():
+            raise NotADirectoryError(f"InPlaceBackend: {target} is not a directory")
+        # Writability probe.
+        try:
+            probe = target / ".cbc-inplace-probe"
+            probe.touch()
+            probe.unlink()
+        except OSError as exc:
+            raise PermissionError(f"InPlaceBackend: {target} is not writable") from exc
+        return StagedLease(root=target, backend=self)
+
+    def release(self, lease: StagedLease) -> None:
+        # No-op: generated files stay in place.
+        return

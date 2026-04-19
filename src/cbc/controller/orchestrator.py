@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import asyncio
+import logging
+import subprocess
 import time
 from datetime import UTC, datetime
 from pathlib import Path
@@ -58,10 +60,30 @@ from cbc.workspace.staging import (
 
 RunEventSink = Callable[[dict[str, Any]], None]
 
+_log = logging.getLogger(__name__)
+
 
 def _check_deadline(started_at: float, budget: float | None) -> None:
     if budget is not None and (time.monotonic() - started_at) > budget:
         raise AttemptTimeout(elapsed=time.monotonic() - started_at)
+
+
+def _git_head_sha(path: Path) -> str | None:
+    """Return the HEAD SHA for a git repo containing path, or None."""
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(path), "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if result.returncode != 0:
+        return None
+    sha = result.stdout.strip()
+    return sha or None
 
 
 def resolve_codex_config(task: TaskSpec, config: AppConfig):
@@ -87,10 +109,20 @@ def resolve_codex_config(task: TaskSpec, config: AppConfig):
     )
 
 
-def load_adapter(task: TaskSpec, config: AppConfig, agent_name: str | None = None):
+def load_adapter(
+    task: TaskSpec,
+    config: AppConfig,
+    agent_name: str | None = None,
+    *,
+    allow_dangerous_codex: bool = False,
+):
     selected_adapter = agent_name or task.adapter
     if selected_adapter == "codex":
-        return CodexExecAdapter(resolve_codex_config(task, config))
+        return CodexExecAdapter(
+            resolve_codex_config(task, config),
+            allow_dangerous=allow_dangerous_codex,
+            task_id=task.task_id,
+        )
     assert task.replay_file is not None
     return ReplayModelAdapter(task.replay_file)
 
@@ -106,11 +138,24 @@ def run_task(
     sandbox: SandboxMode = SandboxMode.LOCAL,
     max_wall_seconds_per_attempt: float | None = None,
     scoring_weights: CheckWeights | None = None,
+    allow_dangerous_codex: bool = False,
+    inplace_root: Path | None = None,
 ) -> RunLedger:
     run_id = uuid4().hex[:12]
     artifact_dir = create_artifact_dir(config.paths.artifacts_dir, "runs")
     schema_path = artifact_dir / "response_schema.json"
     write_schema_file(schema_path)
+
+    if sandbox is SandboxMode.INPLACE:
+        if inplace_root is None:
+            raise ValueError("sandbox=inplace requires inplace_root to be set")
+        inplace_root = Path(inplace_root).resolve()
+        _log.warning(
+            "IN-PLACE MODE: edits apply directly to %s. Use a git worktree or disposable copy.",
+            inplace_root,
+        )
+        # Point the task at the in-place dir so diff/program_text resolution match.
+        task = task.model_copy(update={"workspace": inplace_root})
 
     program_text_raw = load_program(task_dir=Path(task.workspace).parent, repo_root=Path.cwd())
     program_text: str | None = program_text_raw if program_text_raw else None
@@ -122,15 +167,28 @@ def run_task(
                 task.workspace, sandbox=sandbox, task_id=task.task_id
             )
         )
+    elif sandbox is SandboxMode.INPLACE:
+        workspace_lease = create_workspace_lease(
+            task.workspace, sandbox=sandbox, inplace_root=inplace_root
+        )
     else:
         workspace_lease = create_workspace_lease(task.workspace, sandbox=sandbox)
+
+    inplace_head_sha = (
+        _git_head_sha(inplace_root) if sandbox is SandboxMode.INPLACE else None
+    )
     scoring_engine = CandidateScoringEngine(check_weights=scoring_weights)
 
     try:
         workspace = workspace_lease.path
         plan = build_plan(task)
         explorer = build_explorer_artifact(task, workspace)
-        adapter = load_adapter(task, config, agent_name=agent_name)
+        adapter = load_adapter(
+            task,
+            config,
+            agent_name=agent_name,
+            allow_dangerous_codex=allow_dangerous_codex,
+        )
         max_attempts = normalize_max_attempts(task.retry_budget, config.retry.max_attempts, mode)
         active_controller_mode = _resolve_controller_mode(mode, config, controller_mode)
         budget = config.controller.budget
@@ -349,6 +407,8 @@ def run_task(
             selected_candidate_id=selected_candidate_id,
             scheduler_attempts=scheduler_attempts,
             budget=budget,
+            sandbox_mode=sandbox,
+            inplace_head_sha=inplace_head_sha,
         )
         ledger = build_final_ledger(
             state=state,
@@ -1041,6 +1101,8 @@ def _build_final_outputs(
     selected_candidate_id: str | None,
     scheduler_attempts: list[dict[str, Any]],
     budget,
+    sandbox_mode: SandboxMode = SandboxMode.LOCAL,
+    inplace_head_sha: str | None = None,
 ) -> tuple[ProofCard, VerificationReport, dict[str, Any], dict[str, Any], dict[str, Any]]:
     final_verification = attempts[-1].verification
     all_changed_files = _collect_changed_files(attempts)
@@ -1065,6 +1127,12 @@ def _build_final_outputs(
         "selected_candidate_id": selected_candidate_id,
         "attempts": scheduler_attempts,
     }
+    inplace_proof_points: list[str] = []
+    if sandbox_mode is SandboxMode.INPLACE:
+        inplace_proof_points.append(f"sandbox_mode={sandbox_mode.value}")
+        inplace_proof_points.append(f"inplace_root={workspace}")
+        if inplace_head_sha is not None:
+            inplace_proof_points.append(f"inplace_head_sha={inplace_head_sha}")
     proof_card = ProofCard(
         run_id=run_id,
         task_id=task.task_id,
@@ -1083,6 +1151,7 @@ def _build_final_outputs(
             *_explorer_proof_points(explorer),
             *_candidate_proof_points(candidate_results, selected_candidate_id),
             *_property_proof_points(attempts),
+            *inplace_proof_points,
         ],
         artifact_dir=artifact_dir,
     )

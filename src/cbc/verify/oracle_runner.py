@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import os
+import shlex
 import subprocess
 import time
 from pathlib import Path
 
 from cbc.models import CheckResult, CheckStatus, OracleSpec
+from cbc.verify.env_utils import scrub_env
 
 
 def run_oracle(workspace: Path, oracle: OracleSpec) -> CheckResult:
@@ -17,11 +19,13 @@ def run_oracle(workspace: Path, oracle: OracleSpec) -> CheckResult:
     else:
         command = oracle.command
 
+    env = scrub_env(os.environ)
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
     completed = subprocess.run(
-        command,
+        shlex.split(command),
         cwd=workspace,
-        shell=True,
-        env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"},
+        shell=False,
+        env=env,
         capture_output=True,
         text=True,
         check=False,

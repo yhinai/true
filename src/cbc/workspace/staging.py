@@ -7,7 +7,7 @@ import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from cbc.workspace.backends import SandboxMode, StagedLease
+from cbc.workspace.backends import InPlaceBackend, SandboxMode, StagedLease
 
 
 @dataclass
@@ -21,6 +21,9 @@ class WorkspaceLease:
         if self._staged is not None:
             self._staged.release()
             return
+        if self.sandbox is SandboxMode.INPLACE:
+            # In-place edits persist; nothing to tear down.
+            return
         shutil.rmtree(self.root, ignore_errors=True)
 
 
@@ -28,12 +31,23 @@ def create_workspace_lease(
     source: Path,
     *,
     sandbox: SandboxMode = SandboxMode.LOCAL,
+    inplace_root: Path | None = None,
 ) -> WorkspaceLease:
     if sandbox is SandboxMode.LOCAL:
         temp_dir = Path(tempfile.mkdtemp(prefix="cbc-workspace-"))
         destination = temp_dir / source.name
         shutil.copytree(source, destination)
         return WorkspaceLease(root=temp_dir, path=destination, sandbox=sandbox)
+    if sandbox is SandboxMode.INPLACE:
+        target = Path(inplace_root) if inplace_root is not None else Path(source)
+        backend = InPlaceBackend(target)
+        staged = backend.prepare(target)
+        return WorkspaceLease(
+            root=staged.root,
+            path=staged.root,
+            sandbox=sandbox,
+            _staged=staged,
+        )
     raise NotImplementedError(
         f"Sandbox mode {sandbox} requires async prepare; use create_workspace_lease_async."
     )
@@ -44,9 +58,12 @@ async def create_workspace_lease_async(
     *,
     sandbox: SandboxMode = SandboxMode.LOCAL,
     task_id: str | None = None,
+    inplace_root: Path | None = None,
 ) -> WorkspaceLease:
     if sandbox is SandboxMode.LOCAL:
         return create_workspace_lease(source, sandbox=sandbox)
+    if sandbox is SandboxMode.INPLACE:
+        return create_workspace_lease(source, sandbox=sandbox, inplace_root=inplace_root)
     if sandbox is SandboxMode.CONTREE:
         from cbc.workspace.contree_adapter import ContreeWorkspace
         from contree_sdk import Contree

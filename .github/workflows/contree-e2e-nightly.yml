@@ -1,0 +1,49 @@
+name: ConTree E2E (nightly)
+
+on:
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contree-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Gate on secrets present
+        id: gate
+        env:
+          TOKEN: ${{ secrets.CONTREE_TOKEN }}
+          URL: ${{ secrets.CONTREE_BASE_URL }}
+        run: |
+          if [ -n "$TOKEN" ] && [ -n "$URL" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::CONTREE_TOKEN or CONTREE_BASE_URL not set; skipping."
+          fi
+
+      - uses: actions/checkout@v6
+        if: steps.gate.outputs.run == 'true'
+
+      - uses: astral-sh/setup-uv@v8.1.0
+        if: steps.gate.outputs.run == 'true'
+
+      - uses: actions/setup-python@v6
+        if: steps.gate.outputs.run == 'true'
+        with:
+          python-version: "3.11"
+
+      - name: Install with contree + dev extras
+        if: steps.gate.outputs.run == 'true'
+        run: uv sync --extra contree --extra dev
+
+      - name: Run slow e2e tests
+        if: steps.gate.outputs.run == 'true'
+        env:
+          CONTREE_BASE_URL: ${{ secrets.CONTREE_BASE_URL }}
+          CONTREE_TOKEN: ${{ secrets.CONTREE_TOKEN }}
+        run: uv run pytest tests/integration/ -v -m slow

@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import Any
 
 from cbc.review.artifacts import read_json
 from cbc.review.report import compose_review_report_from_path
+
+logger = logging.getLogger(__name__)
 
 
 def _choose_artifact_root(root: Path | str) -> Path:
@@ -54,7 +57,8 @@ def list_runs(artifacts_root: Path | str, limit: int = 50) -> list[dict[str, Any
     for path in _iter_run_files(root):
         try:
             payload = read_json(path)
-        except Exception:
+        except (ValueError, OSError) as exc:
+            logger.warning("skipping malformed run %s: %s", path, exc)
             continue
         results.append(_summarize_run(path, payload))
         if len(results) >= limit:
@@ -69,7 +73,8 @@ def get_run(artifacts_root: Path | str, run_id: str) -> dict[str, Any] | None:
     for path in _iter_run_files(root):
         try:
             payload = read_json(path)
-        except Exception:
+        except (ValueError, OSError) as exc:
+            logger.warning("skipping malformed run %s: %s", path, exc)
             continue
         candidate_id = str(payload.get("run_id") or payload.get("id") or "")
         if candidate_id != run_id:
@@ -128,7 +133,8 @@ def list_benchmarks(artifacts_root: Path | str, limit: int = 50) -> list[dict[st
     for path in _iter_benchmark_files(root):
         try:
             payload = read_json(path)
-        except Exception:
+        except (ValueError, OSError) as exc:
+            logger.warning("skipping malformed benchmark %s: %s", path, exc)
             continue
         results.append(_summarize_benchmark(path, payload))
         if len(results) >= limit:
@@ -142,7 +148,8 @@ def get_benchmark(artifacts_root: Path | str, benchmark_id: str) -> dict[str, An
     for path in _iter_benchmark_files(root):
         try:
             payload = read_json(path)
-        except Exception:
+        except (ValueError, OSError) as exc:
+            logger.warning("skipping malformed benchmark %s: %s", path, exc)
             continue
         candidate_id = str(
             payload.get("benchmark_id")

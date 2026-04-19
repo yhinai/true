@@ -134,6 +134,10 @@ PYTHONPATH=src python3 -m cbc.main ci-artifact artifacts/examples/calculator_tre
 PYTHONPATH=src python3 -m cbc.main trends --last 20 --json
 ```
 
+## Auto-Remediation Queue
+
+Failed `cbc_runs` rows (`verdict IN ('FALSIFIED','TIMED_OUT')`) are automatically enqueued into `cbc_remediations` by the `cbc_runs_enqueue_remediation` trigger installed by `migrations/supabase/0002_cbc_remediations.sql`. Each queued row carries the `run_id`, `task_id`, and a resolved `task_path` (explicit via the optional `cbc_tasks` mapping, otherwise inferred from the convention `fixtures/oracle_tasks/<task_id>/task.yaml`). The `unique (run_id)` constraint guarantees a failed run is never remediated twice. A separate drainer, `scripts/remediate_dispatcher.py`, polls `status='queued'` rows and fires `cbc-remediate.yml` via the GitHub Actions REST API using `GH_TOKEN` and `GH_REPO`; it flips rows to `running` on successful dispatch and records `error` on failure. Dry-run with `python3 scripts/remediate_dispatcher.py --run-once --dry-run`; dispatch manually with `gh workflow run cbc-remediate.yml -f task_path=<path> -f remediation_id=<id>`; inspect status with `psql "$POSTGRES_URL_NON_POOLING" -c "select status, count(*) from cbc_remediations group by status"`.
+
 ## Switching To Live Codex
 
 Task specs can set `adapter: codex` and omit replay behavior. Benchmark YAML can pin lane-level Codex runtime settings under `codex:`, and individual task specs can also include a checked-in `codex:` block to pin task-specific knobs such as `sandbox`, `model`, `profile`, `--config` overrides, and extra writable directories. The adapter in `src/cbc/model/codex_exec.py` uses `codex exec --json` plus a JSON output schema. Checked-in live task specs are available under `fixtures/oracle_tasks/*_codex/`, and a checked-in live comparison config is available at `benchmark-configs/live_codex.yaml`. The current checked-in standard is `model: gpt-5.4`, `sandbox: workspace-write`, `dangerously_bypass_approvals: false`, and `model_reasoning_effort="medium"`, while leaving `profile` unset intentionally.

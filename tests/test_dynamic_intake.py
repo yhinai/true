@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
 from pathlib import Path
 from types import SimpleNamespace
 
 from typer.testing import CliRunner
 
 from cbc.config import AppConfig, PathsConfig
-from cbc.intake.dynamic import build_dynamic_task, ensure_dynamic_oracle
+from cbc.intake.dynamic import build_dynamic_task, ensure_dynamic_oracle, guess_scope_candidates
 from cbc.intake.toolchains import detect_toolchain
 from cbc.main import app
 from cbc.models import AdapterRunResult, FileWrite, ModelResponse, VerificationVerdict
@@ -56,6 +57,34 @@ def test_build_dynamic_task_respects_verify_override(tmp_path: Path) -> None:
     assert task.metadata["dynamic_task"] is True
     assert task.oracles[0].command == "python3 -m pytest -q"
     assert task.required_checks == ["oracle-1"]
+
+
+def test_guess_scope_candidates_prefers_rg_keyword_hits(monkeypatch, tmp_path: Path) -> None:
+    (tmp_path / "app.py").write_text("def status_badge():\n    return 'broken'\n", encoding="utf-8")
+    (tmp_path / "notes.txt").write_text("status badge design notes\n", encoding="utf-8")
+
+    monkeypatch.setattr("cbc.intake.dynamic.shutil.which", lambda _: "/usr/bin/rg")
+
+    def fake_run(cmd: list[str], **_: object) -> subprocess.CompletedProcess[str]:
+        if cmd[:2] == ["rg", "--files"]:
+            return subprocess.CompletedProcess(cmd, 0, "app.py\nnotes.txt\n", "")
+        if cmd[:3] == ["rg", "-l", "-i"]:
+            keyword = cmd[3]
+            if keyword in {"status", "badge"}:
+                return subprocess.CompletedProcess(cmd, 0, "app.py\n", "")
+            return subprocess.CompletedProcess(cmd, 1, "", "")
+        raise AssertionError(f"unexpected command: {cmd}")
+
+    monkeypatch.setattr("cbc.intake.dynamic.subprocess.run", fake_run)
+
+    candidates = guess_scope_candidates(
+        "Fix the status badge renderer",
+        tmp_path,
+        detection=detect_toolchain(tmp_path),
+        limit=2,
+    )
+
+    assert candidates[0] == "app.py"
 
 
 def test_ensure_dynamic_oracle_persists_generated_script(monkeypatch, tmp_path: Path) -> None:
