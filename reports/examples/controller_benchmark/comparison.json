@@ -3,8 +3,8 @@
     "kind": "cbc.controller_comparison",
     "version": "2026-04-18.v2"
   },
-  "benchmark_id": "630c12ece1d5",
-  "config_path": "/home/runner/work/true/true/benchmark-configs/controller_subset.yaml",
+  "benchmark_id": "example-controller-benchmark",
+  "config_path": "<repo>/benchmark-configs/controller_subset.yaml",
   "task_results": [
     {
       "task_id": "calculator_bug",
@@ -13,13 +13,13 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 1.361318,
+      "elapsed_seconds": 0.0,
       "model_calls_used": 2,
       "candidate_evaluations": 0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "selected_candidate_id": null,
-      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/2dfdb45e34f8"
+      "artifact_dir": "reports/examples/controller_benchmark"
     },
     {
       "task_id": "title_case_bug",
@@ -28,13 +28,13 @@
       "verified_success": true,
       "unsafe_claims": 0,
       "retries": 0,
-      "elapsed_seconds": 0.669352,
+      "elapsed_seconds": 0.0,
       "model_calls_used": 1,
       "candidate_evaluations": 0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "selected_candidate_id": null,
-      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/4f911894fca4"
+      "artifact_dir": "reports/examples/controller_benchmark"
     },
     {
       "task_id": "slug_shell_bug",
@@ -43,13 +43,13 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 0.103356,
+      "elapsed_seconds": 0.0,
       "model_calls_used": 2,
       "candidate_evaluations": 0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "selected_candidate_id": null,
-      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/bf9d414bcf49"
+      "artifact_dir": "reports/examples/controller_benchmark"
     },
     {
       "task_id": "checkout_tax_propagation",
@@ -58,13 +58,13 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 1.340242,
+      "elapsed_seconds": 0.0,
       "model_calls_used": 2,
       "candidate_evaluations": 0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "selected_candidate_id": null,
-      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/25719885371f"
+      "artifact_dir": "reports/examples/controller_benchmark"
     },
     {
       "task_id": "price_format_property_regression",
@@ -73,13 +73,13 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 1.32781,
+      "elapsed_seconds": 0.0,
       "model_calls_used": 2,
       "candidate_evaluations": 0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "selected_candidate_id": null,
-      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/4ae6ccb381b0"
+      "artifact_dir": "reports/examples/controller_benchmark"
     },
     {
       "task_id": "status_badge_js_contract",
@@ -88,13 +88,13 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 0.298419,
+      "elapsed_seconds": 0.0,
       "model_calls_used": 2,
       "candidate_evaluations": 0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "selected_candidate_id": null,
-      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/df848e411cb9"
+      "artifact_dir": "reports/examples/controller_benchmark"
     },
     {
       "task_id": "calculator_bug",
@@ -103,13 +103,13 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 1.994519,
+      "elapsed_seconds": 0.0,
       "model_calls_used": 3,
       "candidate_evaluations": 2,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "selected_candidate_id": "candidate_a",
-      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/62dc78c91246"
+      "artifact_dir": "reports/examples/controller_benchmark"
     },
     {
       "task_id": "title_case_bug",
@@ -118,13 +118,13 @@
       "verified_success": true,
       "unsafe_claims": 0,
       "retries": 0,
-      "elapsed_seconds": 1.335789,
+      "elapsed_seconds": 0.0,
       "model_calls_used": 2,
       "candidate_evaluations": 2,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "selected_candidate_id": "candidate_a",
-      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/c09bdef63d84"
+      "artifact_dir": "reports/examples/controller_benchmark"
     },
     {
       "task_id": "slug_shell_bug",
@@ -133,13 +133,13 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 0.157652,
+      "elapsed_seconds": 0.0,
       "model_calls_used": 3,
       "candidate_evaluations": 2,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "selected_candidate_id": "candidate_a",
-      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/9648082b232d"
+      "artifact_dir": "reports/examples/controller_benchmark"
     },
     {
       "task_id": "checkout_tax_propagation",
@@ -148,13 +148,13 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 2.021105,
+      "elapsed_seconds": 0.0,
       "model_calls_used": 3,
       "candidate_evaluations": 2,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "selected_candidate_id": "candidate_a",
-      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/a568dfee7d48"
+      "artifact_dir": "reports/examples/controller_benchmark"
     },
     {
       "task_id": "price_format_property_regression",
@@ -163,13 +163,13 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 1.992166,
+      "elapsed_seconds": 0.0,
       "model_calls_used": 3,
       "candidate_evaluations": 2,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "selected_candidate_id": "candidate_a",
-      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/d142e947135a"
+      "artifact_dir": "reports/examples/controller_benchmark"
     },
     {
       "task_id": "status_badge_js_contract",
@@ -178,20 +178,20 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 0.196019,
+      "elapsed_seconds": 0.0,
       "model_calls_used": 3,
       "candidate_evaluations": 2,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "selected_candidate_id": "candidate_a",
-      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/1e1fa5074a7b"
+      "artifact_dir": "reports/examples/controller_benchmark"
     }
   ],
   "sequential_metrics": {
     "verified_success_rate": 1.0,
     "unsafe_claim_rate": 0.8333333333333334,
     "average_retries": 0.8333333333333334,
-    "average_elapsed_seconds": 0.8500828333333333,
+    "average_elapsed_seconds": 0.0,
     "average_model_calls": 1.8333333333333333,
     "average_candidate_evaluations": 0.0,
     "average_total_tokens": 0.0,
@@ -201,7 +201,7 @@
     "verified_success_rate": 1.0,
     "unsafe_claim_rate": 0.8333333333333334,
     "average_retries": 0.8333333333333334,
-    "average_elapsed_seconds": 1.282875,
+    "average_elapsed_seconds": 0.0,
     "average_model_calls": 2.8333333333333335,
     "average_candidate_evaluations": 2.0,
     "average_total_tokens": 0.0,
@@ -210,13 +210,13 @@
   "delta_verified_success_rate": 0.0,
   "delta_unsafe_claim_rate": 0.0,
   "delta_average_retries": 0.0,
-  "delta_average_elapsed_seconds": 0.43279216666666664,
+  "delta_average_elapsed_seconds": 0.0,
   "delta_average_model_calls": 1.0000000000000002,
   "decision": {
     "recommended_controller": "sequential",
     "rationale": "Keep gearbox opt-in for now because no verified-success lift, gearbox spends more model calls on the checked-in controller benchmark subset.",
     "should_promote_to_default": false
   },
-  "created_at": "2026-04-20T06:57:06.427422Z",
-  "report_dir": "/home/runner/work/true/true/reports/benchmarks/4c8c8553974e"
+  "created_at": "2026-04-18T00:00:00Z",
+  "report_dir": "reports/examples/controller_benchmark"
 }
