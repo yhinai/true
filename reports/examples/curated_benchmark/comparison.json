@@ -3,8 +3,8 @@
     "kind": "cbc.benchmark_comparison",
     "version": "2026-04-18.v2"
   },
-  "benchmark_id": "example-curated-benchmark",
-  "config_path": "<repo>/benchmark-configs/curated_subset.yaml",
+  "benchmark_id": "0434794532c8",
+  "config_path": "/home/runner/work/true/true/benchmark-configs/curated_subset.yaml",
   "task_results": [
     {
       "task_id": "calculator_bug",
@@ -13,10 +13,10 @@
       "verified_success": false,
       "unsafe_claims": 1,
       "retries": 0,
-      "elapsed_seconds": 0.0,
+      "elapsed_seconds": 0.85261,
       "total_tokens": 0,
       "estimated_cost_usd": null,
-      "artifact_dir": "reports/examples/curated_benchmark"
+      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/495cfb79ee8b"
     },
     {
       "task_id": "title_case_bug",
@@ -25,10 +25,10 @@
       "verified_success": true,
       "unsafe_claims": 0,
       "retries": 0,
-      "elapsed_seconds": 0.0,
+      "elapsed_seconds": 0.672676,
       "total_tokens": 0,
       "estimated_cost_usd": null,
-      "artifact_dir": "reports/examples/curated_benchmark"
+      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/0ada1e93d7de"
     },
     {
       "task_id": "slug_shell_bug",
@@ -37,10 +37,10 @@
       "verified_success": false,
       "unsafe_claims": 1,
       "retries": 0,
-      "elapsed_seconds": 0.0,
+      "elapsed_seconds": 0.052356,
       "total_tokens": 0,
       "estimated_cost_usd": null,
-      "artifact_dir": "reports/examples/curated_benchmark"
+      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/3b63d906b6e4"
     },
     {
       "task_id": "calculator_bug",
@@ -49,10 +49,10 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 0.0,
+      "elapsed_seconds": 1.342686,
       "total_tokens": 0,
       "estimated_cost_usd": null,
-      "artifact_dir": "reports/examples/curated_benchmark"
+      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/8219fc0cd0b5"
     },
     {
       "task_id": "title_case_bug",
@@ -61,10 +61,10 @@
       "verified_success": true,
       "unsafe_claims": 0,
       "retries": 0,
-      "elapsed_seconds": 0.0,
+      "elapsed_seconds": 0.670634,
       "total_tokens": 0,
       "estimated_cost_usd": null,
-      "artifact_dir": "reports/examples/curated_benchmark"
+      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/c630ec2e45c0"
     },
     {
       "task_id": "slug_shell_bug",
@@ -73,17 +73,17 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 0.0,
+      "elapsed_seconds": 0.105486,
       "total_tokens": 0,
       "estimated_cost_usd": null,
-      "artifact_dir": "reports/examples/curated_benchmark"
+      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/ef85f1755e00"
     }
   ],
   "baseline_metrics": {
     "verified_success_rate": 0.3333333333333333,
     "unsafe_claim_rate": 0.6666666666666666,
     "average_retries": 0.0,
-    "average_elapsed_seconds": 0.0,
+    "average_elapsed_seconds": 0.5258806666666667,
     "average_total_tokens": 0.0,
     "average_estimated_cost_usd": 0.0
   },
@@ -91,12 +91,12 @@
     "verified_success_rate": 1.0,
     "unsafe_claim_rate": 0.6666666666666666,
     "average_retries": 0.6666666666666666,
-    "average_elapsed_seconds": 0.0,
+    "average_elapsed_seconds": 0.7062686666666668,
     "average_total_tokens": 0.0,
     "average_estimated_cost_usd": 0.0
   },
   "delta_verified_success_rate": 0.6666666666666667,
   "delta_unsafe_claim_rate": 0.0,
-  "created_at": "2026-04-18T00:00:00Z",
-  "report_dir": "reports/examples/curated_benchmark"
+  "created_at": "2026-04-20T06:56:53.042714Z",
+  "report_dir": "/home/runner/work/true/true/reports/benchmarks/eb680e5ff393"
 }
