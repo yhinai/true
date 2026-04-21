@@ -37,7 +37,7 @@ jobs:
         if: steps.gate.outputs.run == 'true'
         run: npm install -g @openai/codex
 
-      - uses: astral-sh/setup-uv@v8.1.0
+      - uses: astral-sh/setup-uv@v7
         if: steps.gate.outputs.run == 'true'
 
       - uses: actions/setup-python@v6
