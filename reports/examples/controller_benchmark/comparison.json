@@ -3,7 +3,7 @@
     "kind": "cbc.controller_comparison",
     "version": "2026-04-18.v2"
   },
-  "benchmark_id": "4716aaa3c6a1",
+  "benchmark_id": "a6bddae1bdc6",
   "config_path": "/home/runner/work/true/true/benchmark-configs/controller_subset.yaml",
   "task_results": [
     {
@@ -13,13 +13,13 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 1.419812,
+      "elapsed_seconds": 1.170099,
       "model_calls_used": 2,
       "candidate_evaluations": 0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "selected_candidate_id": null,
-      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/2c8e80d19e76"
+      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/edf6df7489c0"
     },
     {
       "task_id": "title_case_bug",
@@ -28,13 +28,13 @@
       "verified_success": true,
       "unsafe_claims": 0,
       "retries": 0,
-      "elapsed_seconds": 0.687,
+      "elapsed_seconds": 0.577321,
       "model_calls_used": 1,
       "candidate_evaluations": 0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "selected_candidate_id": null,
-      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/55353351add9"
+      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/2db3556f608d"
     },
     {
       "task_id": "slug_shell_bug",
@@ -43,13 +43,13 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 0.107559,
+      "elapsed_seconds": 0.091497,
       "model_calls_used": 2,
       "candidate_evaluations": 0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "selected_candidate_id": null,
-      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/5120bd0455c4"
+      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/2190d7f7badf"
     },
     {
       "task_id": "checkout_tax_propagation",
@@ -58,13 +58,13 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 1.390276,
+      "elapsed_seconds": 1.155122,
       "model_calls_used": 2,
       "candidate_evaluations": 0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "selected_candidate_id": null,
-      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/07da2e91b6a2"
+      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/cc8c50ec969a"
     },
     {
       "task_id": "price_format_property_regression",
@@ -73,13 +73,13 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 1.39144,
+      "elapsed_seconds": 1.137701,
       "model_calls_used": 2,
       "candidate_evaluations": 0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "selected_candidate_id": null,
-      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/885dd4603a76"
+      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/a9021d547c74"
     },
     {
       "task_id": "status_badge_js_contract",
@@ -88,13 +88,13 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 0.275597,
+      "elapsed_seconds": 0.437453,
       "model_calls_used": 2,
       "candidate_evaluations": 0,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "selected_candidate_id": null,
-      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/c4ac9f36d496"
+      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/2bcff0a9ea43"
     },
     {
       "task_id": "calculator_bug",
@@ -103,13 +103,13 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 2.091628,
+      "elapsed_seconds": 1.791656,
       "model_calls_used": 3,
       "candidate_evaluations": 2,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "selected_candidate_id": "candidate_a",
-      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/ac5f7ff587f1"
+      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/3f625c62e2da"
     },
     {
       "task_id": "title_case_bug",
@@ -118,13 +118,13 @@
       "verified_success": true,
       "unsafe_claims": 0,
       "retries": 0,
-      "elapsed_seconds": 1.379104,
+      "elapsed_seconds": 1.141112,
       "model_calls_used": 2,
       "candidate_evaluations": 2,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "selected_candidate_id": "candidate_a",
-      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/486914caac50"
+      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/aa84d2ff56aa"
     },
     {
       "task_id": "slug_shell_bug",
@@ -133,13 +133,13 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 0.164083,
+      "elapsed_seconds": 0.138289,
       "model_calls_used": 3,
       "candidate_evaluations": 2,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "selected_candidate_id": "candidate_a",
-      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/fe01fa9a33cf"
+      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/eea699e9af39"
     },
     {
       "task_id": "checkout_tax_propagation",
@@ -148,13 +148,13 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 2.091003,
+      "elapsed_seconds": 1.958164,
       "model_calls_used": 3,
       "candidate_evaluations": 2,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "selected_candidate_id": "candidate_a",
-      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/6975ead6625f"
+      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/dc8bb18cb167"
     },
     {
       "task_id": "price_format_property_regression",
@@ -163,13 +163,13 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 2.09027,
+      "elapsed_seconds": 1.701747,
       "model_calls_used": 3,
       "candidate_evaluations": 2,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "selected_candidate_id": "candidate_a",
-      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/16cc7ddeab52"
+      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/f978ba24fae6"
     },
     {
       "task_id": "status_badge_js_contract",
@@ -178,20 +178,20 @@
       "verified_success": true,
       "unsafe_claims": 1,
       "retries": 1,
-      "elapsed_seconds": 0.201752,
+      "elapsed_seconds": 0.168874,
       "model_calls_used": 3,
       "candidate_evaluations": 2,
       "total_tokens": 0,
       "estimated_cost_usd": null,
       "selected_candidate_id": "candidate_a",
-      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/777612c2a03b"
+      "artifact_dir": "/home/runner/work/true/true/artifacts/runs/14df17725a7a"
     }
   ],
   "sequential_metrics": {
     "verified_success_rate": 1.0,
     "unsafe_claim_rate": 0.8333333333333334,
     "average_retries": 0.8333333333333334,
-    "average_elapsed_seconds": 0.8786140000000001,
+    "average_elapsed_seconds": 0.7615321666666666,
     "average_model_calls": 1.8333333333333333,
     "average_candidate_evaluations": 0.0,
     "average_total_tokens": 0.0,
@@ -201,7 +201,7 @@
     "verified_success_rate": 1.0,
     "unsafe_claim_rate": 0.8333333333333334,
     "average_retries": 0.8333333333333334,
-    "average_elapsed_seconds": 1.336306666666667,
+    "average_elapsed_seconds": 1.1499736666666667,
     "average_model_calls": 2.8333333333333335,
     "average_candidate_evaluations": 2.0,
     "average_total_tokens": 0.0,
@@ -210,13 +210,13 @@
   "delta_verified_success_rate": 0.0,
   "delta_unsafe_claim_rate": 0.0,
   "delta_average_retries": 0.0,
-  "delta_average_elapsed_seconds": 0.45769266666666686,
+  "delta_average_elapsed_seconds": 0.3884415000000001,
   "delta_average_model_calls": 1.0000000000000002,
   "decision": {
     "recommended_controller": "sequential",
     "rationale": "Keep gearbox opt-in for now because no verified-success lift, gearbox spends more model calls on the checked-in controller benchmark subset.",
     "should_promote_to_default": false
   },
-  "created_at": "2026-04-23T06:48:47.087150Z",
-  "report_dir": "/home/runner/work/true/true/reports/benchmarks/b8d4fef0e53b"
+  "created_at": "2026-04-24T06:49:33.238179Z",
+  "report_dir": "/home/runner/work/true/true/reports/benchmarks/6e7775f9d171"
 }
