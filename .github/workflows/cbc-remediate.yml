@@ -60,7 +60,7 @@ jobs:
         run: uv sync --extra gemini --extra dev
 
       - name: Setup Node (for gemini CLI)
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "20"
 
